@@ -1082,7 +1082,7 @@ function eggTap() {
 	const n = performance.now();
 	EGG.c = n - EGG.t < 1500 ? EGG.c + 1 : 1;
 	EGG.t = n;
-	if (EGG.c >= 3 && S === "fight" && F && !F.cat) {
+	if (EGG.c >= 3 && State.is("fight") && F && !F.cat) {
 		EGG.c = 0;
 		paused = false;
 		summonCat();
