@@ -1,0 +1,22 @@
+{
+	"name": "monster-awakening",
+	"version": "3.0.0",
+	"private": true,
+	"description": "Пробуждение монстров — игра в одном HTML-файле. src/ + assets/ собираются в index.html.",
+	"type": "module",
+	"scripts": {
+		"build": "node tools/build.mjs",
+		"build:dist": "node tools/build.mjs --dist",
+		"check": "node tools/build.mjs --check",
+		"test": "node --test tests/unit/*.test.mjs",
+		"golden": "node tools/golden.mjs --check",
+		"golden:record": "node tools/golden.mjs --record",
+		"fuzz": "node tools/fuzz-saves.mjs",
+		"soak": "node tools/soak.mjs",
+		"perf": "node tools/perf.mjs",
+		"all": "npm run check && npm test && npm run fuzz && npm run golden"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}

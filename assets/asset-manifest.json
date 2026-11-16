@@ -1,0 +1,78 @@
+{
+  "campfireAnim": {
+    "file": "assets/img/campfireAnim.png",
+    "mime": "image/png"
+  },
+  "heroes": {
+    "file": "assets/img/heroes.png",
+    "mime": "image/png"
+  },
+  "map": {
+    "file": "assets/img/map.png",
+    "mime": "image/png"
+  },
+  "menu_bg": {
+    "file": "assets/img/menu_bg.png",
+    "mime": "image/png"
+  },
+  "mobs": {
+    "file": "assets/img/mobs.png",
+    "mime": "image/png"
+  },
+  "props": {
+    "file": "assets/img/props.png",
+    "mime": "image/png"
+  },
+  "stage_chaos": {
+    "file": "assets/img/stage_chaos.png",
+    "mime": "image/png"
+  },
+  "stage_crystal": {
+    "file": "assets/img/stage_crystal.png",
+    "mime": "image/png"
+  },
+  "stage_dead": {
+    "file": "assets/img/stage_dead.png",
+    "mime": "image/png"
+  },
+  "stage_desert": {
+    "file": "assets/img/stage_desert.png",
+    "mime": "image/png"
+  },
+  "stage_final": {
+    "file": "assets/img/stage_final.png",
+    "mime": "image/png"
+  },
+  "stage_fire": {
+    "file": "assets/img/stage_fire.png",
+    "mime": "image/png"
+  },
+  "stage_ice": {
+    "file": "assets/img/stage_ice.png",
+    "mime": "image/png"
+  },
+  "stage_sky": {
+    "file": "assets/img/stage_sky.png",
+    "mime": "image/png"
+  },
+  "stage_swamp": {
+    "file": "assets/img/stage_swamp.png",
+    "mime": "image/png"
+  },
+  "stage_taiga": {
+    "file": "assets/img/stage_taiga.png",
+    "mime": "image/png"
+  },
+  "ui": {
+    "file": "assets/img/ui.png",
+    "mime": "image/png"
+  },
+  "heroes2": {
+    "file": "assets/img/heroes2.png",
+    "mime": "image/png"
+  },
+  "heroes3": {
+    "file": "assets/img/heroes3.png",
+    "mime": "image/png"
+  }
+}
