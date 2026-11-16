@@ -3,6 +3,7 @@
 let EV = null, // текущее событие (награда, находка, выбор реликвии)
 	MV = null, // переход отряда по карте
 	MAPC = null, // запечённый фон карты
+	MAPK = null, // ключ запечённого фона: сид+мир
 	MAPL = [], // озёра на карте (для бликов)
 	TIPN = null;
 const cmul = () => 1 + 0.5 * (G.w || 0); // доход растёт с номером мира
@@ -188,6 +189,14 @@ function segD(px, py, ax, ay, bx, by) {
 	return Math.hypot(px - ax - dx * k, py - ay - dy * k);
 }
 function bakeMap(seed) {
+	// Фон карты зависит только от сида и мира. Пока ключ совпадает — пересборка не нужна
+	// (каждая занимает ~0.9 c и заметно подвешивает загрузку сохранения).
+	const wi = G ? G.w || 0 : 0,
+		key = seed + ":" + wi;
+	if (MAPC && MAPK === key) {
+		SD = seed;
+		return;
+	}
 	SD = seed;
 	const w = WORLDS[G ? G.w || 0 : 0],
 		P = MAPT[w.id],
@@ -300,6 +309,7 @@ function bakeMap(seed) {
 		x.fill();
 		x.drawImage(im, q[0], q[1], q[2], q[3], Math.round(o.x - q[2] / 2), Math.round(o.y - q[3]), q[2], q[3]);
 	}
+	MAPK = key;
 }
 function avail() {
 	const a = ADJ[G.cur].filter((n) => !G.vis.has(n) && N[n].x > N[G.cur].x);
@@ -725,106 +735,7 @@ function ser() {
 		},
 	});
 }
-function saveGame() {
-	if (!G || G.arena) return false;
-	try {
-		const q = S === "prep" || S === "fight" ? snap : S === "lose" || S === "win" ? null : ser();
-		if (!q) return false;
-		window.__mxStorage.setItem(SAVEK, q);
-		SAVED = true;
-		return true;
-	} catch (e) {
-		return false;
-	}
-}
-function autosave() {
-	if (G && !G.arena && (S === "map" || S === "prep" || S === "world")) saveGame();
-}
-function loadGame() {
-	try {
-		const raw = window.__mxStorage.getItem(SAVEK),
-			d = JSON.parse(raw);
-		// битый сейв может быть чем угодно: null, числом, строкой — не даём упасть на d.g
-		if (!d || typeof d !== "object") return false;
-		const g = d.g;
-		if (!Array.isArray(d.N) || !d.N.length || !Array.isArray(d.E) || !g || !Array.isArray(g.slots)) return false;
-		if ((g.vis != null && !Array.isArray(g.vis)) || (g.rel != null && !Array.isArray(g.rel))) return false;
-		if (g.cur != null && (!Number.isInteger(+g.cur) || +g.cur < 0 || +g.cur >= d.N.length)) return false;
-		// Проверяем карту до изменения глобального состояния: повреждённые связи
-		// не должны оставлять игру с частично восстановленной картой.
-		if (d.N.some((node) => !node || !Number.isFinite(+node.x) || !Number.isFinite(+node.y))) return false;
-		if (d.E.some((edge) => !Array.isArray(edge) || edge.length < 2 || !Number.isInteger(edge[0]) || !Number.isInteger(edge[1]) || edge[0] < 0 || edge[1] < 0 || edge[0] >= d.N.length || edge[1] >= d.N.length)) return false;
-		const sl = g.slots.map((o) => {
-			if (!o) return null;
-			const h = HEROES.find((x) => x.n === (o.n === "Грозовой автомат" ? "Грозовой маг" : o.n));
-			if (!h) return null;
-			const u = mkU(h, 0, 0, 0);
-			// Некорректные числа не должны распространяться в симуляцию и интерфейс.
-			const positive = (v, fallback) => Number.isFinite(+v) && +v > 0 ? +v : fallback;
-			const nonnegative = (v, fallback) => v != null && Number.isFinite(+v) && +v >= 0 ? +v : fallback;
-			u.max = positive(o.max, u.max);
-			u.hp = clamp(nonnegative(o.hp, 0), 0, u.max);
-			u.atk = positive(o.atk, u.atk);
-			u.arm = nonnegative(o.arm, 0);
-			u.aspd = positive(o.aspd, u.aspd);
-			u.spd = positive(o.spd, u.spd);
-			u.skull = !!o.skull;
-			u.r = clamp(o.r | 0, 0, 6);
-			u.lv = positive(o.lv, 1);
-			u.hpl = u.hp / u.max;
-			return u;
-		});
-		while (sl.length < 8) sl.push(null);
-		if (!sl.some(Boolean)) return false;
-		N = d.N;
-		E = d.E;
-		ADJ = N.map(() => []);
-		E.forEach(([a, b]) => {
-			ADJ[a].push(b);
-			ADJ[b].push(a);
-		});
-		// сохранения старого формата: слои узлов восстанавливаем по порядку вдоль пути
-		if (N.some((n) => n.ly === undefined)) {
-			const xs = [...new Set(N.map((n) => Math.round(n.x / 40)))].sort((a, b) => a - b);
-			N.forEach((n) => (n.ly = xs.indexOf(Math.round(n.x / 40))));
-		}
-		G = freshG();
-		Object.assign(G, {
-			coin: Number.isFinite(+g.coin) ? Math.max(0, +g.coin) : 0,
-			meat: Number.isFinite(+g.meat) ? Math.max(0, +g.meat) : 0,
-			slots: sl,
-			cur: g.cur | 0,
-			vis: new Set(g.vis || [0]),
-			depth: g.depth | 0,
-			bf: Object.assign({ atk: 0, hp: 0, arm: 0, as: 0, spd: 0 }, g.bf || {}),
-			shop: !!g.shop,
-			w: clamp(g.w | 0, 0, worldCount() - 1),
-			rel: (g.rel || []).filter((q) => q && typeof q === "object" && Object.prototype.hasOwnProperty.call(RELIC, q.id)).map((q) => ({ ...q, r: clamp(q.r | 0, 0, RAR.length - 1) })),
-			stock: g.stock || null,
-			pend: g.pend || null,
-		});
-		if (g.st) Object.assign(G.st, g.st);
-		bakeMap(d.sd || 7);
-		snap = null;
-		sel = -1;
-		pop = null;
-		paused = false;
-		F = null;
-		EV = null;
-		MV = null;
-		Seq.clear();
-		Parts.clear();
-		S = "map";
-		if (G.pend) {
-			fight(G.pend);
-			snap = raw;
-		}
-		return true;
-	} catch (e) {
-		console.warn(e);
-		return false;
-	}
-}
+// saveGame / loadGame / autosave переехали в 62_save.js (формат v3, резерв, миграции)
 function saveCfg() {
 	CFG.music = Music.on;
 	CFG.vol = Music.vol;

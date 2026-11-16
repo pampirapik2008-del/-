@@ -713,6 +713,7 @@ function sp(c, x, y, s) {
 	ctx.drawImage(c, x - 8 * s, y - 14 * s, 16 * s, 16 * s);
 }
 const SAVEK = "monsterAwakeningSave",
+	SAVEK_B = "monsterAwakeningSave.bak",
 	CFGK = "monsterAwakeningCfg";
 let CFG = { music: true, vol: 1, fps: false },
 	SAVED = false,
@@ -728,6 +729,7 @@ try {
 function delSave() {
 	try {
 		window.__mxStorage.removeItem(SAVEK);
+		window.__mxStorage.removeItem(SAVEK_B);
 	} catch (e) {}
 	SAVED = false;
 }

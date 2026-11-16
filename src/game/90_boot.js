@@ -50,6 +50,7 @@ function lp(e) {
 	return [(lx - (bw - W * s) / 2) / s, (ly - (bh - H * s) / 2) / s];
 }
 function loop(ts) {
+	FRAME_N++;
 	FC++;
 	if (ts - FT >= 500) {
 		FV = Math.round((FC * 1000) / (ts - FT));
@@ -72,20 +73,30 @@ function loop(ts) {
 		Music.level(S === "fight" ? 1 : 0);
 		Tune.upd();
 		if (!paused) {
-			upd(dt);
-			flowTick();
-			visTick(dt);
-			// атмосфера вне боя
-			if (S === "map" || S === "msg" || S === "world" || S === "shop") {
-				MAPA.w = WORLDS[S === "world" ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
-				if (!(S === "msg" && EV && EV.bg)) wxEmit(MAPA, dt, S === "shop" ? 0.5 : 0.7);
-			} else if (S === "menu" || S === "pick" || S === "settings") {
-				MAPA.w = WORLDS[0];
-				wxEmit(MAPA, dt, 2.2);
+			// сбой в симуляции не должен дотянуться до отрисовки и цикла
+			try {
+				upd(dt);
+				flowTick();
+				visTick(dt);
+				// атмосфера вне боя
+				if (S === "map" || S === "msg" || S === "world" || S === "shop") {
+					MAPA.w = WORLDS[S === "world" ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
+					if (!(S === "msg" && EV && EV.bg)) wxEmit(MAPA, dt, S === "shop" ? 0.5 : 0.7);
+				} else if (S === "menu" || S === "pick" || S === "settings") {
+					MAPA.w = WORLDS[0];
+					wxEmit(MAPA, dt, 2.2);
+				}
+			} catch (e) {
+				logErr("update", e);
 			}
 		}
 	}
-	draw();
+	try {
+		draw();
+		errFrameOk();
+	} catch (e) {
+		logErr("draw", e);
+	}
 	requestAnimationFrame(loop);
 }
 cv.addEventListener("pointerdown", (e) => {
@@ -126,6 +137,7 @@ addEventListener("resize", fit);
 addEventListener("orientationchange", () => setTimeout(fit, 150));
 document.addEventListener("visibilitychange", () => Music.pause(document.hidden || paused));
 ["pointerdown", "touchstart", "keydown"].forEach((ev2) => addEventListener(ev2, unlock, { passive: true }));
+errInstallGlobals();
 if (CFG.q === undefined) CFG.q = "auto";
 setQ(CFG.q);
 fit();

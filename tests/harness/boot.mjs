@@ -109,9 +109,24 @@ export function boot({ quiet = true } = {}) {
 	const dev = windowObj.__dev;
 	if (!dev) throw new Error("__dev не появился: devapi не подключился");
 
+	const storage = windowObj.__mxStorage;
+
 	return {
 		dev,
 		errors,
+		storage,
+		setStorage(k, v) {
+			storage.setItem(k, String(v));
+		},
+		readStorage(k) {
+			return storage.getItem(k);
+		},
+		delStorage(k) {
+			storage.removeItem(k);
+		},
+		clearFatal() {
+			fatal = null;
+		},
 		get fatal() {
 			return fatal;
 		},

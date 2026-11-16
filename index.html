@@ -765,6 +765,7 @@ function sp(c, x, y, s) {
 	ctx.drawImage(c, x - 8 * s, y - 14 * s, 16 * s, 16 * s);
 }
 const SAVEK = "monsterAwakeningSave",
+	SAVEK_B = "monsterAwakeningSave.bak",
 	CFGK = "monsterAwakeningCfg";
 let CFG = { music: true, vol: 1, fps: false },
 	SAVED = false,
@@ -780,6 +781,7 @@ try {
 function delSave() {
 	try {
 		window.__mxStorage.removeItem(SAVEK);
+		window.__mxStorage.removeItem(SAVEK_B);
 	} catch (e) {}
 	SAVED = false;
 }
@@ -1983,6 +1985,163 @@ const Music = (() => {
 	};
 })();
 
+// ===== 05_err.js =====
+// ЖУРНАЛ ОШИБОК И АВАРИЙНЫЙ РЕЖИМ.
+// Правило: ошибка внутри кадра не должна останавливать игру. Сбой в update или draw
+// ловится по отдельности, пишется в кольцевой журнал, а три подряд идущих сбоя
+// переводят игру в безопасный режим с понятным окном вместо мёртвого экрана.
+// версия исходников подставляется сборкой (короткий хеш src/ + ассетов)
+let GAME_BUILD = "19d00f3600ec";
+const ERRS = [];
+const ERR_MAX = 200;
+let ERR_SEQ = 0,
+	ERR_STREAK = 0,
+	ERR_STREAK_FRAME = -99,
+	ERR_CRASH = false,
+	FRAME_N = 0;
+
+// ключ API и токены не должны попадать ни в журнал, ни в отчёт
+function errRedact(s) {
+	return String(s == null ? "" : s)
+		.replace(/sk-[A-Za-z0-9_-]{6,}/g, "sk-***")
+		.replace(/(["']?(?:key|token|secret|authorization)["']?\s*[:=]\s*)["'][^"']*["']/gi, "$1\"***\"")
+		.slice(0, 4000);
+}
+
+function logErr(kind, e, extra) {
+	const rec = {
+		i: ++ERR_SEQ,
+		at: new Date().toISOString(),
+		frame: FRAME_N,
+		screen: typeof S === "string" ? S : "?",
+		kind: kind,
+		msg: errRedact(e && e.message ? e.message : e),
+		stack: errRedact(e && e.stack ? String(e.stack).split("\n").slice(0, 6).join("\n") : ""),
+		extra: extra ? errRedact(JSON.stringify(extra)) : "",
+	};
+	ERRS.push(rec);
+	if (ERRS.length > ERR_MAX) ERRS.shift();
+	try {
+		console.error("[game]", kind, rec.msg);
+	} catch (_) {}
+	if (FRAME_N - ERR_STREAK_FRAME <= 1) ERR_STREAK++;
+	else ERR_STREAK = 1;
+	ERR_STREAK_FRAME = FRAME_N;
+	if (ERR_STREAK >= 3 && !ERR_CRASH) crashScreen(rec);
+	return rec;
+}
+function errFrameOk() {
+	ERR_STREAK = 0;
+}
+
+// ---------- аварийное окно ----------
+function errReport() {
+	const C = typeof CFG === "object" && CFG ? CFG : {};
+	const ver = (() => {
+		try {
+			return window.__mxStorage.getItem("mx_active") || "orig";
+		} catch (_) {
+			return "?";
+		}
+	})();
+	return JSON.stringify(
+		{
+			build: typeof GAME_BUILD !== "undefined" ? GAME_BUILD : "",
+			version: ver,
+			userAgent: navigator && navigator.userAgent,
+			screen: typeof S === "string" ? S : "?",
+			frame: FRAME_N,
+			time: Date.now(),
+			quality: typeof QL === "object" && QL ? QL.lv : "?",
+			cfg: { music: C.music, vol: C.vol, sfx: C.sfx, q: C.q, fps: C.fps },
+			errors: ERRS.slice(-40),
+		},
+		null,
+		1
+	);
+}
+
+function crashScreen(rec) {
+	ERR_CRASH = true;
+	try {
+		if (document.getElementById("mx-crash")) return;
+	} catch (_) {}
+	const wrap = document.createElement("div");
+	wrap.id = "mx-crash";
+	wrap.style.cssText =
+		"position:fixed;inset:0;z-index:99999;background:rgba(6,4,10,.86);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif;color:#eee;padding:16px";
+	const box = document.createElement("div");
+	box.style.cssText = "max-width:560px;width:100%;background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:20px 22px";
+	box.innerHTML =
+		'<div style="font-weight:800;font-size:17px;margin-bottom:6px">Что-то пошло не так</div>' +
+		'<div style="color:#b9b3c8;margin-bottom:12px">Игра поймала сбой три кадра подряд, но не остановилась. Можно продолжить, вернуться в меню или откатить версию кода.</div>' +
+		'<div id="mx-crash-msg" style="font:12px/1.4 ui-monospace,monospace;color:#ff9c9c;background:#120e19;border-radius:8px;padding:8px;margin-bottom:12px;word-break:break-word"></div>' +
+		'<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+		'<button id="mx-crash-go" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:#2e7d32;color:#fff;font-weight:700;cursor:pointer">Продолжить</button>' +
+		'<button id="mx-crash-menu" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:#455a64;color:#fff;font-weight:700;cursor:pointer">В меню</button>' +
+		'<button id="mx-crash-roll" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:#8e24aa;color:#fff;font-weight:700;cursor:pointer">Откатить версию</button>' +
+		'<button id="mx-crash-copy" style="flex:1 1 120px;padding:10px;border:1px solid #555;border-radius:8px;background:#2a2238;color:#fff;font-weight:700;cursor:pointer">Скопировать отчёт</button>' +
+		'</div>';
+	wrap.appendChild(box);
+	try {
+		document.body.appendChild(wrap);
+	} catch (_) {
+		return;
+	}
+	const $ = (id) => box.querySelector("#" + id);
+	try {
+		$("mx-crash-msg").textContent = (rec ? rec.kind + ": " + rec.msg : "нет данных") + " · кадр " + FRAME_N + " · экран " + (typeof S === "string" ? S : "?");
+	} catch (_) {}
+	const close = () => {
+		try {
+			wrap.remove();
+		} catch (_) {}
+		ERR_CRASH = false;
+		ERR_STREAK = 0;
+	};
+	$("mx-crash-go").onclick = close;
+	$("mx-crash-menu").onclick = () => {
+		try {
+			F = null;
+			EV = null;
+			pop = null;
+			paused = false;
+			S = "menu";
+		} catch (_) {}
+		close();
+	};
+	$("mx-crash-roll").onclick = () => {
+		try {
+			location.hash = "#orig";
+			location.reload();
+		} catch (_) {}
+	};
+	$("mx-crash-copy").onclick = () => {
+		const txt = errReport();
+		try {
+			if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt);
+			else {
+				const ta = document.createElement("textarea");
+				ta.value = txt;
+				document.body.appendChild(ta);
+				ta.select();
+				document.execCommand && document.execCommand("copy");
+				ta.remove();
+			}
+		} catch (_) {}
+		$("mx-crash-copy").textContent = "Скопировано";
+	};
+}
+
+// глобальные перехватчики: сюда попадают и сбои вне кадра
+function errInstallGlobals() {
+	try {
+		addEventListener("error", (e) => {
+			if (e && (e.error || e.message)) logErr("window.error", e.error || e.message);
+		});
+		addEventListener("unhandledrejection", (e) => logErr("promise", (e && e.reason) || "rejection"));
+	} catch (_) {}
+}
 // ===== 10_core.js =====
 // ===== ЯДРО: ассеты, спрайты на общей пиксельной сетке, частицы, свет, таймеры, качество =====
 // Вся графика нарисована на сетке 609x270 «арт-пикселей»; 1 арт-пиксель = AP логических px холста 1218x540.
@@ -6523,6 +6682,7 @@ function visTick(dt) {
 let EV = null, // текущее событие (награда, находка, выбор реликвии)
 	MV = null, // переход отряда по карте
 	MAPC = null, // запечённый фон карты
+	MAPK = null, // ключ запечённого фона: сид+мир
 	MAPL = [], // озёра на карте (для бликов)
 	TIPN = null;
 const cmul = () => 1 + 0.5 * (G.w || 0); // доход растёт с номером мира
@@ -6708,6 +6868,14 @@ function segD(px, py, ax, ay, bx, by) {
 	return Math.hypot(px - ax - dx * k, py - ay - dy * k);
 }
 function bakeMap(seed) {
+	// Фон карты зависит только от сида и мира. Пока ключ совпадает — пересборка не нужна
+	// (каждая занимает ~0.9 c и заметно подвешивает загрузку сохранения).
+	const wi = G ? G.w || 0 : 0,
+		key = seed + ":" + wi;
+	if (MAPC && MAPK === key) {
+		SD = seed;
+		return;
+	}
 	SD = seed;
 	const w = WORLDS[G ? G.w || 0 : 0],
 		P = MAPT[w.id],
@@ -6820,6 +6988,7 @@ function bakeMap(seed) {
 		x.fill();
 		x.drawImage(im, q[0], q[1], q[2], q[3], Math.round(o.x - q[2] / 2), Math.round(o.y - q[3]), q[2], q[3]);
 	}
+	MAPK = key;
 }
 function avail() {
 	const a = ADJ[G.cur].filter((n) => !G.vis.has(n) && N[n].x > N[G.cur].x);
@@ -7245,106 +7414,7 @@ function ser() {
 		},
 	});
 }
-function saveGame() {
-	if (!G || G.arena) return false;
-	try {
-		const q = S === "prep" || S === "fight" ? snap : S === "lose" || S === "win" ? null : ser();
-		if (!q) return false;
-		window.__mxStorage.setItem(SAVEK, q);
-		SAVED = true;
-		return true;
-	} catch (e) {
-		return false;
-	}
-}
-function autosave() {
-	if (G && !G.arena && (S === "map" || S === "prep" || S === "world")) saveGame();
-}
-function loadGame() {
-	try {
-		const raw = window.__mxStorage.getItem(SAVEK),
-			d = JSON.parse(raw);
-		// битый сейв может быть чем угодно: null, числом, строкой — не даём упасть на d.g
-		if (!d || typeof d !== "object") return false;
-		const g = d.g;
-		if (!Array.isArray(d.N) || !d.N.length || !Array.isArray(d.E) || !g || !Array.isArray(g.slots)) return false;
-		if ((g.vis != null && !Array.isArray(g.vis)) || (g.rel != null && !Array.isArray(g.rel))) return false;
-		if (g.cur != null && (!Number.isInteger(+g.cur) || +g.cur < 0 || +g.cur >= d.N.length)) return false;
-		// Проверяем карту до изменения глобального состояния: повреждённые связи
-		// не должны оставлять игру с частично восстановленной картой.
-		if (d.N.some((node) => !node || !Number.isFinite(+node.x) || !Number.isFinite(+node.y))) return false;
-		if (d.E.some((edge) => !Array.isArray(edge) || edge.length < 2 || !Number.isInteger(edge[0]) || !Number.isInteger(edge[1]) || edge[0] < 0 || edge[1] < 0 || edge[0] >= d.N.length || edge[1] >= d.N.length)) return false;
-		const sl = g.slots.map((o) => {
-			if (!o) return null;
-			const h = HEROES.find((x) => x.n === (o.n === "Грозовой автомат" ? "Грозовой маг" : o.n));
-			if (!h) return null;
-			const u = mkU(h, 0, 0, 0);
-			// Некорректные числа не должны распространяться в симуляцию и интерфейс.
-			const positive = (v, fallback) => Number.isFinite(+v) && +v > 0 ? +v : fallback;
-			const nonnegative = (v, fallback) => v != null && Number.isFinite(+v) && +v >= 0 ? +v : fallback;
-			u.max = positive(o.max, u.max);
-			u.hp = clamp(nonnegative(o.hp, 0), 0, u.max);
-			u.atk = positive(o.atk, u.atk);
-			u.arm = nonnegative(o.arm, 0);
-			u.aspd = positive(o.aspd, u.aspd);
-			u.spd = positive(o.spd, u.spd);
-			u.skull = !!o.skull;
-			u.r = clamp(o.r | 0, 0, 6);
-			u.lv = positive(o.lv, 1);
-			u.hpl = u.hp / u.max;
-			return u;
-		});
-		while (sl.length < 8) sl.push(null);
-		if (!sl.some(Boolean)) return false;
-		N = d.N;
-		E = d.E;
-		ADJ = N.map(() => []);
-		E.forEach(([a, b]) => {
-			ADJ[a].push(b);
-			ADJ[b].push(a);
-		});
-		// сохранения старого формата: слои узлов восстанавливаем по порядку вдоль пути
-		if (N.some((n) => n.ly === undefined)) {
-			const xs = [...new Set(N.map((n) => Math.round(n.x / 40)))].sort((a, b) => a - b);
-			N.forEach((n) => (n.ly = xs.indexOf(Math.round(n.x / 40))));
-		}
-		G = freshG();
-		Object.assign(G, {
-			coin: Number.isFinite(+g.coin) ? Math.max(0, +g.coin) : 0,
-			meat: Number.isFinite(+g.meat) ? Math.max(0, +g.meat) : 0,
-			slots: sl,
-			cur: g.cur | 0,
-			vis: new Set(g.vis || [0]),
-			depth: g.depth | 0,
-			bf: Object.assign({ atk: 0, hp: 0, arm: 0, as: 0, spd: 0 }, g.bf || {}),
-			shop: !!g.shop,
-			w: clamp(g.w | 0, 0, worldCount() - 1),
-			rel: (g.rel || []).filter((q) => q && typeof q === "object" && Object.prototype.hasOwnProperty.call(RELIC, q.id)).map((q) => ({ ...q, r: clamp(q.r | 0, 0, RAR.length - 1) })),
-			stock: g.stock || null,
-			pend: g.pend || null,
-		});
-		if (g.st) Object.assign(G.st, g.st);
-		bakeMap(d.sd || 7);
-		snap = null;
-		sel = -1;
-		pop = null;
-		paused = false;
-		F = null;
-		EV = null;
-		MV = null;
-		Seq.clear();
-		Parts.clear();
-		S = "map";
-		if (G.pend) {
-			fight(G.pend);
-			snap = raw;
-		}
-		return true;
-	} catch (e) {
-		console.warn(e);
-		return false;
-	}
-}
+// saveGame / loadGame / autosave переехали в 62_save.js (формат v3, резерв, миграции)
 function saveCfg() {
 	CFG.music = Music.on;
 	CFG.vol = Music.vol;
@@ -7353,6 +7423,271 @@ function saveCfg() {
 	} catch (e) {}
 }
 
+// ===== 62_save.js =====
+// СОХРАНЕНИЯ: формат v3, контрольная сумма, резервный слот, миграции.
+//
+// Конверт:  { v:3, sum:"fnv1a", at:<мс>, data:"<json строки>" }
+// data:     { N, E, sd, bi, g } — то же содержимое, что писалось в v2.
+// Запись:   сначала в резерв кладётся прошлое валидное сохранение, потом пишется основное.
+// Чтение:   основное → резерв → ошибка. Несовпавшая сумма = повреждение, читаем резерв.
+// Миграция: цепочка v2 → v3 (дальше можно добавлять v3 → v4, не ломая старые сейвы).
+const SAVE_VER = 3;
+let SAVE_WARN = "";
+
+function fnv1a(s) {
+	let h = 0x811c9dc5;
+	for (let i = 0; i < s.length; i++) {
+		h ^= s.charCodeAt(i);
+		h = Math.imul(h, 0x01000193);
+	}
+	return (h >>> 0).toString(16).padStart(8, "0");
+}
+
+// внутреннее содержимое сейва: из строки любого поддерживаемого формата
+function saveInner(q) {
+	const d = typeof q === "string" ? JSON.parse(q) : q;
+	if (!d || typeof d !== "object") return null;
+	if (d.v === 2) return { N: d.N, E: d.E, sd: d.sd, bi: d.bi | 0, g: d.g };
+	if (d.N || d.g) return { N: d.N, E: d.E, sd: d.sd, bi: d.bi | 0, g: d.g };
+	return null;
+}
+
+function packSave(inner) {
+	const body = JSON.stringify(inner);
+	return JSON.stringify({ v: SAVE_VER, sum: fnv1a(body), at: Date.now(), data: body });
+}
+
+// цепочка миграций: каждую версию поднимаем на шаг, пока не дошли до текущей
+const SAVE_MIGRATIONS = {
+	2: (d) => ({ N: d.N, E: d.E, sd: d.sd, bi: d.bi | 0, g: d.g }),
+};
+function migrateSave(d) {
+	let v = typeof d.v === "number" ? d.v : 2,
+		cur = d;
+	let guard = 0;
+	while (v < SAVE_VER) {
+		const step = SAVE_MIGRATIONS[v];
+		if (!step || ++guard > 8) return null;
+		cur = step(cur);
+		v++;
+	}
+	return cur;
+}
+
+// разбор строки из хранилища: { ok, data, ver } либо { ok:false, why }
+function unpackSave(raw) {
+	if (!raw || typeof raw !== "string") return { ok: false, why: "пусто" };
+	let d;
+	try {
+		d = JSON.parse(raw);
+	} catch (e) {
+		return { ok: false, why: "json" };
+	}
+	if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: "не объект" };
+	if (d.v === SAVE_VER && typeof d.data === "string") {
+		if (typeof d.sum === "string" && d.sum !== fnv1a(d.data)) return { ok: false, why: "checksum" };
+		let inner;
+		try {
+			inner = JSON.parse(d.data);
+		} catch (e) {
+			return { ok: false, why: "inner" };
+		}
+		if (!inner || typeof inner !== "object") return { ok: false, why: "inner" };
+		return { ok: true, data: inner, ver: SAVE_VER };
+	}
+	if (typeof d.v === "number" && d.v < SAVE_VER) {
+		const m = migrateSave(d);
+		if (!m) return { ok: false, why: "migrate" };
+		return { ok: true, data: m, ver: d.v };
+	}
+	return { ok: false, why: "version" };
+}
+
+// проверка содержимого ДО изменения глобального состояния
+function validateSave(d) {
+	const g = d.g;
+	if (!Array.isArray(d.N) || !d.N.length || !Array.isArray(d.E) || !g || typeof g !== "object" || !Array.isArray(g.slots)) return null;
+	if ((g.vis != null && !Array.isArray(g.vis)) || (g.rel != null && !Array.isArray(g.rel))) return null;
+	if (g.cur != null && (!Number.isInteger(+g.cur) || +g.cur < 0 || +g.cur >= d.N.length)) return null;
+	if (d.N.some((node) => !node || !Number.isFinite(+node.x) || !Number.isFinite(+node.y))) return null;
+	if (
+		d.E.some(
+			(edge) =>
+				!Array.isArray(edge) ||
+				edge.length < 2 ||
+				!Number.isInteger(edge[0]) ||
+				!Number.isInteger(edge[1]) ||
+				edge[0] < 0 ||
+				edge[1] < 0 ||
+				edge[0] >= d.N.length ||
+				edge[1] >= d.N.length
+		)
+	)
+		return null;
+	const sl = g.slots.map((o) => {
+		if (!o || typeof o !== "object") return null;
+		const h = HEROES.find((x) => x.n === (o.n === "Грозовой автомат" ? "Грозовой маг" : o.n));
+		if (!h) return null;
+		const u = mkU(h, 0, 0, 0);
+		// Некорректные числа не должны распространяться в симуляцию и интерфейс.
+		const positive = (v, fallback) => (Number.isFinite(+v) && +v > 0 ? +v : fallback);
+		const nonnegative = (v, fallback) => (v != null && Number.isFinite(+v) && +v >= 0 ? +v : fallback);
+		u.max = positive(o.max, u.max);
+		u.hp = clamp(nonnegative(o.hp, 0), 0, u.max);
+		u.atk = positive(o.atk, u.atk);
+		u.arm = nonnegative(o.arm, 0);
+		u.aspd = positive(o.aspd, u.aspd);
+		u.spd = positive(o.spd, u.spd);
+		u.skull = !!o.skull;
+		u.r = clamp(o.r | 0, 0, 6);
+		u.lv = positive(o.lv, 1);
+		u.hpl = u.hp / u.max;
+		return u;
+	});
+	while (sl.length < 8) sl.push(null);
+	if (!sl.some(Boolean)) return null;
+	return { sl, g };
+}
+
+function applySave(d, v) {
+	const g = v.g,
+		sl = v.sl;
+	N = d.N;
+	E = d.E;
+	ADJ = N.map(() => []);
+	E.forEach(([a, b]) => {
+		ADJ[a].push(b);
+		ADJ[b].push(a);
+	});
+	// сохранения старого формата: слои узлов восстанавливаем по порядку вдоль пути
+	if (N.some((n) => n.ly === undefined)) {
+		const xs = [...new Set(N.map((n) => Math.round(n.x / 40)))].sort((a, b) => a - b);
+		N.forEach((n) => (n.ly = xs.indexOf(Math.round(n.x / 40))));
+	}
+	G = freshG();
+	Object.assign(G, {
+		coin: Number.isFinite(+g.coin) ? Math.max(0, +g.coin) : 0,
+		meat: Number.isFinite(+g.meat) ? Math.max(0, +g.meat) : 0,
+		slots: sl,
+		cur: g.cur | 0,
+		vis: new Set(g.vis || [0]),
+		depth: g.depth | 0,
+		bf: Object.assign({ atk: 0, hp: 0, arm: 0, as: 0, spd: 0 }, g.bf || {}),
+		shop: !!g.shop,
+		w: clamp(g.w | 0, 0, worldCount() - 1),
+		rel: (g.rel || [])
+			.filter((q) => q && typeof q === "object" && Object.prototype.hasOwnProperty.call(RELIC, q.id))
+			.map((q) => ({ ...q, r: clamp(q.r | 0, 0, RAR.length - 1) })),
+		stock: g.stock || null,
+		pend: g.pend || null,
+	});
+	if (g.st) Object.assign(G.st, g.st);
+	bakeMap(d.sd || 7);
+	snap = null;
+	sel = -1;
+	pop = null;
+	paused = false;
+	F = null;
+	EV = null;
+	MV = null;
+	Seq.clear();
+	Parts.clear();
+	S = "map";
+	if (G.pend) {
+		fight(G.pend);
+		snap = JSON.stringify(d);
+	}
+}
+
+function saveGame() {
+	if (!G || G.arena) return false;
+	try {
+		const q = S === "prep" || S === "fight" ? snap : S === "lose" || S === "win" ? null : ser();
+		if (!q) return false;
+		const inner = saveInner(q);
+		if (!inner) return false;
+		// резерв = прошлое валидное сохранение (а не то, что сейчас пытаемся записать)
+		const prev = window.__mxStorage.getItem(SAVEK);
+		if (prev && unpackSave(prev).ok) {
+			try {
+				window.__mxStorage.setItem(SAVEK_B, prev);
+			} catch (e) {}
+		}
+		window.__mxStorage.setItem(SAVEK, packSave(inner));
+		SAVED = true;
+		SAVE_WARN = "";
+		return true;
+	} catch (e) {
+		SAVE_WARN = "Не удалось сохранить: " + (e && e.message ? e.message : e);
+		logErr("save", e);
+		return false;
+	}
+}
+
+function loadGame() {
+	const sources = [SAVEK, SAVEK_B];
+	let why = "";
+	for (let i = 0; i < sources.length; i++) {
+		let raw = null;
+		try {
+			raw = window.__mxStorage.getItem(sources[i]);
+		} catch (e) {
+			raw = null;
+		}
+		if (!raw) continue;
+		const u = unpackSave(raw);
+		if (!u.ok) {
+			why = why || u.why;
+			continue;
+		}
+		const v = validateSave(u.data);
+		if (!v) {
+			why = why || "поля";
+			continue;
+		}
+		try {
+			applySave(u.data, v);
+		} catch (e) {
+			why = why || "apply";
+			logErr("loadGame", e);
+			continue;
+		}
+		SAVE_WARN = "";
+		if (i > 0) {
+			SAVE_WARN = "Основное сохранение повреждено — загружен резерв.";
+			try {
+				toast(SAVE_WARN);
+			} catch (e) {}
+		}
+		if (u.ver !== SAVE_VER) {
+			// старый формат поднят до текущего — сразу перезаписываем в новом виде
+			try {
+				saveGame();
+			} catch (e) {}
+		}
+		return true;
+	}
+	if (why) logErr("loadGame", "сохранение не прочитано: " + why);
+	return false;
+}
+
+function autosave() {
+	if (G && !G.arena && (S === "map" || S === "prep" || S === "world")) saveGame();
+}
+
+// автосохранение при уходе со страницы и сворачивании вкладки
+try {
+	addEventListener("pagehide", () => {
+		try {
+			autosave();
+		} catch (e) {}
+	});
+	document.addEventListener("visibilitychange", () => {
+		try {
+			if (document.hidden) autosave();
+		} catch (e) {}
+	});
+} catch (e) {}
 // ===== 65_screens.js =====
 // ===== ЭКРАНЫ: карта, события-награды, лавка, меню, выбор героя, настройки, итоги =====
 let BGA = null, // последняя арена — фон для экрана наград
@@ -8747,6 +9082,7 @@ function lp(e) {
 	return [(lx - (bw - W * s) / 2) / s, (ly - (bh - H * s) / 2) / s];
 }
 function loop(ts) {
+	FRAME_N++;
 	FC++;
 	if (ts - FT >= 500) {
 		FV = Math.round((FC * 1000) / (ts - FT));
@@ -8769,20 +9105,30 @@ function loop(ts) {
 		Music.level(S === "fight" ? 1 : 0);
 		Tune.upd();
 		if (!paused) {
-			upd(dt);
-			flowTick();
-			visTick(dt);
-			// атмосфера вне боя
-			if (S === "map" || S === "msg" || S === "world" || S === "shop") {
-				MAPA.w = WORLDS[S === "world" ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
-				if (!(S === "msg" && EV && EV.bg)) wxEmit(MAPA, dt, S === "shop" ? 0.5 : 0.7);
-			} else if (S === "menu" || S === "pick" || S === "settings") {
-				MAPA.w = WORLDS[0];
-				wxEmit(MAPA, dt, 2.2);
+			// сбой в симуляции не должен дотянуться до отрисовки и цикла
+			try {
+				upd(dt);
+				flowTick();
+				visTick(dt);
+				// атмосфера вне боя
+				if (S === "map" || S === "msg" || S === "world" || S === "shop") {
+					MAPA.w = WORLDS[S === "world" ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
+					if (!(S === "msg" && EV && EV.bg)) wxEmit(MAPA, dt, S === "shop" ? 0.5 : 0.7);
+				} else if (S === "menu" || S === "pick" || S === "settings") {
+					MAPA.w = WORLDS[0];
+					wxEmit(MAPA, dt, 2.2);
+				}
+			} catch (e) {
+				logErr("update", e);
 			}
 		}
 	}
-	draw();
+	try {
+		draw();
+		errFrameOk();
+	} catch (e) {
+		logErr("draw", e);
+	}
 	requestAnimationFrame(loop);
 }
 cv.addEventListener("pointerdown", (e) => {
@@ -8823,6 +9169,7 @@ addEventListener("resize", fit);
 addEventListener("orientationchange", () => setTimeout(fit, 150));
 document.addEventListener("visibilitychange", () => Music.pause(document.hidden || paused));
 ["pointerdown", "touchstart", "keydown"].forEach((ev2) => addEventListener(ev2, unlock, { passive: true }));
+errInstallGlobals();
 if (CFG.q === undefined) CFG.q = "auto";
 setQ(CFG.q);
 fit();

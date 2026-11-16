@@ -1,6 +1,7 @@
 // Общая сборка исходников: используется и tools/build.mjs, и тестовой обвязкой.
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 
 export const FONT_PLACEHOLDER = "@@FONT_BASE64@@";
 
@@ -26,11 +27,16 @@ export function gameFileList(root) {
 
 export function loadGameSrc(root) {
 	const font = fs.readFileSync(path.join(root, "assets/font.woff2")).toString("base64");
-	return gameFileList(root)
-		.map((f) => readText(root, "src/game/" + f))
-		.join("")
-		.split(FONT_PLACEHOLDER)
-		.join(font);
+	const files = gameFileList(root);
+	const raw = files.map((f) => readText(root, "src/game/" + f)).join("");
+	// короткий хеш исходников — попадает в аварийный отчёт, чтобы было видно, какая сборка упала
+	const build = crypto
+		.createHash("sha256")
+		.update(raw)
+		.update(readText(root, "assets/asset-manifest.json"))
+		.digest("hex")
+		.slice(0, 12);
+	return raw.split(FONT_PLACEHOLDER).join(font).split("@@BUILD@@").join(build);
 }
 
 export function buildHtml(root) {

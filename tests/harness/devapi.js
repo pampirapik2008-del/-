@@ -78,6 +78,29 @@
 			return Rand.state;
 		},
 		snapshot: snap,
+		// журнал ошибок и аварийный режим
+		errs: () => ERRS.map((r) => ({ kind: r.kind, msg: r.msg, frame: r.frame, screen: r.screen })),
+		crash: () => ERR_CRASH,
+		makeDrawThrow(n = 1) {
+			const orig = draw;
+			draw = function () {
+				if (n > 0) {
+					n--;
+					throw new Error("тестовая ошибка draw");
+				}
+				return orig.apply(this, arguments);
+			};
+		},
+		makeUpdateThrow(n = 1) {
+			const orig = upd;
+			upd = function () {
+				if (n > 0) {
+					n--;
+					throw new Error("тестовая ошибка update");
+				}
+				return orig.apply(this, arguments);
+			};
+		},
 		newGame,
 		genMap,
 		bakeMap,
@@ -89,6 +112,7 @@
 		buy,
 		evClose,
 		saveGame,
+		delSave,
 		loadGame,
 		autosave,
 		toast,
