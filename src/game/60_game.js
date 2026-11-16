@@ -322,7 +322,7 @@ function walkTo(n) {
 	sfx("step");
 }
 function flowTick() {
-	if (MV && S === "map" && t - MV.t0 >= MV.d) {
+	if (MV && State.is("map") && t - MV.t0 >= MV.d) {
 		const b = MV.b;
 		MV = null;
 		go(b);
@@ -376,13 +376,13 @@ function toMenu() {
 	EV = null;
 	MV = null;
 	Seq.clear();
-	S = "menu";
+	State.go("menu");
 }
 
 // ---------- события ----------
 function ev(o) {
 	EV = Object.assign({ t0: t, cards: [], sel: -1, open: o.chest === undefined ? 1 : 0, rv: [] }, o);
-	S = "msg";
+	State.go("msg");
 	pop = null;
 	TIPN = null;
 }
@@ -419,7 +419,7 @@ function evClose() {
 	EV = null;
 	if (e.next) e.next();
 	else {
-		S = "map";
+		State.go("map");
 		autosave();
 	}
 }
@@ -549,7 +549,7 @@ function win() {
 		const after = () => {
 			G.shop = true;
 			G.stock = null;
-			S = "shop";
+			State.go("shop");
 			SS.sel = -1;
 		};
 		ev({
@@ -601,10 +601,10 @@ function win() {
 					next: () => {
 						if (G.w + 1 >= worldCount()) {
 							delSave();
-							S = "win";
+							State.go("win");
 							sfx("fanfare");
 						} else {
-							S = "world";
+							State.go("world");
 							WT0 = t;
 							autosave();
 						}
@@ -641,7 +641,7 @@ function nextWorld() {
 	G.slots.forEach((u) => u && (u.hp = u.max));
 	genMap();
 	bakeMap(1 + ((Rand.next() * 2147483000) | 0));
-	S = "map";
+	State.go("map");
 	Parts.clear();
 	autosave();
 }
@@ -652,7 +652,7 @@ function lose() {
 	}
 	if (!G.arena) delSave();
 	if (F) BGA = F.A;
-	S = "lose";
+	State.go("lose");
 	pop = null;
 	sfx("lose");
 }
@@ -673,7 +673,7 @@ function openShop() {
 	G.sm = "";
 	G.rm = G.sk = false;
 	pop = null;
-	S = "shop";
+	State.go("shop");
 	sfx("chest");
 }
 const rrPrice = () => 3 + 2 * G.stock.rr;

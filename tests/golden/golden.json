@@ -2,8 +2,8 @@
  "version": 1,
  "generatedBy": "tools/golden.mjs",
  "battles": {
-  "count": 200,
-  "summary": "297e1dc9a0f961fa",
+  "count": 500,
+  "summary": "a388ea9591873224",
   "items": [
    {
     "i": 0,
@@ -3604,12 +3604,5412 @@
     },
     "rand": 3802112787,
     "hash": "27d5bc6eb5fc287f"
+   },
+   {
+    "i": 200,
+    "seed": 2400,
+    "kind": "fight",
+    "w": 0,
+    "depth": 4,
+    "party": 1,
+    "result": "lose",
+    "frames": 936,
+    "st": {
+     "dmg": 3236,
+     "taken": 2157,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 236955764,
+    "hash": "c6570188efef07a3"
+   },
+   {
+    "i": 201,
+    "seed": 2407,
+    "kind": "fight",
+    "w": 1,
+    "depth": 9,
+    "party": 2,
+    "result": "win",
+    "frames": 2111,
+    "st": {
+     "dmg": 15849,
+     "taken": 7843,
+     "kills": 4,
+     "crits": 10
+    },
+    "rand": 3786890826,
+    "hash": "a37fbc9751d82df1"
+   },
+   {
+    "i": 202,
+    "seed": 2414,
+    "kind": "boss",
+    "w": 2,
+    "depth": 2,
+    "party": 3,
+    "result": "lose",
+    "frames": 1973,
+    "st": {
+     "dmg": 5933,
+     "taken": 9061,
+     "kills": 1,
+     "crits": 7
+    },
+    "rand": 1178296917,
+    "hash": "a2ba1b129ffefbea"
+   },
+   {
+    "i": 203,
+    "seed": 2421,
+    "kind": "arena",
+    "w": 3,
+    "depth": 7,
+    "party": 4,
+    "result": "win",
+    "frames": 1032,
+    "st": {
+     "dmg": 8465,
+     "taken": 11434,
+     "kills": 3,
+     "crits": 23
+    },
+    "rand": 3907852988,
+    "hash": "0191b33d9867f4e7"
+   },
+   {
+    "i": 204,
+    "seed": 2428,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 0,
+    "party": 5,
+    "result": "win",
+    "frames": 692,
+    "st": {
+     "dmg": 5609,
+     "taken": 907,
+     "kills": 2,
+     "crits": 9
+    },
+    "rand": 3314296227,
+    "hash": "2aeab1b709cc13aa"
+   },
+   {
+    "i": 205,
+    "seed": 2435,
+    "kind": "fight",
+    "w": 5,
+    "depth": 5,
+    "party": 1,
+    "result": "lose",
+    "frames": 441,
+    "st": {
+     "dmg": 1042,
+     "taken": 3046,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 3472811855,
+    "hash": "82d7ba86430df58e"
+   },
+   {
+    "i": 206,
+    "seed": 2442,
+    "kind": "fight",
+    "w": 6,
+    "depth": 10,
+    "party": 2,
+    "result": "lose",
+    "frames": 517,
+    "st": {
+     "dmg": 2659,
+     "taken": 6601,
+     "kills": 0,
+     "crits": 6
+    },
+    "rand": 882114664,
+    "hash": "b04fb44574a6d5a0"
+   },
+   {
+    "i": 207,
+    "seed": 2449,
+    "kind": "boss",
+    "w": 7,
+    "depth": 3,
+    "party": 3,
+    "result": "lose",
+    "frames": 819,
+    "st": {
+     "dmg": 2593,
+     "taken": 7943,
+     "kills": 0,
+     "crits": 9
+    },
+    "rand": 3421865833,
+    "hash": "c95c4e1757bd29fc"
+   },
+   {
+    "i": 208,
+    "seed": 2456,
+    "kind": "arena",
+    "w": 8,
+    "depth": 8,
+    "party": 4,
+    "result": "lose",
+    "frames": 789,
+    "st": {
+     "dmg": 4741,
+     "taken": 12135,
+     "kills": 0,
+     "crits": 16
+    },
+    "rand": 352688384,
+    "hash": "e29cb8e6a562510d"
+   },
+   {
+    "i": 209,
+    "seed": 2463,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 1,
+    "party": 5,
+    "result": "win",
+    "frames": 1263,
+    "st": {
+     "dmg": 12585,
+     "taken": 5200,
+     "kills": 2,
+     "crits": 23
+    },
+    "rand": 664162022,
+    "hash": "bdf6169f3489834d"
+   },
+   {
+    "i": 210,
+    "seed": 2470,
+    "kind": "fight",
+    "w": 0,
+    "depth": 6,
+    "party": 1,
+    "result": "lose",
+    "frames": 742,
+    "st": {
+     "dmg": 1362,
+     "taken": 3896,
+     "kills": 0,
+     "crits": 3
+    },
+    "rand": 3407041281,
+    "hash": "b590883c0dd30180"
+   },
+   {
+    "i": 211,
+    "seed": 2477,
+    "kind": "fight",
+    "w": 1,
+    "depth": 11,
+    "party": 2,
+    "result": "lose",
+    "frames": 496,
+    "st": {
+     "dmg": 2285,
+     "taken": 5896,
+     "kills": 0,
+     "crits": 4
+    },
+    "rand": 596044711,
+    "hash": "311e40d93264dd71"
+   },
+   {
+    "i": 212,
+    "seed": 2484,
+    "kind": "boss",
+    "w": 2,
+    "depth": 4,
+    "party": 3,
+    "result": "lose",
+    "frames": 2264,
+    "st": {
+     "dmg": 7339,
+     "taken": 13430,
+     "kills": 1,
+     "crits": 7
+    },
+    "rand": 330666093,
+    "hash": "00ba3ba238f9b105"
+   },
+   {
+    "i": 213,
+    "seed": 2491,
+    "kind": "arena",
+    "w": 3,
+    "depth": 9,
+    "party": 4,
+    "result": "lose",
+    "frames": 1222,
+    "st": {
+     "dmg": 11199,
+     "taken": 11199,
+     "kills": 0,
+     "crits": 23
+    },
+    "rand": 557507171,
+    "hash": "642758f6456fe675"
+   },
+   {
+    "i": 214,
+    "seed": 2498,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 2,
+    "party": 5,
+    "result": "win",
+    "frames": 816,
+    "st": {
+     "dmg": 7411,
+     "taken": 1651,
+     "kills": 2,
+     "crits": 6
+    },
+    "rand": 3993677831,
+    "hash": "44974ab69a988c25"
+   },
+   {
+    "i": 215,
+    "seed": 2505,
+    "kind": "fight",
+    "w": 5,
+    "depth": 7,
+    "party": 1,
+    "result": "lose",
+    "frames": 423,
+    "st": {
+     "dmg": 1680,
+     "taken": 3029,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 242116078,
+    "hash": "caa7ffee478927cf"
+   },
+   {
+    "i": 216,
+    "seed": 2512,
+    "kind": "fight",
+    "w": 6,
+    "depth": 0,
+    "party": 2,
+    "result": "win",
+    "frames": 614,
+    "st": {
+     "dmg": 2433,
+     "taken": 713,
+     "kills": 1,
+     "crits": 5
+    },
+    "rand": 2989758144,
+    "hash": "f673fa0d68a9df9e"
+   },
+   {
+    "i": 217,
+    "seed": 2519,
+    "kind": "boss",
+    "w": 7,
+    "depth": 5,
+    "party": 3,
+    "result": "lose",
+    "frames": 1152,
+    "st": {
+     "dmg": 4699,
+     "taken": 10723,
+     "kills": 0,
+     "crits": 17
+    },
+    "rand": 1150874690,
+    "hash": "5901af839533971a"
+   },
+   {
+    "i": 218,
+    "seed": 2526,
+    "kind": "arena",
+    "w": 8,
+    "depth": 10,
+    "party": 4,
+    "result": "lose",
+    "frames": 678,
+    "st": {
+     "dmg": 3779,
+     "taken": 12205,
+     "kills": 0,
+     "crits": 5
+    },
+    "rand": 3930064689,
+    "hash": "09d841aaea7238dd"
+   },
+   {
+    "i": 219,
+    "seed": 2533,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 3,
+    "party": 5,
+    "result": "win",
+    "frames": 1623,
+    "st": {
+     "dmg": 15924,
+     "taken": 4827,
+     "kills": 2,
+     "crits": 39
+    },
+    "rand": 3405729236,
+    "hash": "c1a21b1a22b19ea5"
+   },
+   {
+    "i": 220,
+    "seed": 2540,
+    "kind": "fight",
+    "w": 0,
+    "depth": 8,
+    "party": 1,
+    "result": "win",
+    "frames": 1743,
+    "st": {
+     "dmg": 3656,
+     "taken": 5910,
+     "kills": 3,
+     "crits": 1
+    },
+    "rand": 41404114,
+    "hash": "9d6df01e8e1564f8"
+   },
+   {
+    "i": 221,
+    "seed": 2547,
+    "kind": "fight",
+    "w": 1,
+    "depth": 1,
+    "party": 2,
+    "result": "win",
+    "frames": 387,
+    "st": {
+     "dmg": 1511,
+     "taken": 339,
+     "kills": 1,
+     "crits": 2
+    },
+    "rand": 3156436779,
+    "hash": "473b142675aaa162"
+   },
+   {
+    "i": 222,
+    "seed": 2554,
+    "kind": "boss",
+    "w": 2,
+    "depth": 6,
+    "party": 3,
+    "result": "lose",
+    "frames": 2785,
+    "st": {
+     "dmg": 9110,
+     "taken": 15876,
+     "kills": 1,
+     "crits": 28
+    },
+    "rand": 2023701137,
+    "hash": "d1871e4008930097"
+   },
+   {
+    "i": 223,
+    "seed": 2561,
+    "kind": "arena",
+    "w": 3,
+    "depth": 11,
+    "party": 4,
+    "result": "lose",
+    "frames": 644,
+    "st": {
+     "dmg": 3922,
+     "taken": 10825,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 3620351130,
+    "hash": "8c1344f610f8058a"
+   },
+   {
+    "i": 224,
+    "seed": 2568,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 4,
+    "party": 5,
+    "result": "win",
+    "frames": 1062,
+    "st": {
+     "dmg": 9280,
+     "taken": 1827,
+     "kills": 2,
+     "crits": 14
+    },
+    "rand": 3132723819,
+    "hash": "04123af967736717"
+   },
+   {
+    "i": 225,
+    "seed": 2575,
+    "kind": "fight",
+    "w": 5,
+    "depth": 9,
+    "party": 1,
+    "result": "lose",
+    "frames": 181,
+    "st": {
+     "dmg": 313,
+     "taken": 2613,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 4255258959,
+    "hash": "28df73baeb26c9a9"
+   },
+   {
+    "i": 226,
+    "seed": 2582,
+    "kind": "fight",
+    "w": 6,
+    "depth": 2,
+    "party": 2,
+    "result": "win",
+    "frames": 758,
+    "st": {
+     "dmg": 3293,
+     "taken": 1392,
+     "kills": 1,
+     "crits": 2
+    },
+    "rand": 179676343,
+    "hash": "e0fc6f682abb6c90"
+   },
+   {
+    "i": 227,
+    "seed": 2589,
+    "kind": "boss",
+    "w": 7,
+    "depth": 7,
+    "party": 3,
+    "result": "lose",
+    "frames": 1227,
+    "st": {
+     "dmg": 6874,
+     "taken": 8934,
+     "kills": 0,
+     "crits": 32
+    },
+    "rand": 1529361733,
+    "hash": "bf49aa1d36db088d"
+   },
+   {
+    "i": 228,
+    "seed": 2596,
+    "kind": "arena",
+    "w": 8,
+    "depth": 0,
+    "party": 4,
+    "result": "lose",
+    "frames": 1781,
+    "st": {
+     "dmg": 14236,
+     "taken": 16159,
+     "kills": 0,
+     "crits": 17
+    },
+    "rand": 2129321450,
+    "hash": "1da11fe16f21c62a"
+   },
+   {
+    "i": 229,
+    "seed": 2603,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 5,
+    "party": 5,
+    "result": "win",
+    "frames": 1388,
+    "st": {
+     "dmg": 13432,
+     "taken": 10946,
+     "kills": 2,
+     "crits": 22
+    },
+    "rand": 2517472794,
+    "hash": "ec8dd591585d57bf"
+   },
+   {
+    "i": 230,
+    "seed": 2610,
+    "kind": "fight",
+    "w": 0,
+    "depth": 10,
+    "party": 1,
+    "result": "lose",
+    "frames": 361,
+    "st": {
+     "dmg": 859,
+     "taken": 3473,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 1887605293,
+    "hash": "769cfcd2640c13e4"
+   },
+   {
+    "i": 231,
+    "seed": 2617,
+    "kind": "fight",
+    "w": 1,
+    "depth": 3,
+    "party": 2,
+    "result": "win",
+    "frames": 837,
+    "st": {
+     "dmg": 3919,
+     "taken": 1634,
+     "kills": 2,
+     "crits": 7
+    },
+    "rand": 1269092818,
+    "hash": "de67b49fbf632699"
+   },
+   {
+    "i": 232,
+    "seed": 2624,
+    "kind": "boss",
+    "w": 2,
+    "depth": 8,
+    "party": 3,
+    "result": "lose",
+    "frames": 1846,
+    "st": {
+     "dmg": 8434,
+     "taken": 8811,
+     "kills": 0,
+     "crits": 13
+    },
+    "rand": 3578085440,
+    "hash": "93696c7351ca8ba1"
+   },
+   {
+    "i": 233,
+    "seed": 2631,
+    "kind": "arena",
+    "w": 3,
+    "depth": 1,
+    "party": 4,
+    "result": "win",
+    "frames": 934,
+    "st": {
+     "dmg": 6896,
+     "taken": 6458,
+     "kills": 3,
+     "crits": 9
+    },
+    "rand": 1252956151,
+    "hash": "c6b07128c9997734"
+   },
+   {
+    "i": 234,
+    "seed": 2638,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 6,
+    "party": 5,
+    "result": "win",
+    "frames": 1167,
+    "st": {
+     "dmg": 10765,
+     "taken": 3000,
+     "kills": 2,
+     "crits": 18
+    },
+    "rand": 2433616225,
+    "hash": "b8ed6b378fbd71f3"
+   },
+   {
+    "i": 235,
+    "seed": 2645,
+    "kind": "fight",
+    "w": 5,
+    "depth": 11,
+    "party": 1,
+    "result": "lose",
+    "frames": 189,
+    "st": {
+     "dmg": 222,
+     "taken": 3187,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 3560396868,
+    "hash": "d936cfbd909a81cd"
+   },
+   {
+    "i": 236,
+    "seed": 2652,
+    "kind": "fight",
+    "w": 6,
+    "depth": 4,
+    "party": 2,
+    "result": "win",
+    "frames": 1208,
+    "st": {
+     "dmg": 8274,
+     "taken": 4814,
+     "kills": 2,
+     "crits": 27
+    },
+    "rand": 4066110188,
+    "hash": "3170c2df2aeea0f1"
+   },
+   {
+    "i": 237,
+    "seed": 2659,
+    "kind": "boss",
+    "w": 7,
+    "depth": 9,
+    "party": 3,
+    "result": "lose",
+    "frames": 1127,
+    "st": {
+     "dmg": 5030,
+     "taken": 8026,
+     "kills": 0,
+     "crits": 11
+    },
+    "rand": 960880651,
+    "hash": "c868e8b3cfcf63af"
+   },
+   {
+    "i": 238,
+    "seed": 2666,
+    "kind": "arena",
+    "w": 8,
+    "depth": 2,
+    "party": 4,
+    "result": "lose",
+    "frames": 2880,
+    "st": {
+     "dmg": 22130,
+     "taken": 25969,
+     "kills": 1,
+     "crits": 47
+    },
+    "rand": 3072302794,
+    "hash": "a1967c4870c68080"
+   },
+   {
+    "i": 239,
+    "seed": 2673,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 7,
+    "party": 5,
+    "result": "lose",
+    "frames": 1187,
+    "st": {
+     "dmg": 7679,
+     "taken": 14324,
+     "kills": 0,
+     "crits": 13
+    },
+    "rand": 1851742545,
+    "hash": "a18bf2af79766d8e"
+   },
+   {
+    "i": 240,
+    "seed": 2680,
+    "kind": "fight",
+    "w": 0,
+    "depth": 0,
+    "party": 1,
+    "result": "win",
+    "frames": 547,
+    "st": {
+     "dmg": 978,
+     "taken": 847,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 2853384912,
+    "hash": "0497d165b2e4d4a2"
+   },
+   {
+    "i": 241,
+    "seed": 2687,
+    "kind": "fight",
+    "w": 1,
+    "depth": 5,
+    "party": 2,
+    "result": "win",
+    "frames": 1082,
+    "st": {
+     "dmg": 6875,
+     "taken": 1609,
+     "kills": 2,
+     "crits": 21
+    },
+    "rand": 1421205567,
+    "hash": "809cac7b93f6502a"
+   },
+   {
+    "i": 242,
+    "seed": 2694,
+    "kind": "boss",
+    "w": 2,
+    "depth": 10,
+    "party": 3,
+    "result": "lose",
+    "frames": 1501,
+    "st": {
+     "dmg": 5397,
+     "taken": 10838,
+     "kills": 0,
+     "crits": 4
+    },
+    "rand": 2146562212,
+    "hash": "d4474dfb78643068"
+   },
+   {
+    "i": 243,
+    "seed": 2701,
+    "kind": "arena",
+    "w": 3,
+    "depth": 3,
+    "party": 4,
+    "result": "win",
+    "frames": 1625,
+    "st": {
+     "dmg": 14883,
+     "taken": 5136,
+     "kills": 3,
+     "crits": 28
+    },
+    "rand": 143226972,
+    "hash": "5d5c42aa7db1bd44"
+   },
+   {
+    "i": 244,
+    "seed": 2708,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 8,
+    "party": 5,
+    "result": "lose",
+    "frames": 1804,
+    "st": {
+     "dmg": 11243,
+     "taken": 17702,
+     "kills": 1,
+     "crits": 11
+    },
+    "rand": 2125076059,
+    "hash": "a76c8bc4b8b16018"
+   },
+   {
+    "i": 245,
+    "seed": 2715,
+    "kind": "fight",
+    "w": 5,
+    "depth": 1,
+    "party": 1,
+    "result": "win",
+    "frames": 589,
+    "st": {
+     "dmg": 2138,
+     "taken": 1266,
+     "kills": 1,
+     "crits": 3
+    },
+    "rand": 2398220268,
+    "hash": "e63a582e65beda33"
+   },
+   {
+    "i": 246,
+    "seed": 2722,
+    "kind": "fight",
+    "w": 6,
+    "depth": 6,
+    "party": 2,
+    "result": "lose",
+    "frames": 1099,
+    "st": {
+     "dmg": 5372,
+     "taken": 6649,
+     "kills": 0,
+     "crits": 10
+    },
+    "rand": 2597292139,
+    "hash": "c19e1a406c6c2716"
+   },
+   {
+    "i": 247,
+    "seed": 2729,
+    "kind": "boss",
+    "w": 7,
+    "depth": 11,
+    "party": 3,
+    "result": "lose",
+    "frames": 846,
+    "st": {
+     "dmg": 2357,
+     "taken": 9434,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 2839733746,
+    "hash": "7e12be7654f49dfc"
+   },
+   {
+    "i": 248,
+    "seed": 2736,
+    "kind": "arena",
+    "w": 8,
+    "depth": 4,
+    "party": 4,
+    "result": "lose",
+    "frames": 1396,
+    "st": {
+     "dmg": 9793,
+     "taken": 16606,
+     "kills": 0,
+     "crits": 22
+    },
+    "rand": 2504805793,
+    "hash": "74d9318ba2c78bd1"
+   },
+   {
+    "i": 249,
+    "seed": 2743,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 9,
+    "party": 5,
+    "result": "lose",
+    "frames": 1095,
+    "st": {
+     "dmg": 7432,
+     "taken": 15704,
+     "kills": 0,
+     "crits": 10
+    },
+    "rand": 2303576497,
+    "hash": "92f5d3c6f91803ab"
+   },
+   {
+    "i": 250,
+    "seed": 2750,
+    "kind": "fight",
+    "w": 0,
+    "depth": 2,
+    "party": 1,
+    "result": "win",
+    "frames": 1129,
+    "st": {
+     "dmg": 1521,
+     "taken": 989,
+     "kills": 1,
+     "crits": 2
+    },
+    "rand": 3479473764,
+    "hash": "1350aa83859dea49"
+   },
+   {
+    "i": 251,
+    "seed": 2757,
+    "kind": "fight",
+    "w": 1,
+    "depth": 7,
+    "party": 2,
+    "result": "lose",
+    "frames": 782,
+    "st": {
+     "dmg": 5819,
+     "taken": 4444,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 56626306,
+    "hash": "a19ab264b33cd015"
+   },
+   {
+    "i": 252,
+    "seed": 2764,
+    "kind": "boss",
+    "w": 2,
+    "depth": 0,
+    "party": 3,
+    "result": "lose",
+    "frames": 2860,
+    "st": {
+     "dmg": 6905,
+     "taken": 18902,
+     "kills": 1,
+     "crits": 10
+    },
+    "rand": 908811889,
+    "hash": "10c0ac674ac1045d"
+   },
+   {
+    "i": 253,
+    "seed": 2771,
+    "kind": "arena",
+    "w": 3,
+    "depth": 5,
+    "party": 4,
+    "result": "lose",
+    "frames": 778,
+    "st": {
+     "dmg": 4705,
+     "taken": 11292,
+     "kills": 1,
+     "crits": 10
+    },
+    "rand": 1003266418,
+    "hash": "966c0469f6809423"
+   },
+   {
+    "i": 254,
+    "seed": 2778,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 10,
+    "party": 5,
+    "result": "win",
+    "frames": 1374,
+    "st": {
+     "dmg": 14559,
+     "taken": 4577,
+     "kills": 2,
+     "crits": 29
+    },
+    "rand": 1474170383,
+    "hash": "7d648d68f7982d7b"
+   },
+   {
+    "i": 255,
+    "seed": 2785,
+    "kind": "fight",
+    "w": 5,
+    "depth": 3,
+    "party": 1,
+    "result": "lose",
+    "frames": 640,
+    "st": {
+     "dmg": 3708,
+     "taken": 2197,
+     "kills": 0,
+     "crits": 13
+    },
+    "rand": 3294311802,
+    "hash": "681e84d92829f95e"
+   },
+   {
+    "i": 256,
+    "seed": 2792,
+    "kind": "fight",
+    "w": 6,
+    "depth": 8,
+    "party": 2,
+    "result": "lose",
+    "frames": 440,
+    "st": {
+     "dmg": 2342,
+     "taken": 5209,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 1368499599,
+    "hash": "88a10e1f24698567"
+   },
+   {
+    "i": 257,
+    "seed": 2799,
+    "kind": "boss",
+    "w": 7,
+    "depth": 1,
+    "party": 3,
+    "result": "lose",
+    "frames": 1858,
+    "st": {
+     "dmg": 5650,
+     "taken": 13106,
+     "kills": 1,
+     "crits": 13
+    },
+    "rand": 1277514631,
+    "hash": "d1cdaa213acaba14"
+   },
+   {
+    "i": 258,
+    "seed": 2806,
+    "kind": "arena",
+    "w": 8,
+    "depth": 6,
+    "party": 4,
+    "result": "lose",
+    "frames": 655,
+    "st": {
+     "dmg": 2683,
+     "taken": 11857,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 2033643253,
+    "hash": "1903cfecf4f1c107"
+   },
+   {
+    "i": 259,
+    "seed": 2813,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 11,
+    "party": 5,
+    "result": "lose",
+    "frames": 1628,
+    "st": {
+     "dmg": 14629,
+     "taken": 21135,
+     "kills": 1,
+     "crits": 27
+    },
+    "rand": 3005358974,
+    "hash": "7b97a43c84c11023"
+   },
+   {
+    "i": 260,
+    "seed": 2820,
+    "kind": "fight",
+    "w": 0,
+    "depth": 4,
+    "party": 1,
+    "result": "win",
+    "frames": 2663,
+    "st": {
+     "dmg": 3911,
+     "taken": 2287,
+     "kills": 2,
+     "crits": 2
+    },
+    "rand": 4246440171,
+    "hash": "741002a55996d324"
+   },
+   {
+    "i": 261,
+    "seed": 2827,
+    "kind": "fight",
+    "w": 1,
+    "depth": 9,
+    "party": 2,
+    "result": "lose",
+    "frames": 455,
+    "st": {
+     "dmg": 1272,
+     "taken": 5856,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 1936980786,
+    "hash": "d1fb00bb91cf81d9"
+   },
+   {
+    "i": 262,
+    "seed": 2834,
+    "kind": "boss",
+    "w": 2,
+    "depth": 2,
+    "party": 3,
+    "result": "lose",
+    "frames": 2381,
+    "st": {
+     "dmg": 7899,
+     "taken": 12767,
+     "kills": 1,
+     "crits": 26
+    },
+    "rand": 2704067032,
+    "hash": "abdc73bb4b3a71c3"
+   },
+   {
+    "i": 263,
+    "seed": 2841,
+    "kind": "arena",
+    "w": 3,
+    "depth": 7,
+    "party": 4,
+    "result": "lose",
+    "frames": 707,
+    "st": {
+     "dmg": 4484,
+     "taken": 13589,
+     "kills": 1,
+     "crits": 3
+    },
+    "rand": 2336625913,
+    "hash": "e12d2e26630bb8ad"
+   },
+   {
+    "i": 264,
+    "seed": 2848,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 0,
+    "party": 5,
+    "result": "win",
+    "frames": 545,
+    "st": {
+     "dmg": 5651,
+     "taken": 740,
+     "kills": 2,
+     "crits": 14
+    },
+    "rand": 2100328610,
+    "hash": "5e2a898eed12fe90"
+   },
+   {
+    "i": 265,
+    "seed": 2855,
+    "kind": "fight",
+    "w": 5,
+    "depth": 5,
+    "party": 1,
+    "result": "lose",
+    "frames": 477,
+    "st": {
+     "dmg": 2082,
+     "taken": 2358,
+     "kills": 0,
+     "crits": 5
+    },
+    "rand": 900011795,
+    "hash": "06ebace8222c2cbd"
+   },
+   {
+    "i": 266,
+    "seed": 2862,
+    "kind": "fight",
+    "w": 6,
+    "depth": 10,
+    "party": 2,
+    "result": "lose",
+    "frames": 423,
+    "st": {
+     "dmg": 1825,
+     "taken": 5399,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 940309393,
+    "hash": "63ce7a52da11a9eb"
+   },
+   {
+    "i": 267,
+    "seed": 2869,
+    "kind": "boss",
+    "w": 7,
+    "depth": 3,
+    "party": 3,
+    "result": "lose",
+    "frames": 1115,
+    "st": {
+     "dmg": 5062,
+     "taken": 9584,
+     "kills": 0,
+     "crits": 14
+    },
+    "rand": 559336961,
+    "hash": "d802b73e7b68b611"
+   },
+   {
+    "i": 268,
+    "seed": 2876,
+    "kind": "arena",
+    "w": 8,
+    "depth": 8,
+    "party": 4,
+    "result": "lose",
+    "frames": 436,
+    "st": {
+     "dmg": 1755,
+     "taken": 10724,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 2379737032,
+    "hash": "610515265b542c0c"
+   },
+   {
+    "i": 269,
+    "seed": 2883,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 1,
+    "party": 5,
+    "result": "win",
+    "frames": 1071,
+    "st": {
+     "dmg": 12461,
+     "taken": 3671,
+     "kills": 2,
+     "crits": 31
+    },
+    "rand": 4025484801,
+    "hash": "ad43ff3a00f28a65"
+   },
+   {
+    "i": 270,
+    "seed": 2890,
+    "kind": "fight",
+    "w": 0,
+    "depth": 6,
+    "party": 1,
+    "result": "lose",
+    "frames": 426,
+    "st": {
+     "dmg": 1921,
+     "taken": 2144,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 1186081818,
+    "hash": "d046c78ecdf63ac6"
+   },
+   {
+    "i": 271,
+    "seed": 2897,
+    "kind": "fight",
+    "w": 1,
+    "depth": 11,
+    "party": 2,
+    "result": "lose",
+    "frames": 1080,
+    "st": {
+     "dmg": 7830,
+     "taken": 8250,
+     "kills": 0,
+     "crits": 5
+    },
+    "rand": 2915168887,
+    "hash": "a1c6094fe395d021"
+   },
+   {
+    "i": 272,
+    "seed": 2904,
+    "kind": "boss",
+    "w": 2,
+    "depth": 4,
+    "party": 3,
+    "result": "lose",
+    "frames": 1831,
+    "st": {
+     "dmg": 6320,
+     "taken": 8960,
+     "kills": 1,
+     "crits": 6
+    },
+    "rand": 2940175135,
+    "hash": "f0db4ec01a7ccd54"
+   },
+   {
+    "i": 273,
+    "seed": 2911,
+    "kind": "arena",
+    "w": 3,
+    "depth": 9,
+    "party": 4,
+    "result": "win",
+    "frames": 2332,
+    "st": {
+     "dmg": 21528,
+     "taken": 17389,
+     "kills": 3,
+     "crits": 55
+    },
+    "rand": 1811375817,
+    "hash": "37616d48b6bd7e20"
+   },
+   {
+    "i": 274,
+    "seed": 2918,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 2,
+    "party": 5,
+    "result": "win",
+    "frames": 779,
+    "st": {
+     "dmg": 7427,
+     "taken": 1789,
+     "kills": 2,
+     "crits": 12
+    },
+    "rand": 868135898,
+    "hash": "8332b8709ee37d71"
+   },
+   {
+    "i": 275,
+    "seed": 2925,
+    "kind": "fight",
+    "w": 5,
+    "depth": 7,
+    "party": 1,
+    "result": "lose",
+    "frames": 363,
+    "st": {
+     "dmg": 998,
+     "taken": 3131,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 682128577,
+    "hash": "a3757f3b24be17a4"
+   },
+   {
+    "i": 276,
+    "seed": 2932,
+    "kind": "fight",
+    "w": 6,
+    "depth": 0,
+    "party": 2,
+    "result": "win",
+    "frames": 510,
+    "st": {
+     "dmg": 2496,
+     "taken": 272,
+     "kills": 1,
+     "crits": 8
+    },
+    "rand": 3171589764,
+    "hash": "c5f9236d7ac939d6"
+   },
+   {
+    "i": 277,
+    "seed": 2939,
+    "kind": "boss",
+    "w": 7,
+    "depth": 5,
+    "party": 3,
+    "result": "lose",
+    "frames": 869,
+    "st": {
+     "dmg": 3532,
+     "taken": 8107,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 3191246526,
+    "hash": "f211d1dfe4f61a3a"
+   },
+   {
+    "i": 278,
+    "seed": 2946,
+    "kind": "arena",
+    "w": 8,
+    "depth": 10,
+    "party": 4,
+    "result": "lose",
+    "frames": 903,
+    "st": {
+     "dmg": 6372,
+     "taken": 15722,
+     "kills": 0,
+     "crits": 27
+    },
+    "rand": 1049639099,
+    "hash": "af7c205103032bbd"
+   },
+   {
+    "i": 279,
+    "seed": 2953,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 3,
+    "party": 5,
+    "result": "win",
+    "frames": 1554,
+    "st": {
+     "dmg": 16039,
+     "taken": 6935,
+     "kills": 2,
+     "crits": 20
+    },
+    "rand": 36244318,
+    "hash": "97135558c1853be6"
+   },
+   {
+    "i": 280,
+    "seed": 2960,
+    "kind": "fight",
+    "w": 0,
+    "depth": 8,
+    "party": 1,
+    "result": "lose",
+    "frames": 534,
+    "st": {
+     "dmg": 1015,
+     "taken": 3256,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 1396975555,
+    "hash": "f46a83217e1568d1"
+   },
+   {
+    "i": 281,
+    "seed": 2967,
+    "kind": "fight",
+    "w": 1,
+    "depth": 1,
+    "party": 2,
+    "result": "win",
+    "frames": 321,
+    "st": {
+     "dmg": 1537,
+     "taken": 279,
+     "kills": 1,
+     "crits": 4
+    },
+    "rand": 1205479998,
+    "hash": "777b1091543abe77"
+   },
+   {
+    "i": 282,
+    "seed": 2974,
+    "kind": "boss",
+    "w": 2,
+    "depth": 6,
+    "party": 3,
+    "result": "lose",
+    "frames": 2127,
+    "st": {
+     "dmg": 7509,
+     "taken": 14834,
+     "kills": 1,
+     "crits": 8
+    },
+    "rand": 365217286,
+    "hash": "d41f2e7a866a02fd"
+   },
+   {
+    "i": 283,
+    "seed": 2981,
+    "kind": "arena",
+    "w": 3,
+    "depth": 11,
+    "party": 4,
+    "result": "lose",
+    "frames": 946,
+    "st": {
+     "dmg": 7666,
+     "taken": 11076,
+     "kills": 0,
+     "crits": 13
+    },
+    "rand": 1868466213,
+    "hash": "2acf8d25788f1113"
+   },
+   {
+    "i": 284,
+    "seed": 2988,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 4,
+    "party": 5,
+    "result": "win",
+    "frames": 1024,
+    "st": {
+     "dmg": 9169,
+     "taken": 2084,
+     "kills": 2,
+     "crits": 7
+    },
+    "rand": 3622439621,
+    "hash": "8cca4c3af40a5ebd"
+   },
+   {
+    "i": 285,
+    "seed": 2995,
+    "kind": "fight",
+    "w": 5,
+    "depth": 9,
+    "party": 1,
+    "result": "lose",
+    "frames": 199,
+    "st": {
+     "dmg": 534,
+     "taken": 3212,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 2283989369,
+    "hash": "42ef4c3999fb3623"
+   },
+   {
+    "i": 286,
+    "seed": 3002,
+    "kind": "fight",
+    "w": 6,
+    "depth": 2,
+    "party": 2,
+    "result": "win",
+    "frames": 834,
+    "st": {
+     "dmg": 3141,
+     "taken": 1250,
+     "kills": 1,
+     "crits": 1
+    },
+    "rand": 2969445825,
+    "hash": "545003b7c589b12e"
+   },
+   {
+    "i": 287,
+    "seed": 3009,
+    "kind": "boss",
+    "w": 7,
+    "depth": 7,
+    "party": 3,
+    "result": "lose",
+    "frames": 1028,
+    "st": {
+     "dmg": 4840,
+     "taken": 9491,
+     "kills": 0,
+     "crits": 23
+    },
+    "rand": 903601398,
+    "hash": "3b381cb4df4e81d6"
+   },
+   {
+    "i": 288,
+    "seed": 3016,
+    "kind": "arena",
+    "w": 8,
+    "depth": 0,
+    "party": 4,
+    "result": "lose",
+    "frames": 1481,
+    "st": {
+     "dmg": 11146,
+     "taken": 11885,
+     "kills": 0,
+     "crits": 20
+    },
+    "rand": 2901189764,
+    "hash": "c6b9df4a17b3be35"
+   },
+   {
+    "i": 289,
+    "seed": 3023,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 5,
+    "party": 5,
+    "result": "win",
+    "frames": 1491,
+    "st": {
+     "dmg": 14235,
+     "taken": 9416,
+     "kills": 2,
+     "crits": 26
+    },
+    "rand": 2022925650,
+    "hash": "eeb70482f87776a7"
+   },
+   {
+    "i": 290,
+    "seed": 3030,
+    "kind": "fight",
+    "w": 0,
+    "depth": 10,
+    "party": 1,
+    "result": "lose",
+    "frames": 578,
+    "st": {
+     "dmg": 1546,
+     "taken": 4648,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 3013074241,
+    "hash": "623bf6464d10cd0f"
+   },
+   {
+    "i": 291,
+    "seed": 3037,
+    "kind": "fight",
+    "w": 1,
+    "depth": 3,
+    "party": 2,
+    "result": "win",
+    "frames": 828,
+    "st": {
+     "dmg": 3644,
+     "taken": 1396,
+     "kills": 2,
+     "crits": 0
+    },
+    "rand": 1610613417,
+    "hash": "af76d868a58ea14d"
+   },
+   {
+    "i": 292,
+    "seed": 3044,
+    "kind": "boss",
+    "w": 2,
+    "depth": 8,
+    "party": 3,
+    "result": "lose",
+    "frames": 2440,
+    "st": {
+     "dmg": 9938,
+     "taken": 16141,
+     "kills": 1,
+     "crits": 26
+    },
+    "rand": 1129767602,
+    "hash": "d3e8bcbba95cbb51"
+   },
+   {
+    "i": 293,
+    "seed": 3051,
+    "kind": "arena",
+    "w": 3,
+    "depth": 1,
+    "party": 4,
+    "result": "win",
+    "frames": 791,
+    "st": {
+     "dmg": 6573,
+     "taken": 8026,
+     "kills": 3,
+     "crits": 9
+    },
+    "rand": 4149708539,
+    "hash": "502399ee5990cac6"
+   },
+   {
+    "i": 294,
+    "seed": 3058,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 6,
+    "party": 5,
+    "result": "win",
+    "frames": 1198,
+    "st": {
+     "dmg": 10969,
+     "taken": 2562,
+     "kills": 2,
+     "crits": 19
+    },
+    "rand": 1946645381,
+    "hash": "0b10ccb8f4a8171f"
+   },
+   {
+    "i": 295,
+    "seed": 3065,
+    "kind": "fight",
+    "w": 5,
+    "depth": 11,
+    "party": 1,
+    "result": "lose",
+    "frames": 156,
+    "st": {
+     "dmg": 335,
+     "taken": 2504,
+     "kills": 0,
+     "crits": 3
+    },
+    "rand": 3647067385,
+    "hash": "1c93d6f3f74f4d0f"
+   },
+   {
+    "i": 296,
+    "seed": 3072,
+    "kind": "fight",
+    "w": 6,
+    "depth": 4,
+    "party": 2,
+    "result": "lose",
+    "frames": 988,
+    "st": {
+     "dmg": 3759,
+     "taken": 4684,
+     "kills": 0,
+     "crits": 4
+    },
+    "rand": 792701079,
+    "hash": "0fc74930efc28b7e"
+   },
+   {
+    "i": 297,
+    "seed": 3079,
+    "kind": "boss",
+    "w": 7,
+    "depth": 9,
+    "party": 3,
+    "result": "lose",
+    "frames": 2218,
+    "st": {
+     "dmg": 9383,
+     "taken": 9085,
+     "kills": 0,
+     "crits": 32
+    },
+    "rand": 1030827808,
+    "hash": "c81d4465f0bba65b"
+   },
+   {
+    "i": 298,
+    "seed": 3086,
+    "kind": "arena",
+    "w": 8,
+    "depth": 2,
+    "party": 4,
+    "result": "lose",
+    "frames": 1055,
+    "st": {
+     "dmg": 6570,
+     "taken": 13213,
+     "kills": 0,
+     "crits": 9
+    },
+    "rand": 442361881,
+    "hash": "24bca67b16eb0b3d"
+   },
+   {
+    "i": 299,
+    "seed": 3093,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 7,
+    "party": 5,
+    "result": "win",
+    "frames": 1606,
+    "st": {
+     "dmg": 14703,
+     "taken": 14765,
+     "kills": 2,
+     "crits": 28
+    },
+    "rand": 1771078408,
+    "hash": "73758204f2ad0e23"
+   },
+   {
+    "i": 300,
+    "seed": 3100,
+    "kind": "fight",
+    "w": 0,
+    "depth": 0,
+    "party": 1,
+    "result": "win",
+    "frames": 511,
+    "st": {
+     "dmg": 935,
+     "taken": 912,
+     "kills": 1,
+     "crits": 1
+    },
+    "rand": 2601866047,
+    "hash": "a8497a89e133b8d3"
+   },
+   {
+    "i": 301,
+    "seed": 3107,
+    "kind": "fight",
+    "w": 1,
+    "depth": 5,
+    "party": 2,
+    "result": "win",
+    "frames": 1337,
+    "st": {
+     "dmg": 5807,
+     "taken": 3971,
+     "kills": 2,
+     "crits": 5
+    },
+    "rand": 3605199076,
+    "hash": "8505ae6350c84892"
+   },
+   {
+    "i": 302,
+    "seed": 3114,
+    "kind": "boss",
+    "w": 2,
+    "depth": 10,
+    "party": 3,
+    "result": "lose",
+    "frames": 1922,
+    "st": {
+     "dmg": 8940,
+     "taken": 9055,
+     "kills": 1,
+     "crits": 7
+    },
+    "rand": 1911369305,
+    "hash": "4d80553a1b270b37"
+   },
+   {
+    "i": 303,
+    "seed": 3121,
+    "kind": "arena",
+    "w": 3,
+    "depth": 3,
+    "party": 4,
+    "result": "win",
+    "frames": 1954,
+    "st": {
+     "dmg": 14889,
+     "taken": 7017,
+     "kills": 3,
+     "crits": 16
+    },
+    "rand": 2373264960,
+    "hash": "bb2ec6ee8ef1c5ba"
+   },
+   {
+    "i": 304,
+    "seed": 3128,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 8,
+    "party": 5,
+    "result": "win",
+    "frames": 1243,
+    "st": {
+     "dmg": 12530,
+     "taken": 4304,
+     "kills": 2,
+     "crits": 28
+    },
+    "rand": 3293328064,
+    "hash": "5b4c3fe94dd753db"
+   },
+   {
+    "i": 305,
+    "seed": 3135,
+    "kind": "fight",
+    "w": 5,
+    "depth": 1,
+    "party": 1,
+    "result": "win",
+    "frames": 721,
+    "st": {
+     "dmg": 1728,
+     "taken": 2026,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 1851225703,
+    "hash": "2886ccff661b272c"
+   },
+   {
+    "i": 306,
+    "seed": 3142,
+    "kind": "fight",
+    "w": 6,
+    "depth": 6,
+    "party": 2,
+    "result": "lose",
+    "frames": 724,
+    "st": {
+     "dmg": 3120,
+     "taken": 6579,
+     "kills": 0,
+     "crits": 10
+    },
+    "rand": 4159770396,
+    "hash": "d96ce3a3bb600ff6"
+   },
+   {
+    "i": 307,
+    "seed": 3149,
+    "kind": "boss",
+    "w": 7,
+    "depth": 11,
+    "party": 3,
+    "result": "lose",
+    "frames": 655,
+    "st": {
+     "dmg": 2763,
+     "taken": 8143,
+     "kills": 0,
+     "crits": 10
+    },
+    "rand": 1051210062,
+    "hash": "0d3657b73c5e9a33"
+   },
+   {
+    "i": 308,
+    "seed": 3156,
+    "kind": "arena",
+    "w": 8,
+    "depth": 4,
+    "party": 4,
+    "result": "lose",
+    "frames": 1426,
+    "st": {
+     "dmg": 9721,
+     "taken": 16006,
+     "kills": 0,
+     "crits": 13
+    },
+    "rand": 1721772570,
+    "hash": "bea1e269aee0daae"
+   },
+   {
+    "i": 309,
+    "seed": 3163,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 9,
+    "party": 5,
+    "result": "lose",
+    "frames": 1038,
+    "st": {
+     "dmg": 7065,
+     "taken": 14350,
+     "kills": 0,
+     "crits": 13
+    },
+    "rand": 4286668730,
+    "hash": "34d5ce0de4c844c9"
+   },
+   {
+    "i": 310,
+    "seed": 3170,
+    "kind": "fight",
+    "w": 0,
+    "depth": 2,
+    "party": 1,
+    "result": "win",
+    "frames": 809,
+    "st": {
+     "dmg": 1511,
+     "taken": 870,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 3054614705,
+    "hash": "3cec208a0f6a8bc7"
+   },
+   {
+    "i": 311,
+    "seed": 3177,
+    "kind": "fight",
+    "w": 1,
+    "depth": 7,
+    "party": 2,
+    "result": "win",
+    "frames": 2815,
+    "st": {
+     "dmg": 9764,
+     "taken": 5521,
+     "kills": 3,
+     "crits": 19
+    },
+    "rand": 2256945773,
+    "hash": "5ce77496bd9b519a"
+   },
+   {
+    "i": 312,
+    "seed": 3184,
+    "kind": "boss",
+    "w": 2,
+    "depth": 0,
+    "party": 3,
+    "result": "lose",
+    "frames": 1835,
+    "st": {
+     "dmg": 6054,
+     "taken": 11746,
+     "kills": 1,
+     "crits": 6
+    },
+    "rand": 1336813308,
+    "hash": "2b2a0f969de2b301"
+   },
+   {
+    "i": 313,
+    "seed": 3191,
+    "kind": "arena",
+    "w": 3,
+    "depth": 5,
+    "party": 4,
+    "result": "lose",
+    "frames": 1413,
+    "st": {
+     "dmg": 10202,
+     "taken": 14381,
+     "kills": 1,
+     "crits": 18
+    },
+    "rand": 3604801758,
+    "hash": "171186d464a25fdf"
+   },
+   {
+    "i": 314,
+    "seed": 3198,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 10,
+    "party": 5,
+    "result": "win",
+    "frames": 1575,
+    "st": {
+     "dmg": 14215,
+     "taken": 8906,
+     "kills": 2,
+     "crits": 16
+    },
+    "rand": 148646330,
+    "hash": "0f0a502722422ee8"
+   },
+   {
+    "i": 315,
+    "seed": 3205,
+    "kind": "fight",
+    "w": 5,
+    "depth": 3,
+    "party": 1,
+    "result": "lose",
+    "frames": 607,
+    "st": {
+     "dmg": 2016,
+     "taken": 2415,
+     "kills": 0,
+     "crits": 3
+    },
+    "rand": 2151861682,
+    "hash": "80b60aaf80387688"
+   },
+   {
+    "i": 316,
+    "seed": 3212,
+    "kind": "fight",
+    "w": 6,
+    "depth": 8,
+    "party": 2,
+    "result": "lose",
+    "frames": 860,
+    "st": {
+     "dmg": 3716,
+     "taken": 6558,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 2189415162,
+    "hash": "9db7058ae6633a7f"
+   },
+   {
+    "i": 317,
+    "seed": 3219,
+    "kind": "boss",
+    "w": 7,
+    "depth": 1,
+    "party": 3,
+    "result": "lose",
+    "frames": 1136,
+    "st": {
+     "dmg": 3753,
+     "taken": 10293,
+     "kills": 0,
+     "crits": 11
+    },
+    "rand": 3562157479,
+    "hash": "e7353d81d0596359"
+   },
+   {
+    "i": 318,
+    "seed": 3226,
+    "kind": "arena",
+    "w": 8,
+    "depth": 6,
+    "party": 4,
+    "result": "lose",
+    "frames": 1090,
+    "st": {
+     "dmg": 6369,
+     "taken": 13912,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 805696394,
+    "hash": "d3f25ff0b7d67f9e"
+   },
+   {
+    "i": 319,
+    "seed": 3233,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 11,
+    "party": 5,
+    "result": "lose",
+    "frames": 1089,
+    "st": {
+     "dmg": 7341,
+     "taken": 15200,
+     "kills": 0,
+     "crits": 14
+    },
+    "rand": 445951477,
+    "hash": "b46a61facde7e5be"
+   },
+   {
+    "i": 320,
+    "seed": 3240,
+    "kind": "fight",
+    "w": 0,
+    "depth": 4,
+    "party": 1,
+    "result": "win",
+    "frames": 2442,
+    "st": {
+     "dmg": 3722,
+     "taken": 4756,
+     "kills": 2,
+     "crits": 5
+    },
+    "rand": 1566657205,
+    "hash": "5146a11237dfc507"
+   },
+   {
+    "i": 321,
+    "seed": 3247,
+    "kind": "fight",
+    "w": 1,
+    "depth": 9,
+    "party": 2,
+    "result": "lose",
+    "frames": 503,
+    "st": {
+     "dmg": 3465,
+     "taken": 4541,
+     "kills": 0,
+     "crits": 4
+    },
+    "rand": 695124060,
+    "hash": "366e57e04c2d86bf"
+   },
+   {
+    "i": 322,
+    "seed": 3254,
+    "kind": "boss",
+    "w": 2,
+    "depth": 2,
+    "party": 3,
+    "result": "lose",
+    "frames": 3059,
+    "st": {
+     "dmg": 7424,
+     "taken": 15602,
+     "kills": 1,
+     "crits": 8
+    },
+    "rand": 83323706,
+    "hash": "28763d68d2bc6103"
+   },
+   {
+    "i": 323,
+    "seed": 3261,
+    "kind": "arena",
+    "w": 3,
+    "depth": 7,
+    "party": 4,
+    "result": "lose",
+    "frames": 849,
+    "st": {
+     "dmg": 5556,
+     "taken": 11416,
+     "kills": 1,
+     "crits": 8
+    },
+    "rand": 707791208,
+    "hash": "a20814ce51da88e3"
+   },
+   {
+    "i": 324,
+    "seed": 3268,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 0,
+    "party": 5,
+    "result": "win",
+    "frames": 609,
+    "st": {
+     "dmg": 5606,
+     "taken": 754,
+     "kills": 2,
+     "crits": 8
+    },
+    "rand": 1035142875,
+    "hash": "69813f9e28732923"
+   },
+   {
+    "i": 325,
+    "seed": 3275,
+    "kind": "fight",
+    "w": 5,
+    "depth": 5,
+    "party": 1,
+    "result": "lose",
+    "frames": 509,
+    "st": {
+     "dmg": 2534,
+     "taken": 2184,
+     "kills": 0,
+     "crits": 6
+    },
+    "rand": 1670637376,
+    "hash": "c6c47041bbddc5bd"
+   },
+   {
+    "i": 326,
+    "seed": 3282,
+    "kind": "fight",
+    "w": 6,
+    "depth": 10,
+    "party": 2,
+    "result": "lose",
+    "frames": 331,
+    "st": {
+     "dmg": 1900,
+     "taken": 5133,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 1535178689,
+    "hash": "ab8801f0d3c2901f"
+   },
+   {
+    "i": 327,
+    "seed": 3289,
+    "kind": "boss",
+    "w": 7,
+    "depth": 3,
+    "party": 3,
+    "result": "lose",
+    "frames": 1678,
+    "st": {
+     "dmg": 6139,
+     "taken": 10539,
+     "kills": 0,
+     "crits": 20
+    },
+    "rand": 1121156939,
+    "hash": "5bc87798e174564e"
+   },
+   {
+    "i": 328,
+    "seed": 3296,
+    "kind": "arena",
+    "w": 8,
+    "depth": 8,
+    "party": 4,
+    "result": "lose",
+    "frames": 602,
+    "st": {
+     "dmg": 2700,
+     "taken": 11445,
+     "kills": 0,
+     "crits": 6
+    },
+    "rand": 2708521122,
+    "hash": "cdb71bb745e8a405"
+   },
+   {
+    "i": 329,
+    "seed": 3303,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 1,
+    "party": 5,
+    "result": "win",
+    "frames": 1249,
+    "st": {
+     "dmg": 12501,
+     "taken": 3141,
+     "kills": 2,
+     "crits": 25
+    },
+    "rand": 3105750151,
+    "hash": "455c171c67984035"
+   },
+   {
+    "i": 330,
+    "seed": 3310,
+    "kind": "fight",
+    "w": 0,
+    "depth": 6,
+    "party": 1,
+    "result": "lose",
+    "frames": 2675,
+    "st": {
+     "dmg": 5244,
+     "taken": 4244,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 2656073715,
+    "hash": "951c612697003894"
+   },
+   {
+    "i": 331,
+    "seed": 3317,
+    "kind": "fight",
+    "w": 1,
+    "depth": 11,
+    "party": 2,
+    "result": "lose",
+    "frames": 311,
+    "st": {
+     "dmg": 582,
+     "taken": 5054,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 2463991479,
+    "hash": "34766ee961eecbbf"
+   },
+   {
+    "i": 332,
+    "seed": 3324,
+    "kind": "boss",
+    "w": 2,
+    "depth": 4,
+    "party": 3,
+    "result": "lose",
+    "frames": 2230,
+    "st": {
+     "dmg": 8241,
+     "taken": 13220,
+     "kills": 1,
+     "crits": 25
+    },
+    "rand": 2220427055,
+    "hash": "e45b6a0aea97fbec"
+   },
+   {
+    "i": 333,
+    "seed": 3331,
+    "kind": "arena",
+    "w": 3,
+    "depth": 9,
+    "party": 4,
+    "result": "lose",
+    "frames": 999,
+    "st": {
+     "dmg": 6913,
+     "taken": 12478,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 1372676266,
+    "hash": "6de524f452b67b3f"
+   },
+   {
+    "i": 334,
+    "seed": 3338,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 2,
+    "party": 5,
+    "result": "win",
+    "frames": 676,
+    "st": {
+     "dmg": 7436,
+     "taken": 1604,
+     "kills": 2,
+     "crits": 17
+    },
+    "rand": 1249367409,
+    "hash": "b64712ea60b372e9"
+   },
+   {
+    "i": 335,
+    "seed": 3345,
+    "kind": "fight",
+    "w": 5,
+    "depth": 7,
+    "party": 1,
+    "result": "lose",
+    "frames": 320,
+    "st": {
+     "dmg": 1110,
+     "taken": 2430,
+     "kills": 0,
+     "crits": 3
+    },
+    "rand": 1837316046,
+    "hash": "df58fdc42144f433"
+   },
+   {
+    "i": 336,
+    "seed": 3352,
+    "kind": "fight",
+    "w": 6,
+    "depth": 0,
+    "party": 2,
+    "result": "win",
+    "frames": 764,
+    "st": {
+     "dmg": 2472,
+     "taken": 819,
+     "kills": 1,
+     "crits": 1
+    },
+    "rand": 3286736069,
+    "hash": "752a201fca0e637d"
+   },
+   {
+    "i": 337,
+    "seed": 3359,
+    "kind": "boss",
+    "w": 7,
+    "depth": 5,
+    "party": 3,
+    "result": "lose",
+    "frames": 982,
+    "st": {
+     "dmg": 4040,
+     "taken": 9600,
+     "kills": 0,
+     "crits": 14
+    },
+    "rand": 591472063,
+    "hash": "9228d024d3926595"
+   },
+   {
+    "i": 338,
+    "seed": 3366,
+    "kind": "arena",
+    "w": 8,
+    "depth": 10,
+    "party": 4,
+    "result": "lose",
+    "frames": 480,
+    "st": {
+     "dmg": 2080,
+     "taken": 10708,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 208152915,
+    "hash": "19449a173fdda3b0"
+   },
+   {
+    "i": 339,
+    "seed": 3373,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 3,
+    "party": 5,
+    "result": "win",
+    "frames": 1349,
+    "st": {
+     "dmg": 16014,
+     "taken": 5416,
+     "kills": 2,
+     "crits": 38
+    },
+    "rand": 3103920809,
+    "hash": "2d000a400993597d"
+   },
+   {
+    "i": 340,
+    "seed": 3380,
+    "kind": "fight",
+    "w": 0,
+    "depth": 8,
+    "party": 1,
+    "result": "lose",
+    "frames": 377,
+    "st": {
+     "dmg": 1710,
+     "taken": 2131,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 1917911263,
+    "hash": "82bc62c170973dd6"
+   },
+   {
+    "i": 341,
+    "seed": 3387,
+    "kind": "fight",
+    "w": 1,
+    "depth": 1,
+    "party": 2,
+    "result": "win",
+    "frames": 510,
+    "st": {
+     "dmg": 1513,
+     "taken": 207,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 1622763597,
+    "hash": "080313ffc0c402a3"
+   },
+   {
+    "i": 342,
+    "seed": 3394,
+    "kind": "boss",
+    "w": 2,
+    "depth": 6,
+    "party": 3,
+    "result": "lose",
+    "frames": 1915,
+    "st": {
+     "dmg": 6607,
+     "taken": 9217,
+     "kills": 1,
+     "crits": 7
+    },
+    "rand": 1776497570,
+    "hash": "5fd36428fb2647a7"
+   },
+   {
+    "i": 343,
+    "seed": 3401,
+    "kind": "arena",
+    "w": 3,
+    "depth": 11,
+    "party": 4,
+    "result": "lose",
+    "frames": 1928,
+    "st": {
+     "dmg": 17253,
+     "taken": 19176,
+     "kills": 0,
+     "crits": 36
+    },
+    "rand": 382269100,
+    "hash": "5ba529ad666794cd"
+   },
+   {
+    "i": 344,
+    "seed": 3408,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 4,
+    "party": 5,
+    "result": "win",
+    "frames": 965,
+    "st": {
+     "dmg": 9240,
+     "taken": 1891,
+     "kills": 2,
+     "crits": 10
+    },
+    "rand": 1456930349,
+    "hash": "c9b05ef926612cf3"
+   },
+   {
+    "i": 345,
+    "seed": 3415,
+    "kind": "fight",
+    "w": 5,
+    "depth": 9,
+    "party": 1,
+    "result": "lose",
+    "frames": 214,
+    "st": {
+     "dmg": 327,
+     "taken": 2855,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 1370329634,
+    "hash": "10f6118c7654d531"
+   },
+   {
+    "i": 346,
+    "seed": 3422,
+    "kind": "fight",
+    "w": 6,
+    "depth": 2,
+    "party": 2,
+    "result": "win",
+    "frames": 646,
+    "st": {
+     "dmg": 3279,
+     "taken": 453,
+     "kills": 1,
+     "crits": 7
+    },
+    "rand": 3182497351,
+    "hash": "033899ec7cb7f00f"
+   },
+   {
+    "i": 347,
+    "seed": 3429,
+    "kind": "boss",
+    "w": 7,
+    "depth": 7,
+    "party": 3,
+    "result": "lose",
+    "frames": 700,
+    "st": {
+     "dmg": 2166,
+     "taken": 8937,
+     "kills": 0,
+     "crits": 8
+    },
+    "rand": 1501214812,
+    "hash": "a44f2654da256e1f"
+   },
+   {
+    "i": 348,
+    "seed": 3436,
+    "kind": "arena",
+    "w": 8,
+    "depth": 0,
+    "party": 4,
+    "result": "win",
+    "frames": 2317,
+    "st": {
+     "dmg": 19456,
+     "taken": 11200,
+     "kills": 3,
+     "crits": 53
+    },
+    "rand": 4132070858,
+    "hash": "0705686a97e4f1ef"
+   },
+   {
+    "i": 349,
+    "seed": 3443,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 5,
+    "party": 5,
+    "result": "win",
+    "frames": 1705,
+    "st": {
+     "dmg": 14806,
+     "taken": 14814,
+     "kills": 2,
+     "crits": 18
+    },
+    "rand": 527720227,
+    "hash": "4d35e14fa41b22bd"
+   },
+   {
+    "i": 350,
+    "seed": 3450,
+    "kind": "fight",
+    "w": 0,
+    "depth": 10,
+    "party": 1,
+    "result": "lose",
+    "frames": 387,
+    "st": {
+     "dmg": 600,
+     "taken": 2656,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 3000666179,
+    "hash": "a6a7aba7cb082381"
+   },
+   {
+    "i": 351,
+    "seed": 3457,
+    "kind": "fight",
+    "w": 1,
+    "depth": 3,
+    "party": 2,
+    "result": "win",
+    "frames": 653,
+    "st": {
+     "dmg": 3819,
+     "taken": 1303,
+     "kills": 2,
+     "crits": 6
+    },
+    "rand": 2334279813,
+    "hash": "fccc41b72f877561"
+   },
+   {
+    "i": 352,
+    "seed": 3464,
+    "kind": "boss",
+    "w": 2,
+    "depth": 8,
+    "party": 3,
+    "result": "lose",
+    "frames": 1949,
+    "st": {
+     "dmg": 7500,
+     "taken": 11787,
+     "kills": 1,
+     "crits": 11
+    },
+    "rand": 382018,
+    "hash": "f6c7e4f7b5fff13d"
+   },
+   {
+    "i": 353,
+    "seed": 3471,
+    "kind": "arena",
+    "w": 3,
+    "depth": 1,
+    "party": 4,
+    "result": "win",
+    "frames": 581,
+    "st": {
+     "dmg": 6037,
+     "taken": 4975,
+     "kills": 3,
+     "crits": 16
+    },
+    "rand": 3239707628,
+    "hash": "161f54761f35cbee"
+   },
+   {
+    "i": 354,
+    "seed": 3478,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 6,
+    "party": 5,
+    "result": "win",
+    "frames": 1222,
+    "st": {
+     "dmg": 10957,
+     "taken": 3924,
+     "kills": 2,
+     "crits": 11
+    },
+    "rand": 2036646695,
+    "hash": "4a17f9e34df85ebb"
+   },
+   {
+    "i": 355,
+    "seed": 3485,
+    "kind": "fight",
+    "w": 5,
+    "depth": 11,
+    "party": 1,
+    "result": "lose",
+    "frames": 344,
+    "st": {
+     "dmg": 1746,
+     "taken": 3131,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 3424024308,
+    "hash": "455c6052e54bddcd"
+   },
+   {
+    "i": 356,
+    "seed": 3492,
+    "kind": "fight",
+    "w": 6,
+    "depth": 4,
+    "party": 2,
+    "result": "win",
+    "frames": 2013,
+    "st": {
+     "dmg": 7957,
+     "taken": 6347,
+     "kills": 2,
+     "crits": 8
+    },
+    "rand": 1289337127,
+    "hash": "21ad9e3ae50e68bf"
+   },
+   {
+    "i": 357,
+    "seed": 3499,
+    "kind": "boss",
+    "w": 7,
+    "depth": 9,
+    "party": 3,
+    "result": "lose",
+    "frames": 1788,
+    "st": {
+     "dmg": 7555,
+     "taken": 11748,
+     "kills": 0,
+     "crits": 30
+    },
+    "rand": 126573785,
+    "hash": "245fbf3bcfd2995c"
+   },
+   {
+    "i": 358,
+    "seed": 3506,
+    "kind": "arena",
+    "w": 8,
+    "depth": 2,
+    "party": 4,
+    "result": "lose",
+    "frames": 1240,
+    "st": {
+     "dmg": 9033,
+     "taken": 12109,
+     "kills": 0,
+     "crits": 12
+    },
+    "rand": 2881205472,
+    "hash": "dd5ab31c7d21fbe8"
+   },
+   {
+    "i": 359,
+    "seed": 3513,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 7,
+    "party": 5,
+    "result": "win",
+    "frames": 1899,
+    "st": {
+     "dmg": 18057,
+     "taken": 17042,
+     "kills": 2,
+     "crits": 46
+    },
+    "rand": 3498664505,
+    "hash": "0d16a155d05102d1"
+   },
+   {
+    "i": 360,
+    "seed": 3520,
+    "kind": "fight",
+    "w": 0,
+    "depth": 0,
+    "party": 1,
+    "result": "win",
+    "frames": 713,
+    "st": {
+     "dmg": 854,
+     "taken": 665,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 1306975221,
+    "hash": "6ca41dd854da49a8"
+   },
+   {
+    "i": 361,
+    "seed": 3527,
+    "kind": "fight",
+    "w": 1,
+    "depth": 5,
+    "party": 2,
+    "result": "win",
+    "frames": 1156,
+    "st": {
+     "dmg": 5607,
+     "taken": 3257,
+     "kills": 2,
+     "crits": 3
+    },
+    "rand": 2257274150,
+    "hash": "03c8f66ac126b310"
+   },
+   {
+    "i": 362,
+    "seed": 3534,
+    "kind": "boss",
+    "w": 2,
+    "depth": 10,
+    "party": 3,
+    "result": "lose",
+    "frames": 2561,
+    "st": {
+     "dmg": 9707,
+     "taken": 15696,
+     "kills": 1,
+     "crits": 28
+    },
+    "rand": 3422245472,
+    "hash": "79b007411215d31a"
+   },
+   {
+    "i": 363,
+    "seed": 3541,
+    "kind": "arena",
+    "w": 3,
+    "depth": 3,
+    "party": 4,
+    "result": "lose",
+    "frames": 1174,
+    "st": {
+     "dmg": 7947,
+     "taken": 11066,
+     "kills": 0,
+     "crits": 18
+    },
+    "rand": 132648742,
+    "hash": "c9ff7beef31cd2c2"
+   },
+   {
+    "i": 364,
+    "seed": 3548,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 8,
+    "party": 5,
+    "result": "win",
+    "frames": 1098,
+    "st": {
+     "dmg": 10320,
+     "taken": 3876,
+     "kills": 2,
+     "crits": 23
+    },
+    "rand": 2243622956,
+    "hash": "4b01be612a9bf148"
+   },
+   {
+    "i": 365,
+    "seed": 3555,
+    "kind": "fight",
+    "w": 5,
+    "depth": 1,
+    "party": 1,
+    "result": "win",
+    "frames": 480,
+    "st": {
+     "dmg": 2076,
+     "taken": 1096,
+     "kills": 1,
+     "crits": 6
+    },
+    "rand": 2929148787,
+    "hash": "b2263feb4a24794f"
+   },
+   {
+    "i": 366,
+    "seed": 3562,
+    "kind": "fight",
+    "w": 6,
+    "depth": 6,
+    "party": 2,
+    "result": "lose",
+    "frames": 610,
+    "st": {
+     "dmg": 2348,
+     "taken": 4748,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 1573647148,
+    "hash": "781743f49c1478b8"
+   },
+   {
+    "i": 367,
+    "seed": 3569,
+    "kind": "boss",
+    "w": 7,
+    "depth": 11,
+    "party": 3,
+    "result": "lose",
+    "frames": 1029,
+    "st": {
+     "dmg": 3872,
+     "taken": 9194,
+     "kills": 0,
+     "crits": 16
+    },
+    "rand": 2454257992,
+    "hash": "35dade9c90bbedaa"
+   },
+   {
+    "i": 368,
+    "seed": 3576,
+    "kind": "arena",
+    "w": 8,
+    "depth": 4,
+    "party": 4,
+    "result": "lose",
+    "frames": 775,
+    "st": {
+     "dmg": 5092,
+     "taken": 11584,
+     "kills": 0,
+     "crits": 4
+    },
+    "rand": 3440350357,
+    "hash": "c8dc0557d8dd2c7d"
+   },
+   {
+    "i": 369,
+    "seed": 3583,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 9,
+    "party": 5,
+    "result": "lose",
+    "frames": 1990,
+    "st": {
+     "dmg": 14305,
+     "taken": 19386,
+     "kills": 1,
+     "crits": 28
+    },
+    "rand": 3236238193,
+    "hash": "9f9a2c5361df5c56"
+   },
+   {
+    "i": 370,
+    "seed": 3590,
+    "kind": "fight",
+    "w": 0,
+    "depth": 2,
+    "party": 1,
+    "result": "win",
+    "frames": 876,
+    "st": {
+     "dmg": 1529,
+     "taken": 712,
+     "kills": 1,
+     "crits": 1
+    },
+    "rand": 158777863,
+    "hash": "61e164605bd43ab7"
+   },
+   {
+    "i": 371,
+    "seed": 3597,
+    "kind": "fight",
+    "w": 1,
+    "depth": 7,
+    "party": 2,
+    "result": "lose",
+    "frames": 1751,
+    "st": {
+     "dmg": 7979,
+     "taken": 9672,
+     "kills": 1,
+     "crits": 5
+    },
+    "rand": 3933655209,
+    "hash": "3b4124dfd168fff5"
+   },
+   {
+    "i": 372,
+    "seed": 3604,
+    "kind": "boss",
+    "w": 2,
+    "depth": 0,
+    "party": 3,
+    "result": "lose",
+    "frames": 1967,
+    "st": {
+     "dmg": 6205,
+     "taken": 8689,
+     "kills": 1,
+     "crits": 10
+    },
+    "rand": 682249158,
+    "hash": "792742fe6e44408c"
+   },
+   {
+    "i": 373,
+    "seed": 3611,
+    "kind": "arena",
+    "w": 3,
+    "depth": 5,
+    "party": 4,
+    "result": "win",
+    "frames": 1521,
+    "st": {
+     "dmg": 12699,
+     "taken": 13632,
+     "kills": 3,
+     "crits": 15
+    },
+    "rand": 1780484638,
+    "hash": "9e22fda0933ca7f9"
+   },
+   {
+    "i": 374,
+    "seed": 3618,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 10,
+    "party": 5,
+    "result": "win",
+    "frames": 1488,
+    "st": {
+     "dmg": 14303,
+     "taken": 5801,
+     "kills": 2,
+     "crits": 22
+    },
+    "rand": 3505723606,
+    "hash": "65fd58c9e716e7f7"
+   },
+   {
+    "i": 375,
+    "seed": 3625,
+    "kind": "fight",
+    "w": 5,
+    "depth": 3,
+    "party": 1,
+    "result": "lose",
+    "frames": 775,
+    "st": {
+     "dmg": 2313,
+     "taken": 3114,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 950302547,
+    "hash": "5db38e47f24419a3"
+   },
+   {
+    "i": 376,
+    "seed": 3632,
+    "kind": "fight",
+    "w": 6,
+    "depth": 8,
+    "party": 2,
+    "result": "lose",
+    "frames": 714,
+    "st": {
+     "dmg": 3154,
+     "taken": 7083,
+     "kills": 0,
+     "crits": 8
+    },
+    "rand": 4066439195,
+    "hash": "520e4e322840723a"
+   },
+   {
+    "i": 377,
+    "seed": 3639,
+    "kind": "boss",
+    "w": 7,
+    "depth": 1,
+    "party": 3,
+    "result": "lose",
+    "frames": 892,
+    "st": {
+     "dmg": 3609,
+     "taken": 8508,
+     "kills": 0,
+     "crits": 11
+    },
+    "rand": 3775209005,
+    "hash": "3233e97d97b9a5e0"
+   },
+   {
+    "i": 378,
+    "seed": 3646,
+    "kind": "arena",
+    "w": 8,
+    "depth": 6,
+    "party": 4,
+    "result": "lose",
+    "frames": 1169,
+    "st": {
+     "dmg": 7532,
+     "taken": 16684,
+     "kills": 0,
+     "crits": 22
+    },
+    "rand": 2512711030,
+    "hash": "82cbe3360b2be619"
+   },
+   {
+    "i": 379,
+    "seed": 3653,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 11,
+    "party": 5,
+    "result": "lose",
+    "frames": 865,
+    "st": {
+     "dmg": 5278,
+     "taken": 14202,
+     "kills": 0,
+     "crits": 9
+    },
+    "rand": 3184844298,
+    "hash": "4b8867921d806459"
+   },
+   {
+    "i": 380,
+    "seed": 3660,
+    "kind": "fight",
+    "w": 0,
+    "depth": 4,
+    "party": 1,
+    "result": "lose",
+    "frames": 869,
+    "st": {
+     "dmg": 2083,
+     "taken": 2225,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 2029726631,
+    "hash": "c3725f9ad7e9ab5a"
+   },
+   {
+    "i": 381,
+    "seed": 3667,
+    "kind": "fight",
+    "w": 1,
+    "depth": 9,
+    "party": 2,
+    "result": "lose",
+    "frames": 1577,
+    "st": {
+     "dmg": 9738,
+     "taken": 6466,
+     "kills": 1,
+     "crits": 20
+    },
+    "rand": 2635691888,
+    "hash": "205f028a102b26b1"
+   },
+   {
+    "i": 382,
+    "seed": 3674,
+    "kind": "boss",
+    "w": 2,
+    "depth": 2,
+    "party": 3,
+    "result": "lose",
+    "frames": 2081,
+    "st": {
+     "dmg": 6295,
+     "taken": 11406,
+     "kills": 1,
+     "crits": 10
+    },
+    "rand": 3706555563,
+    "hash": "c9bd0aabccfaf611"
+   },
+   {
+    "i": 383,
+    "seed": 3681,
+    "kind": "arena",
+    "w": 3,
+    "depth": 7,
+    "party": 4,
+    "result": "win",
+    "frames": 858,
+    "st": {
+     "dmg": 7711,
+     "taken": 11405,
+     "kills": 3,
+     "crits": 14
+    },
+    "rand": 2368433338,
+    "hash": "455cbeeb84a5ec16"
+   },
+   {
+    "i": 384,
+    "seed": 3688,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 0,
+    "party": 5,
+    "result": "win",
+    "frames": 725,
+    "st": {
+     "dmg": 5534,
+     "taken": 1448,
+     "kills": 2,
+     "crits": 6
+    },
+    "rand": 1333621765,
+    "hash": "e8fb6462a31afdc4"
+   },
+   {
+    "i": 385,
+    "seed": 3695,
+    "kind": "fight",
+    "w": 5,
+    "depth": 5,
+    "party": 1,
+    "result": "lose",
+    "frames": 482,
+    "st": {
+     "dmg": 1667,
+     "taken": 2401,
+     "kills": 0,
+     "crits": 6
+    },
+    "rand": 1403965911,
+    "hash": "8a8f94c074cc639d"
+   },
+   {
+    "i": 386,
+    "seed": 3702,
+    "kind": "fight",
+    "w": 6,
+    "depth": 10,
+    "party": 2,
+    "result": "lose",
+    "frames": 488,
+    "st": {
+     "dmg": 1957,
+     "taken": 6664,
+     "kills": 0,
+     "crits": 4
+    },
+    "rand": 3376737313,
+    "hash": "d9648e7ade2cec57"
+   },
+   {
+    "i": 387,
+    "seed": 3709,
+    "kind": "boss",
+    "w": 7,
+    "depth": 3,
+    "party": 3,
+    "result": "lose",
+    "frames": 854,
+    "st": {
+     "dmg": 2767,
+     "taken": 9786,
+     "kills": 0,
+     "crits": 10
+    },
+    "rand": 2353350141,
+    "hash": "2e05230a75557458"
+   },
+   {
+    "i": 388,
+    "seed": 3716,
+    "kind": "arena",
+    "w": 8,
+    "depth": 8,
+    "party": 4,
+    "result": "lose",
+    "frames": 971,
+    "st": {
+     "dmg": 5503,
+     "taken": 14287,
+     "kills": 0,
+     "crits": 6
+    },
+    "rand": 3110324094,
+    "hash": "88f65fd3598e9a18"
+   },
+   {
+    "i": 389,
+    "seed": 3723,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 1,
+    "party": 5,
+    "result": "win",
+    "frames": 1492,
+    "st": {
+     "dmg": 12232,
+     "taken": 6543,
+     "kills": 2,
+     "crits": 22
+    },
+    "rand": 4153626687,
+    "hash": "4720c80cf9ced674"
+   },
+   {
+    "i": 390,
+    "seed": 3730,
+    "kind": "fight",
+    "w": 0,
+    "depth": 6,
+    "party": 1,
+    "result": "lose",
+    "frames": 1204,
+    "st": {
+     "dmg": 2085,
+     "taken": 7703,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 1222721425,
+    "hash": "41630e1b12ee64c0"
+   },
+   {
+    "i": 391,
+    "seed": 3737,
+    "kind": "fight",
+    "w": 1,
+    "depth": 11,
+    "party": 2,
+    "result": "lose",
+    "frames": 449,
+    "st": {
+     "dmg": 3088,
+     "taken": 4625,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 4174336912,
+    "hash": "67d3b432a01ed151"
+   },
+   {
+    "i": 392,
+    "seed": 3744,
+    "kind": "boss",
+    "w": 2,
+    "depth": 4,
+    "party": 3,
+    "result": "lose",
+    "frames": 2647,
+    "st": {
+     "dmg": 7438,
+     "taken": 16161,
+     "kills": 1,
+     "crits": 6
+    },
+    "rand": 6387838,
+    "hash": "ed7d953963e36ae7"
+   },
+   {
+    "i": 393,
+    "seed": 3751,
+    "kind": "arena",
+    "w": 3,
+    "depth": 9,
+    "party": 4,
+    "result": "lose",
+    "frames": 986,
+    "st": {
+     "dmg": 7094,
+     "taken": 11556,
+     "kills": 0,
+     "crits": 11
+    },
+    "rand": 3178182802,
+    "hash": "4ad799837cf70085"
+   },
+   {
+    "i": 394,
+    "seed": 3758,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 2,
+    "party": 5,
+    "result": "win",
+    "frames": 777,
+    "st": {
+     "dmg": 7424,
+     "taken": 1298,
+     "kills": 2,
+     "crits": 17
+    },
+    "rand": 3805186297,
+    "hash": "00130c2a165e4573"
+   },
+   {
+    "i": 395,
+    "seed": 3765,
+    "kind": "fight",
+    "w": 5,
+    "depth": 7,
+    "party": 1,
+    "result": "lose",
+    "frames": 339,
+    "st": {
+     "dmg": 1282,
+     "taken": 2157,
+     "kills": 0,
+     "crits": 3
+    },
+    "rand": 2758552921,
+    "hash": "0201c6c92e1460fa"
+   },
+   {
+    "i": 396,
+    "seed": 3772,
+    "kind": "fight",
+    "w": 6,
+    "depth": 0,
+    "party": 2,
+    "result": "win",
+    "frames": 494,
+    "st": {
+     "dmg": 2497,
+     "taken": 746,
+     "kills": 1,
+     "crits": 3
+    },
+    "rand": 2118226252,
+    "hash": "e750f5ea846f0704"
+   },
+   {
+    "i": 397,
+    "seed": 3779,
+    "kind": "boss",
+    "w": 7,
+    "depth": 5,
+    "party": 3,
+    "result": "lose",
+    "frames": 1951,
+    "st": {
+     "dmg": 8052,
+     "taken": 12162,
+     "kills": 1,
+     "crits": 27
+    },
+    "rand": 208083953,
+    "hash": "fe6abd41c3eeb4d9"
+   },
+   {
+    "i": 398,
+    "seed": 3786,
+    "kind": "arena",
+    "w": 8,
+    "depth": 10,
+    "party": 4,
+    "result": "lose",
+    "frames": 480,
+    "st": {
+     "dmg": 1928,
+     "taken": 12121,
+     "kills": 0,
+     "crits": 5
+    },
+    "rand": 3851886858,
+    "hash": "5dd6367171c3f0c4"
+   },
+   {
+    "i": 399,
+    "seed": 3793,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 3,
+    "party": 5,
+    "result": "win",
+    "frames": 1382,
+    "st": {
+     "dmg": 16039,
+     "taken": 4823,
+     "kills": 2,
+     "crits": 41
+    },
+    "rand": 3576654599,
+    "hash": "6f7830bd216a6d9c"
+   },
+   {
+    "i": 400,
+    "seed": 3800,
+    "kind": "fight",
+    "w": 0,
+    "depth": 8,
+    "party": 1,
+    "result": "lose",
+    "frames": 1116,
+    "st": {
+     "dmg": 2338,
+     "taken": 4294,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 2274843114,
+    "hash": "c7dd1315267cb918"
+   },
+   {
+    "i": 401,
+    "seed": 3807,
+    "kind": "fight",
+    "w": 1,
+    "depth": 1,
+    "party": 2,
+    "result": "win",
+    "frames": 320,
+    "st": {
+     "dmg": 1499,
+     "taken": 342,
+     "kills": 1,
+     "crits": 2
+    },
+    "rand": 1840647305,
+    "hash": "becb4c1253c8a5d4"
+   },
+   {
+    "i": 402,
+    "seed": 3814,
+    "kind": "boss",
+    "w": 2,
+    "depth": 6,
+    "party": 3,
+    "result": "lose",
+    "frames": 2366,
+    "st": {
+     "dmg": 8791,
+     "taken": 13936,
+     "kills": 1,
+     "crits": 21
+    },
+    "rand": 2789823403,
+    "hash": "8814402c1e40c1be"
+   },
+   {
+    "i": 403,
+    "seed": 3821,
+    "kind": "arena",
+    "w": 3,
+    "depth": 11,
+    "party": 4,
+    "result": "lose",
+    "frames": 838,
+    "st": {
+     "dmg": 5333,
+     "taken": 12843,
+     "kills": 0,
+     "crits": 5
+    },
+    "rand": 3751237554,
+    "hash": "eb1ba13299d67fc2"
+   },
+   {
+    "i": 404,
+    "seed": 3828,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 4,
+    "party": 5,
+    "result": "win",
+    "frames": 842,
+    "st": {
+     "dmg": 9151,
+     "taken": 1808,
+     "kills": 2,
+     "crits": 17
+    },
+    "rand": 1367844581,
+    "hash": "1086ff52566cb573"
+   },
+   {
+    "i": 405,
+    "seed": 3835,
+    "kind": "fight",
+    "w": 5,
+    "depth": 9,
+    "party": 1,
+    "result": "lose",
+    "frames": 208,
+    "st": {
+     "dmg": 263,
+     "taken": 2482,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 3950706834,
+    "hash": "0f27af2963e63510"
+   },
+   {
+    "i": 406,
+    "seed": 3842,
+    "kind": "fight",
+    "w": 6,
+    "depth": 2,
+    "party": 2,
+    "result": "win",
+    "frames": 1044,
+    "st": {
+     "dmg": 3270,
+     "taken": 1494,
+     "kills": 1,
+     "crits": 3
+    },
+    "rand": 1396976437,
+    "hash": "9c1fb3bfac7e324d"
+   },
+   {
+    "i": 407,
+    "seed": 3849,
+    "kind": "boss",
+    "w": 7,
+    "depth": 7,
+    "party": 3,
+    "result": "lose",
+    "frames": 975,
+    "st": {
+     "dmg": 3870,
+     "taken": 10291,
+     "kills": 0,
+     "crits": 11
+    },
+    "rand": 2821838148,
+    "hash": "8568fa56b047b06c"
+   },
+   {
+    "i": 408,
+    "seed": 3856,
+    "kind": "arena",
+    "w": 8,
+    "depth": 0,
+    "party": 4,
+    "result": "lose",
+    "frames": 1133,
+    "st": {
+     "dmg": 5968,
+     "taken": 11668,
+     "kills": 0,
+     "crits": 12
+    },
+    "rand": 1620865279,
+    "hash": "710fc00841338492"
+   },
+   {
+    "i": 409,
+    "seed": 3863,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 5,
+    "party": 5,
+    "result": "win",
+    "frames": 1423,
+    "st": {
+     "dmg": 14866,
+     "taken": 9592,
+     "kills": 2,
+     "crits": 34
+    },
+    "rand": 479260077,
+    "hash": "64d414984498a891"
+   },
+   {
+    "i": 410,
+    "seed": 3870,
+    "kind": "fight",
+    "w": 0,
+    "depth": 10,
+    "party": 1,
+    "result": "lose",
+    "frames": 302,
+    "st": {
+     "dmg": 1832,
+     "taken": 2303,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 2008827353,
+    "hash": "e252bc07ad51831f"
+   },
+   {
+    "i": 411,
+    "seed": 3877,
+    "kind": "fight",
+    "w": 1,
+    "depth": 3,
+    "party": 2,
+    "result": "win",
+    "frames": 896,
+    "st": {
+     "dmg": 3947,
+     "taken": 510,
+     "kills": 2,
+     "crits": 5
+    },
+    "rand": 826665908,
+    "hash": "18123eee63b4890c"
+   },
+   {
+    "i": 412,
+    "seed": 3884,
+    "kind": "boss",
+    "w": 2,
+    "depth": 8,
+    "party": 3,
+    "result": "lose",
+    "frames": 1686,
+    "st": {
+     "dmg": 6571,
+     "taken": 9211,
+     "kills": 1,
+     "crits": 5
+    },
+    "rand": 2618054039,
+    "hash": "7e002b4e35e6da9e"
+   },
+   {
+    "i": 413,
+    "seed": 3891,
+    "kind": "arena",
+    "w": 3,
+    "depth": 1,
+    "party": 4,
+    "result": "win",
+    "frames": 718,
+    "st": {
+     "dmg": 6472,
+     "taken": 5850,
+     "kills": 3,
+     "crits": 17
+    },
+    "rand": 1251456026,
+    "hash": "c79258aa26168e23"
+   },
+   {
+    "i": 414,
+    "seed": 3898,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 6,
+    "party": 5,
+    "result": "win",
+    "frames": 1070,
+    "st": {
+     "dmg": 10966,
+     "taken": 3099,
+     "kills": 2,
+     "crits": 19
+    },
+    "rand": 785712284,
+    "hash": "99064c808985f1fe"
+   },
+   {
+    "i": 415,
+    "seed": 3905,
+    "kind": "fight",
+    "w": 5,
+    "depth": 11,
+    "party": 1,
+    "result": "lose",
+    "frames": 250,
+    "st": {
+     "dmg": 918,
+     "taken": 3058,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 3533423725,
+    "hash": "4bf0c5d7550c20fe"
+   },
+   {
+    "i": 416,
+    "seed": 3912,
+    "kind": "fight",
+    "w": 6,
+    "depth": 4,
+    "party": 2,
+    "result": "win",
+    "frames": 1313,
+    "st": {
+     "dmg": 8239,
+     "taken": 2478,
+     "kills": 2,
+     "crits": 21
+    },
+    "rand": 2484563535,
+    "hash": "d7586795c59cead8"
+   },
+   {
+    "i": 417,
+    "seed": 3919,
+    "kind": "boss",
+    "w": 7,
+    "depth": 9,
+    "party": 3,
+    "result": "lose",
+    "frames": 1249,
+    "st": {
+     "dmg": 4396,
+     "taken": 8152,
+     "kills": 0,
+     "crits": 8
+    },
+    "rand": 743585302,
+    "hash": "751104155acfecab"
+   },
+   {
+    "i": 418,
+    "seed": 3926,
+    "kind": "arena",
+    "w": 8,
+    "depth": 2,
+    "party": 4,
+    "result": "lose",
+    "frames": 2248,
+    "st": {
+     "dmg": 14721,
+     "taken": 22238,
+     "kills": 0,
+     "crits": 31
+    },
+    "rand": 1302004695,
+    "hash": "4076a3d21d0361bc"
+   },
+   {
+    "i": 419,
+    "seed": 3933,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 7,
+    "party": 5,
+    "result": "lose",
+    "frames": 1302,
+    "st": {
+     "dmg": 9677,
+     "taken": 16558,
+     "kills": 0,
+     "crits": 10
+    },
+    "rand": 3769065009,
+    "hash": "9db3e0674885a78a"
+   },
+   {
+    "i": 420,
+    "seed": 3940,
+    "kind": "fight",
+    "w": 0,
+    "depth": 0,
+    "party": 1,
+    "result": "win",
+    "frames": 706,
+    "st": {
+     "dmg": 935,
+     "taken": 840,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 3650071030,
+    "hash": "2cc28cc4ffecfa32"
+   },
+   {
+    "i": 421,
+    "seed": 3947,
+    "kind": "fight",
+    "w": 1,
+    "depth": 5,
+    "party": 2,
+    "result": "win",
+    "frames": 951,
+    "st": {
+     "dmg": 5758,
+     "taken": 2633,
+     "kills": 2,
+     "crits": 11
+    },
+    "rand": 1805768715,
+    "hash": "90c04bcba5b5a6ab"
+   },
+   {
+    "i": 422,
+    "seed": 3954,
+    "kind": "boss",
+    "w": 2,
+    "depth": 10,
+    "party": 3,
+    "result": "lose",
+    "frames": 1499,
+    "st": {
+     "dmg": 5469,
+     "taken": 10474,
+     "kills": 0,
+     "crits": 9
+    },
+    "rand": 1882307678,
+    "hash": "092f9d3bc7b3b37b"
+   },
+   {
+    "i": 423,
+    "seed": 3961,
+    "kind": "arena",
+    "w": 3,
+    "depth": 3,
+    "party": 4,
+    "result": "win",
+    "frames": 1669,
+    "st": {
+     "dmg": 14876,
+     "taken": 6584,
+     "kills": 3,
+     "crits": 26
+    },
+    "rand": 4226973834,
+    "hash": "137a3c25de79f178"
+   },
+   {
+    "i": 424,
+    "seed": 3968,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 8,
+    "party": 5,
+    "result": "win",
+    "frames": 1462,
+    "st": {
+     "dmg": 12795,
+     "taken": 5589,
+     "kills": 2,
+     "crits": 13
+    },
+    "rand": 657501933,
+    "hash": "c5cb31c1364c0cd8"
+   },
+   {
+    "i": 425,
+    "seed": 3975,
+    "kind": "fight",
+    "w": 5,
+    "depth": 1,
+    "party": 1,
+    "result": "win",
+    "frames": 859,
+    "st": {
+     "dmg": 2001,
+     "taken": 2035,
+     "kills": 1,
+     "crits": 2
+    },
+    "rand": 1542427655,
+    "hash": "76d87002e04a2d0f"
+   },
+   {
+    "i": 426,
+    "seed": 3982,
+    "kind": "fight",
+    "w": 6,
+    "depth": 6,
+    "party": 2,
+    "result": "lose",
+    "frames": 764,
+    "st": {
+     "dmg": 2658,
+     "taken": 6787,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 2579724708,
+    "hash": "f729715ccde7fc51"
+   },
+   {
+    "i": 427,
+    "seed": 3989,
+    "kind": "boss",
+    "w": 7,
+    "depth": 11,
+    "party": 3,
+    "result": "lose",
+    "frames": 774,
+    "st": {
+     "dmg": 2502,
+     "taken": 9887,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 523614020,
+    "hash": "e0ba42f74ca5dc4f"
+   },
+   {
+    "i": 428,
+    "seed": 3996,
+    "kind": "arena",
+    "w": 8,
+    "depth": 4,
+    "party": 4,
+    "result": "lose",
+    "frames": 747,
+    "st": {
+     "dmg": 5520,
+     "taken": 11740,
+     "kills": 0,
+     "crits": 10
+    },
+    "rand": 2881533989,
+    "hash": "e338c42bf3b1665c"
+   },
+   {
+    "i": 429,
+    "seed": 4003,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 9,
+    "party": 5,
+    "result": "win",
+    "frames": 2334,
+    "st": {
+     "dmg": 17244,
+     "taken": 17304,
+     "kills": 2,
+     "crits": 26
+    },
+    "rand": 837365006,
+    "hash": "ea10ae08c324d534"
+   },
+   {
+    "i": 430,
+    "seed": 4010,
+    "kind": "fight",
+    "w": 0,
+    "depth": 2,
+    "party": 1,
+    "result": "win",
+    "frames": 1255,
+    "st": {
+     "dmg": 1626,
+     "taken": 645,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 1369415523,
+    "hash": "ee1f2df6538ce312"
+   },
+   {
+    "i": 431,
+    "seed": 4017,
+    "kind": "fight",
+    "w": 1,
+    "depth": 7,
+    "party": 2,
+    "result": "lose",
+    "frames": 828,
+    "st": {
+     "dmg": 4089,
+     "taken": 5535,
+     "kills": 0,
+     "crits": 3
+    },
+    "rand": 2110908849,
+    "hash": "0b5673c2b2edf07e"
+   },
+   {
+    "i": 432,
+    "seed": 4024,
+    "kind": "boss",
+    "w": 2,
+    "depth": 0,
+    "party": 3,
+    "result": "lose",
+    "frames": 2445,
+    "st": {
+     "dmg": 7323,
+     "taken": 14264,
+     "kills": 1,
+     "crits": 20
+    },
+    "rand": 1887070555,
+    "hash": "bf90a7fbcfd79b66"
+   },
+   {
+    "i": 433,
+    "seed": 4031,
+    "kind": "arena",
+    "w": 3,
+    "depth": 5,
+    "party": 4,
+    "result": "win",
+    "frames": 821,
+    "st": {
+     "dmg": 5417,
+     "taken": 8911,
+     "kills": 3,
+     "crits": 10
+    },
+    "rand": 1684806651,
+    "hash": "c90201689adcd878"
+   },
+   {
+    "i": 434,
+    "seed": 4038,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 10,
+    "party": 5,
+    "result": "win",
+    "frames": 1514,
+    "st": {
+     "dmg": 14568,
+     "taken": 5431,
+     "kills": 2,
+     "crits": 33
+    },
+    "rand": 1988117310,
+    "hash": "23d2342042b9b51d"
+   },
+   {
+    "i": 435,
+    "seed": 4045,
+    "kind": "fight",
+    "w": 5,
+    "depth": 3,
+    "party": 1,
+    "result": "lose",
+    "frames": 676,
+    "st": {
+     "dmg": 2968,
+     "taken": 2541,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 2004582025,
+    "hash": "aebe61466592c429"
+   },
+   {
+    "i": 436,
+    "seed": 4052,
+    "kind": "fight",
+    "w": 6,
+    "depth": 8,
+    "party": 2,
+    "result": "lose",
+    "frames": 422,
+    "st": {
+     "dmg": 1301,
+     "taken": 4804,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 2290652020,
+    "hash": "1e764fbb28926cb6"
+   },
+   {
+    "i": 437,
+    "seed": 4059,
+    "kind": "boss",
+    "w": 7,
+    "depth": 1,
+    "party": 3,
+    "result": "lose",
+    "frames": 1673,
+    "st": {
+     "dmg": 6430,
+     "taken": 9369,
+     "kills": 1,
+     "crits": 30
+    },
+    "rand": 4216394862,
+    "hash": "2b465b0c6385fea5"
+   },
+   {
+    "i": 438,
+    "seed": 4066,
+    "kind": "arena",
+    "w": 8,
+    "depth": 6,
+    "party": 4,
+    "result": "lose",
+    "frames": 682,
+    "st": {
+     "dmg": 3973,
+     "taken": 11347,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 2365172301,
+    "hash": "86ee4d551660b8c9"
+   },
+   {
+    "i": 439,
+    "seed": 4073,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 11,
+    "party": 5,
+    "result": "lose",
+    "frames": 2006,
+    "st": {
+     "dmg": 16970,
+     "taken": 20086,
+     "kills": 1,
+     "crits": 35
+    },
+    "rand": 4122924435,
+    "hash": "96f4700dc8e2b920"
+   },
+   {
+    "i": 440,
+    "seed": 4080,
+    "kind": "fight",
+    "w": 0,
+    "depth": 4,
+    "party": 1,
+    "result": "win",
+    "frames": 1640,
+    "st": {
+     "dmg": 3740,
+     "taken": 2905,
+     "kills": 2,
+     "crits": 4
+    },
+    "rand": 511792308,
+    "hash": "76bbbecce083d353"
+   },
+   {
+    "i": 441,
+    "seed": 4087,
+    "kind": "fight",
+    "w": 1,
+    "depth": 9,
+    "party": 2,
+    "result": "lose",
+    "frames": 652,
+    "st": {
+     "dmg": 2930,
+     "taken": 7500,
+     "kills": 0,
+     "crits": 6
+    },
+    "rand": 4238537111,
+    "hash": "08f8c57471726c90"
+   },
+   {
+    "i": 442,
+    "seed": 4094,
+    "kind": "boss",
+    "w": 2,
+    "depth": 2,
+    "party": 3,
+    "result": "lose",
+    "frames": 1807,
+    "st": {
+     "dmg": 7686,
+     "taken": 8678,
+     "kills": 1,
+     "crits": 10
+    },
+    "rand": 3478093625,
+    "hash": "cc15e576df2262fd"
+   },
+   {
+    "i": 443,
+    "seed": 4101,
+    "kind": "arena",
+    "w": 3,
+    "depth": 7,
+    "party": 4,
+    "result": "win",
+    "frames": 1056,
+    "st": {
+     "dmg": 8120,
+     "taken": 12391,
+     "kills": 3,
+     "crits": 9
+    },
+    "rand": 729278215,
+    "hash": "7831be7dda7316ec"
+   },
+   {
+    "i": 444,
+    "seed": 4108,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 0,
+    "party": 5,
+    "result": "win",
+    "frames": 607,
+    "st": {
+     "dmg": 5524,
+     "taken": 916,
+     "kills": 2,
+     "crits": 12
+    },
+    "rand": 1955465464,
+    "hash": "e157773812f0a26a"
+   },
+   {
+    "i": 445,
+    "seed": 4115,
+    "kind": "fight",
+    "w": 5,
+    "depth": 5,
+    "party": 1,
+    "result": "lose",
+    "frames": 423,
+    "st": {
+     "dmg": 1020,
+     "taken": 3145,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 3788274017,
+    "hash": "3e789a784b88a353"
+   },
+   {
+    "i": 446,
+    "seed": 4122,
+    "kind": "fight",
+    "w": 6,
+    "depth": 10,
+    "party": 2,
+    "result": "lose",
+    "frames": 429,
+    "st": {
+     "dmg": 1794,
+     "taken": 6043,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 3609773621,
+    "hash": "f7c8a0bd6d7c9c71"
+   },
+   {
+    "i": 447,
+    "seed": 4129,
+    "kind": "boss",
+    "w": 7,
+    "depth": 3,
+    "party": 3,
+    "result": "lose",
+    "frames": 672,
+    "st": {
+     "dmg": 2267,
+     "taken": 8082,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 693623557,
+    "hash": "715b9957a65fcca7"
+   },
+   {
+    "i": 448,
+    "seed": 4136,
+    "kind": "arena",
+    "w": 8,
+    "depth": 8,
+    "party": 4,
+    "result": "lose",
+    "frames": 1086,
+    "st": {
+     "dmg": 5608,
+     "taken": 15501,
+     "kills": 0,
+     "crits": 8
+    },
+    "rand": 3881864381,
+    "hash": "a8f4abfd5782c4e7"
+   },
+   {
+    "i": 449,
+    "seed": 4143,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 1,
+    "party": 5,
+    "result": "win",
+    "frames": 1553,
+    "st": {
+     "dmg": 12218,
+     "taken": 6158,
+     "kills": 2,
+     "crits": 14
+    },
+    "rand": 2103263300,
+    "hash": "431d245e3d650b03"
+   },
+   {
+    "i": 450,
+    "seed": 4150,
+    "kind": "fight",
+    "w": 0,
+    "depth": 6,
+    "party": 1,
+    "result": "lose",
+    "frames": 525,
+    "st": {
+     "dmg": 1295,
+     "taken": 2235,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 4050700434,
+    "hash": "5d4d5eecd159fafd"
+   },
+   {
+    "i": 451,
+    "seed": 4157,
+    "kind": "fight",
+    "w": 1,
+    "depth": 11,
+    "party": 2,
+    "result": "lose",
+    "frames": 891,
+    "st": {
+     "dmg": 5200,
+     "taken": 6442,
+     "kills": 0,
+     "crits": 11
+    },
+    "rand": 4264010199,
+    "hash": "1b8b8c47247f8c51"
+   },
+   {
+    "i": 452,
+    "seed": 4164,
+    "kind": "boss",
+    "w": 2,
+    "depth": 4,
+    "party": 3,
+    "result": "lose",
+    "frames": 2200,
+    "st": {
+     "dmg": 6346,
+     "taken": 11816,
+     "kills": 1,
+     "crits": 7
+    },
+    "rand": 1624972340,
+    "hash": "8ef2ebd007a0f8c6"
+   },
+   {
+    "i": 453,
+    "seed": 4171,
+    "kind": "arena",
+    "w": 3,
+    "depth": 9,
+    "party": 4,
+    "result": "win",
+    "frames": 1620,
+    "st": {
+     "dmg": 13735,
+     "taken": 11671,
+     "kills": 3,
+     "crits": 36
+    },
+    "rand": 1431716746,
+    "hash": "788060867a9d4e55"
+   },
+   {
+    "i": 454,
+    "seed": 4178,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 2,
+    "party": 5,
+    "result": "win",
+    "frames": 856,
+    "st": {
+     "dmg": 7321,
+     "taken": 2482,
+     "kills": 2,
+     "crits": 8
+    },
+    "rand": 3878205599,
+    "hash": "a6ab1b0b4499890b"
+   },
+   {
+    "i": 455,
+    "seed": 4185,
+    "kind": "fight",
+    "w": 5,
+    "depth": 7,
+    "party": 1,
+    "result": "lose",
+    "frames": 327,
+    "st": {
+     "dmg": 880,
+     "taken": 2553,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 1310634710,
+    "hash": "1dcf8f336d8ead18"
+   },
+   {
+    "i": 456,
+    "seed": 4192,
+    "kind": "fight",
+    "w": 6,
+    "depth": 0,
+    "party": 2,
+    "result": "win",
+    "frames": 625,
+    "st": {
+     "dmg": 2562,
+     "taken": 275,
+     "kills": 1,
+     "crits": 5
+    },
+    "rand": 1268507714,
+    "hash": "9168f7b416ddf98e"
+   },
+   {
+    "i": 457,
+    "seed": 4199,
+    "kind": "boss",
+    "w": 7,
+    "depth": 5,
+    "party": 3,
+    "result": "lose",
+    "frames": 1082,
+    "st": {
+     "dmg": 3429,
+     "taken": 10134,
+     "kills": 0,
+     "crits": 7
+    },
+    "rand": 4240366635,
+    "hash": "bc33ec7165538b28"
+   },
+   {
+    "i": 458,
+    "seed": 4206,
+    "kind": "arena",
+    "w": 8,
+    "depth": 10,
+    "party": 4,
+    "result": "lose",
+    "frames": 670,
+    "st": {
+     "dmg": 3872,
+     "taken": 14861,
+     "kills": 0,
+     "crits": 11
+    },
+    "rand": 1160282089,
+    "hash": "6cf83c96d518e79d"
+   },
+   {
+    "i": 459,
+    "seed": 4213,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 3,
+    "party": 5,
+    "result": "win",
+    "frames": 1457,
+    "st": {
+     "dmg": 15664,
+     "taken": 6368,
+     "kills": 2,
+     "crits": 30
+    },
+    "rand": 985043115,
+    "hash": "8a3f82a3d68d4c47"
+   },
+   {
+    "i": 460,
+    "seed": 4220,
+    "kind": "fight",
+    "w": 0,
+    "depth": 8,
+    "party": 1,
+    "result": "lose",
+    "frames": 743,
+    "st": {
+     "dmg": 1321,
+     "taken": 5476,
+     "kills": 0,
+     "crits": 2
+    },
+    "rand": 3752480686,
+    "hash": "95455e6dc787764c"
+   },
+   {
+    "i": 461,
+    "seed": 4227,
+    "kind": "fight",
+    "w": 1,
+    "depth": 1,
+    "party": 2,
+    "result": "win",
+    "frames": 337,
+    "st": {
+     "dmg": 1491,
+     "taken": 315,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 99997512,
+    "hash": "dc42abbee0b54738"
+   },
+   {
+    "i": 462,
+    "seed": 4234,
+    "kind": "boss",
+    "w": 2,
+    "depth": 6,
+    "party": 3,
+    "result": "lose",
+    "frames": 2774,
+    "st": {
+     "dmg": 8840,
+     "taken": 17810,
+     "kills": 0,
+     "crits": 11
+    },
+    "rand": 1596099220,
+    "hash": "51135d5ec7b9fad2"
+   },
+   {
+    "i": 463,
+    "seed": 4241,
+    "kind": "arena",
+    "w": 3,
+    "depth": 11,
+    "party": 4,
+    "result": "lose",
+    "frames": 858,
+    "st": {
+     "dmg": 5616,
+     "taken": 11643,
+     "kills": 0,
+     "crits": 8
+    },
+    "rand": 106589745,
+    "hash": "bfdfba5582df21ed"
+   },
+   {
+    "i": 464,
+    "seed": 4248,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 4,
+    "party": 5,
+    "result": "win",
+    "frames": 965,
+    "st": {
+     "dmg": 9221,
+     "taken": 2261,
+     "kills": 2,
+     "crits": 13
+    },
+    "rand": 2937571111,
+    "hash": "90d5f954a48aa16b"
+   },
+   {
+    "i": 465,
+    "seed": 4255,
+    "kind": "fight",
+    "w": 5,
+    "depth": 9,
+    "party": 1,
+    "result": "lose",
+    "frames": 185,
+    "st": {
+     "dmg": 420,
+     "taken": 2321,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 2694612214,
+    "hash": "9677be3feed991d7"
+   },
+   {
+    "i": 466,
+    "seed": 4262,
+    "kind": "fight",
+    "w": 6,
+    "depth": 2,
+    "party": 2,
+    "result": "win",
+    "frames": 610,
+    "st": {
+     "dmg": 3261,
+     "taken": 1288,
+     "kills": 1,
+     "crits": 4
+    },
+    "rand": 1395475472,
+    "hash": "0fc62b9a8ebef0a2"
+   },
+   {
+    "i": 467,
+    "seed": 4269,
+    "kind": "boss",
+    "w": 7,
+    "depth": 7,
+    "party": 3,
+    "result": "lose",
+    "frames": 1424,
+    "st": {
+     "dmg": 5286,
+     "taken": 11654,
+     "kills": 0,
+     "crits": 16
+    },
+    "rand": 3307895126,
+    "hash": "d671a544bff08060"
+   },
+   {
+    "i": 468,
+    "seed": 4276,
+    "kind": "arena",
+    "w": 8,
+    "depth": 0,
+    "party": 4,
+    "result": "lose",
+    "frames": 1215,
+    "st": {
+     "dmg": 7098,
+     "taken": 11525,
+     "kills": 0,
+     "crits": 9
+    },
+    "rand": 1750249478,
+    "hash": "bfaa498f6d3f8285"
+   },
+   {
+    "i": 469,
+    "seed": 4283,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 5,
+    "party": 5,
+    "result": "win",
+    "frames": 1414,
+    "st": {
+     "dmg": 14333,
+     "taken": 9732,
+     "kills": 2,
+     "crits": 27
+    },
+    "rand": 376523094,
+    "hash": "72a987df15330861"
+   },
+   {
+    "i": 470,
+    "seed": 4290,
+    "kind": "fight",
+    "w": 0,
+    "depth": 10,
+    "party": 1,
+    "result": "lose",
+    "frames": 1034,
+    "st": {
+     "dmg": 2992,
+     "taken": 4277,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 2087265516,
+    "hash": "eb4219f3e8c004c3"
+   },
+   {
+    "i": 471,
+    "seed": 4297,
+    "kind": "fight",
+    "w": 1,
+    "depth": 3,
+    "party": 2,
+    "result": "win",
+    "frames": 811,
+    "st": {
+     "dmg": 3806,
+     "taken": 1522,
+     "kills": 2,
+     "crits": 5
+    },
+    "rand": 2957625317,
+    "hash": "3cd539b8021f4ba9"
+   },
+   {
+    "i": 472,
+    "seed": 4304,
+    "kind": "boss",
+    "w": 2,
+    "depth": 8,
+    "party": 3,
+    "result": "lose",
+    "frames": 2426,
+    "st": {
+     "dmg": 9447,
+     "taken": 13980,
+     "kills": 1,
+     "crits": 19
+    },
+    "rand": 73988419,
+    "hash": "b17ae1e06ecd1477"
+   },
+   {
+    "i": 473,
+    "seed": 4311,
+    "kind": "arena",
+    "w": 3,
+    "depth": 1,
+    "party": 4,
+    "result": "win",
+    "frames": 739,
+    "st": {
+     "dmg": 5162,
+     "taken": 8872,
+     "kills": 3,
+     "crits": 6
+    },
+    "rand": 2896945556,
+    "hash": "79c8f5cfee781e11"
+   },
+   {
+    "i": 474,
+    "seed": 4318,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 6,
+    "party": 5,
+    "result": "win",
+    "frames": 957,
+    "st": {
+     "dmg": 11014,
+     "taken": 2399,
+     "kills": 2,
+     "crits": 31
+    },
+    "rand": 1595134071,
+    "hash": "23d9e0d0de969c33"
+   },
+   {
+    "i": 475,
+    "seed": 4325,
+    "kind": "fight",
+    "w": 5,
+    "depth": 11,
+    "party": 1,
+    "result": "lose",
+    "frames": 234,
+    "st": {
+     "dmg": 350,
+     "taken": 2483,
+     "kills": 0,
+     "crits": 0
+    },
+    "rand": 920326074,
+    "hash": "ae6a97be05bb5dd4"
+   },
+   {
+    "i": 476,
+    "seed": 4332,
+    "kind": "fight",
+    "w": 6,
+    "depth": 4,
+    "party": 2,
+    "result": "win",
+    "frames": 2208,
+    "st": {
+     "dmg": 8123,
+     "taken": 6730,
+     "kills": 2,
+     "crits": 9
+    },
+    "rand": 3039393892,
+    "hash": "7a65be33482b3bad"
+   },
+   {
+    "i": 477,
+    "seed": 4339,
+    "kind": "boss",
+    "w": 7,
+    "depth": 9,
+    "party": 3,
+    "result": "lose",
+    "frames": 1493,
+    "st": {
+     "dmg": 5095,
+     "taken": 9588,
+     "kills": 0,
+     "crits": 16
+    },
+    "rand": 1637847774,
+    "hash": "dd452a641ae2cbde"
+   },
+   {
+    "i": 478,
+    "seed": 4346,
+    "kind": "arena",
+    "w": 8,
+    "depth": 2,
+    "party": 4,
+    "result": "lose",
+    "frames": 948,
+    "st": {
+     "dmg": 6962,
+     "taken": 13224,
+     "kills": 0,
+     "crits": 20
+    },
+    "rand": 1200251793,
+    "hash": "a8309f196d83256c"
+   },
+   {
+    "i": 479,
+    "seed": 4353,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 7,
+    "party": 5,
+    "result": "lose",
+    "frames": 1535,
+    "st": {
+     "dmg": 14057,
+     "taken": 14059,
+     "kills": 1,
+     "crits": 39
+    },
+    "rand": 38333782,
+    "hash": "bea686908ba79dbd"
+   },
+   {
+    "i": 480,
+    "seed": 4360,
+    "kind": "fight",
+    "w": 0,
+    "depth": 0,
+    "party": 1,
+    "result": "win",
+    "frames": 335,
+    "st": {
+     "dmg": 1263,
+     "taken": 317,
+     "kills": 1,
+     "crits": 2
+    },
+    "rand": 3058861398,
+    "hash": "6ab048a7eb4557a7"
+   },
+   {
+    "i": 481,
+    "seed": 4367,
+    "kind": "fight",
+    "w": 1,
+    "depth": 5,
+    "party": 2,
+    "result": "win",
+    "frames": 1203,
+    "st": {
+     "dmg": 5766,
+     "taken": 1427,
+     "kills": 2,
+     "crits": 5
+    },
+    "rand": 3859463739,
+    "hash": "a675e594d2c62f2a"
+   },
+   {
+    "i": 482,
+    "seed": 4374,
+    "kind": "boss",
+    "w": 2,
+    "depth": 10,
+    "party": 3,
+    "result": "lose",
+    "frames": 1505,
+    "st": {
+     "dmg": 6148,
+     "taken": 8967,
+     "kills": 0,
+     "crits": 5
+    },
+    "rand": 2440796859,
+    "hash": "bd45c7c2d6c6117b"
+   },
+   {
+    "i": 483,
+    "seed": 4381,
+    "kind": "arena",
+    "w": 3,
+    "depth": 3,
+    "party": 4,
+    "result": "win",
+    "frames": 1712,
+    "st": {
+     "dmg": 14883,
+     "taken": 5273,
+     "kills": 3,
+     "crits": 30
+    },
+    "rand": 398078734,
+    "hash": "2a60dd6cd78c11d7"
+   },
+   {
+    "i": 484,
+    "seed": 4388,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 8,
+    "party": 5,
+    "result": "win",
+    "frames": 1344,
+    "st": {
+     "dmg": 12970,
+     "taken": 3769,
+     "kills": 2,
+     "crits": 13
+    },
+    "rand": 2400896684,
+    "hash": "c2aa832a06d093a2"
+   },
+   {
+    "i": 485,
+    "seed": 4395,
+    "kind": "fight",
+    "w": 5,
+    "depth": 1,
+    "party": 1,
+    "result": "win",
+    "frames": 629,
+    "st": {
+     "dmg": 1957,
+     "taken": 1661,
+     "kills": 1,
+     "crits": 2
+    },
+    "rand": 3627342585,
+    "hash": "37c29bd87073df35"
+   },
+   {
+    "i": 486,
+    "seed": 4402,
+    "kind": "fight",
+    "w": 6,
+    "depth": 6,
+    "party": 2,
+    "result": "lose",
+    "frames": 1635,
+    "st": {
+     "dmg": 9262,
+     "taken": 7793,
+     "kills": 0,
+     "crits": 27
+    },
+    "rand": 2546347783,
+    "hash": "bd348acb7291109a"
+   },
+   {
+    "i": 487,
+    "seed": 4409,
+    "kind": "boss",
+    "w": 7,
+    "depth": 11,
+    "party": 3,
+    "result": "lose",
+    "frames": 727,
+    "st": {
+     "dmg": 2387,
+     "taken": 8194,
+     "kills": 0,
+     "crits": 10
+    },
+    "rand": 3957040975,
+    "hash": "393cc64e4d987ff3"
+   },
+   {
+    "i": 488,
+    "seed": 4416,
+    "kind": "arena",
+    "w": 8,
+    "depth": 4,
+    "party": 4,
+    "result": "lose",
+    "frames": 1276,
+    "st": {
+     "dmg": 7701,
+     "taken": 15573,
+     "kills": 0,
+     "crits": 21
+    },
+    "rand": 2945147579,
+    "hash": "e3ef77a16197e3b8"
+   },
+   {
+    "i": 489,
+    "seed": 4423,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 9,
+    "party": 5,
+    "result": "lose",
+    "frames": 1119,
+    "st": {
+     "dmg": 8400,
+     "taken": 16927,
+     "kills": 0,
+     "crits": 14
+    },
+    "rand": 2582986571,
+    "hash": "370bb8d5ce7d2b71"
+   },
+   {
+    "i": 490,
+    "seed": 4430,
+    "kind": "fight",
+    "w": 0,
+    "depth": 2,
+    "party": 1,
+    "result": "win",
+    "frames": 1109,
+    "st": {
+     "dmg": 1488,
+     "taken": 1078,
+     "kills": 1,
+     "crits": 0
+    },
+    "rand": 2712181080,
+    "hash": "f8556b8523d4dcb8"
+   },
+   {
+    "i": 491,
+    "seed": 4437,
+    "kind": "fight",
+    "w": 1,
+    "depth": 7,
+    "party": 2,
+    "result": "lose",
+    "frames": 1011,
+    "st": {
+     "dmg": 5284,
+     "taken": 5967,
+     "kills": 0,
+     "crits": 8
+    },
+    "rand": 3773380391,
+    "hash": "2552b925fe93b35c"
+   },
+   {
+    "i": 492,
+    "seed": 4444,
+    "kind": "boss",
+    "w": 2,
+    "depth": 0,
+    "party": 3,
+    "result": "lose",
+    "frames": 1810,
+    "st": {
+     "dmg": 5498,
+     "taken": 13380,
+     "kills": 1,
+     "crits": 8
+    },
+    "rand": 2801387184,
+    "hash": "a356486b981297a2"
+   },
+   {
+    "i": 493,
+    "seed": 4451,
+    "kind": "arena",
+    "w": 3,
+    "depth": 5,
+    "party": 4,
+    "result": "win",
+    "frames": 775,
+    "st": {
+     "dmg": 7829,
+     "taken": 5589,
+     "kills": 3,
+     "crits": 13
+    },
+    "rand": 3970622857,
+    "hash": "438208e7a72c8e62"
+   },
+   {
+    "i": 494,
+    "seed": 4458,
+    "kind": "swamp",
+    "w": 4,
+    "depth": 10,
+    "party": 5,
+    "result": "win",
+    "frames": 1580,
+    "st": {
+     "dmg": 14562,
+     "taken": 5390,
+     "kills": 2,
+     "crits": 10
+    },
+    "rand": 3542104561,
+    "hash": "11cb5172b70cb8d0"
+   },
+   {
+    "i": 495,
+    "seed": 4465,
+    "kind": "fight",
+    "w": 5,
+    "depth": 3,
+    "party": 1,
+    "result": "lose",
+    "frames": 984,
+    "st": {
+     "dmg": 3467,
+     "taken": 3094,
+     "kills": 0,
+     "crits": 1
+    },
+    "rand": 2229127327,
+    "hash": "6d880ee64a1757b1"
+   },
+   {
+    "i": 496,
+    "seed": 4472,
+    "kind": "fight",
+    "w": 6,
+    "depth": 8,
+    "party": 2,
+    "result": "lose",
+    "frames": 675,
+    "st": {
+     "dmg": 3002,
+     "taken": 6921,
+     "kills": 0,
+     "crits": 3
+    },
+    "rand": 2466995404,
+    "hash": "bf7c7c3ffce83545"
+   },
+   {
+    "i": 497,
+    "seed": 4479,
+    "kind": "boss",
+    "w": 7,
+    "depth": 1,
+    "party": 3,
+    "result": "lose",
+    "frames": 1161,
+    "st": {
+     "dmg": 4383,
+     "taken": 10532,
+     "kills": 0,
+     "crits": 15
+    },
+    "rand": 316310292,
+    "hash": "59cedbae1cae9774"
+   },
+   {
+    "i": 498,
+    "seed": 4486,
+    "kind": "arena",
+    "w": 8,
+    "depth": 6,
+    "party": 4,
+    "result": "lose",
+    "frames": 752,
+    "st": {
+     "dmg": 4388,
+     "taken": 12097,
+     "kills": 0,
+     "crits": 4
+    },
+    "rand": 4188247528,
+    "hash": "2a70335e61f0f9f4"
+   },
+   {
+    "i": 499,
+    "seed": 4493,
+    "kind": "swamp",
+    "w": 9,
+    "depth": 11,
+    "party": 5,
+    "result": "lose",
+    "frames": 1556,
+    "st": {
+     "dmg": 11943,
+     "taken": 21305,
+     "kills": 0,
+     "crits": 23
+    },
+    "rand": 2593237684,
+    "hash": "e9a1bde416ef1021"
    }
   ]
  },
  "maps": {
-  "count": 500,
-  "summary": "8a1490b024f8b044",
+  "count": 1000,
+  "summary": "be4d4ed26db14e5c",
   "items": [
    {
     "seed": 5000,
@@ -7110,6 +12510,3506 @@
     "edges": 19,
     "rand": 1760059803,
     "hash": "f992fb9efca0fd64"
+   },
+   {
+    "seed": 11500,
+    "nodes": 15,
+    "edges": 18,
+    "rand": 2327954289,
+    "hash": "13e37f8fcbbf4c9a"
+   },
+   {
+    "seed": 11513,
+    "nodes": 17,
+    "edges": 20,
+    "rand": 4095578918,
+    "hash": "0d2e0b326827912b"
+   },
+   {
+    "seed": 11526,
+    "nodes": 22,
+    "edges": 29,
+    "rand": 1944307133,
+    "hash": "8d306880851aeef9"
+   },
+   {
+    "seed": 11539,
+    "nodes": 15,
+    "edges": 17,
+    "rand": 1128224185,
+    "hash": "7b0bacc12242d84c"
+   },
+   {
+    "seed": 11552,
+    "nodes": 23,
+    "edges": 32,
+    "rand": 1248530292,
+    "hash": "524ce9f46d86365b"
+   },
+   {
+    "seed": 11565,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 1632177487,
+    "hash": "d099010a78999a4d"
+   },
+   {
+    "seed": 11578,
+    "nodes": 15,
+    "edges": 20,
+    "rand": 3591625707,
+    "hash": "a5dfde2adcfa1593"
+   },
+   {
+    "seed": 11591,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 2072189592,
+    "hash": "0a3300698e03eb9d"
+   },
+   {
+    "seed": 11604,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 3144037354,
+    "hash": "f520890e665a3f28"
+   },
+   {
+    "seed": 11617,
+    "nodes": 21,
+    "edges": 25,
+    "rand": 2008248421,
+    "hash": "3276c4ceb140758a"
+   },
+   {
+    "seed": 11630,
+    "nodes": 16,
+    "edges": 22,
+    "rand": 2327954419,
+    "hash": "0b9185f8ebbb1cf4"
+   },
+   {
+    "seed": 11643,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 1376412777,
+    "hash": "f8a471df45f38996"
+   },
+   {
+    "seed": 11656,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 1696118775,
+    "hash": "4e7faa53fcbe746b"
+   },
+   {
+    "seed": 11669,
+    "nodes": 19,
+    "edges": 26,
+    "rand": 936400724,
+    "hash": "f2a8136844afe3f3"
+   },
+   {
+    "seed": 11682,
+    "nodes": 19,
+    "edges": 26,
+    "rand": 936400737,
+    "hash": "b2a0ed61769b7895"
+   },
+   {
+    "seed": 11695,
+    "nodes": 27,
+    "edges": 35,
+    "rand": 3456167130,
+    "hash": "c04be25f9cfaca78"
+   },
+   {
+    "seed": 11708,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 1504295236,
+    "hash": "0b5fd1ddc158bc4d"
+   },
+   {
+    "seed": 11721,
+    "nodes": 11,
+    "edges": 13,
+    "rand": 1383989155,
+    "hash": "711b06e7b2e99169"
+   },
+   {
+    "seed": 11734,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 936400789,
+    "hash": "9909a5c1a84cb6ae"
+   },
+   {
+    "seed": 11747,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 2264013339,
+    "hash": "b793446820924c04"
+   },
+   {
+    "seed": 11760,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 3399802298,
+    "hash": "a0e11abdfb7868c6"
+   },
+   {
+    "seed": 11773,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 3335861114,
+    "hash": "44deec3afa4b22a7"
+   },
+   {
+    "seed": 11786,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 872459644,
+    "hash": "d91d891a51e109bc"
+   },
+   {
+    "seed": 11799,
+    "nodes": 18,
+    "edges": 21,
+    "rand": 432447578,
+    "hash": "ef4d711c9eebb3bd"
+   },
+   {
+    "seed": 11812,
+    "nodes": 23,
+    "edges": 28,
+    "rand": 616694882,
+    "hash": "786466c3a0411f08"
+   },
+   {
+    "seed": 11825,
+    "nodes": 17,
+    "edges": 20,
+    "rand": 2264013417,
+    "hash": "19f803f92fbfef8f"
+   },
+   {
+    "seed": 11838,
+    "nodes": 17,
+    "edges": 20,
+    "rand": 4095579243,
+    "hash": "95db4c95d3cd1794"
+   },
+   {
+    "seed": 11851,
+    "nodes": 20,
+    "edges": 23,
+    "rand": 3335861192,
+    "hash": "4308770575bafe2d"
+   },
+   {
+    "seed": 11864,
+    "nodes": 20,
+    "edges": 27,
+    "rand": 1440354195,
+    "hash": "dcd86c7d0a684a67"
+   },
+   {
+    "seed": 11877,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 3839814494,
+    "hash": "422fac5dd380e9ca"
+   },
+   {
+    "seed": 11890,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 3207978837,
+    "hash": "69bb358a43b5dd85"
+   },
+   {
+    "seed": 11903,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 368506485,
+    "hash": "e42c62ab6ad5895a"
+   },
+   {
+    "seed": 11916,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 3271920060,
+    "hash": "98a16acf5ca91779"
+   },
+   {
+    "seed": 11929,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 4031638137,
+    "hash": "1654b03a09acf514"
+   },
+   {
+    "seed": 11942,
+    "nodes": 13,
+    "edges": 14,
+    "rand": 1256106982,
+    "hash": "5f35218bc7968b76"
+   },
+   {
+    "seed": 11955,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 1568236680,
+    "hash": "b2596697ac9264b4"
+   },
+   {
+    "seed": 11968,
+    "nodes": 23,
+    "edges": 31,
+    "rand": 4279826664,
+    "hash": "a43e03b893b0ffbc"
+   },
+   {
+    "seed": 11981,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 1000342233,
+    "hash": "1ab65aae233962ff"
+   },
+   {
+    "seed": 11994,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 3335861335,
+    "hash": "140cdcd2c8f17df2"
+   },
+   {
+    "seed": 12007,
+    "nodes": 16,
+    "edges": 22,
+    "rand": 1696119126,
+    "hash": "3cb120bf4437c240"
+   },
+   {
+    "seed": 12020,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 1696119139,
+    "hash": "5d57b477107495f1"
+   },
+   {
+    "seed": 12033,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 2264013625,
+    "hash": "10f6076371a784d6"
+   },
+   {
+    "seed": 12046,
+    "nodes": 24,
+    "edges": 28,
+    "rand": 3016155402,
+    "hash": "6da2a81e89503b7b"
+   },
+   {
+    "seed": 12059,
+    "nodes": 17,
+    "edges": 19,
+    "rand": 3463743794,
+    "hash": "360dc47a8c958922"
+   },
+   {
+    "seed": 12072,
+    "nodes": 18,
+    "edges": 20,
+    "rand": 368506654,
+    "hash": "7a6b9503882657db"
+   },
+   {
+    "seed": 12085,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 2576143362,
+    "hash": "6d769a4fc114214e"
+   },
+   {
+    "seed": 12098,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 4031638306,
+    "hash": "c94fca089638d773"
+   },
+   {
+    "seed": 12111,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 2072190112,
+    "hash": "189a6e2f3c99f9be"
+   },
+   {
+    "seed": 12124,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 176683115,
+    "hash": "b268de32dfdf4d05"
+   },
+   {
+    "seed": 12137,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2200072532,
+    "hash": "631fcec176fb6211"
+   },
+   {
+    "seed": 12150,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 1000342402,
+    "hash": "e55f9f7cd02353fd"
+   },
+   {
+    "seed": 12163,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 240624351,
+    "hash": "1f753408e4a9222c"
+   },
+   {
+    "seed": 12176,
+    "nodes": 22,
+    "edges": 29,
+    "rand": 3775873596,
+    "hash": "43a1d7928ac998ee"
+   },
+   {
+    "seed": 12189,
+    "nodes": 20,
+    "edges": 27,
+    "rand": 2008248993,
+    "hash": "19f61d9adabe8f35"
+   },
+   {
+    "seed": 12202,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 3967697213,
+    "hash": "fc5f92fdfd71d451"
+   },
+   {
+    "seed": 12215,
+    "nodes": 16,
+    "edges": 18,
+    "rand": 496389191,
+    "hash": "75aaadde79d187f4"
+   },
+   {
+    "seed": 12228,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 3903756042,
+    "hash": "876f327a7b2840eb"
+   },
+   {
+    "seed": 12241,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 432448020,
+    "hash": "d94480eec674e9c7"
+   },
+   {
+    "seed": 12254,
+    "nodes": 17,
+    "edges": 19,
+    "rand": 2831908319,
+    "hash": "f7623cd705402b1e"
+   },
+   {
+    "seed": 12267,
+    "nodes": 15,
+    "edges": 17,
+    "rand": 1760060583,
+    "hash": "924e76ea90e52b66"
+   },
+   {
+    "seed": 12280,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 3144038030,
+    "hash": "852366916709065c"
+   },
+   {
+    "seed": 12293,
+    "nodes": 24,
+    "edges": 33,
+    "rand": 4215885792,
+    "hash": "43ee7d2c42aebc7c"
+   },
+   {
+    "seed": 12306,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 2264013898,
+    "hash": "c8e624720ca6bfeb"
+   },
+   {
+    "seed": 12319,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 3903756133,
+    "hash": "0fbd2d281305340e"
+   },
+   {
+    "seed": 12332,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 2512202412,
+    "hash": "ee5043bea8950854"
+   },
+   {
+    "seed": 12345,
+    "nodes": 23,
+    "edges": 31,
+    "rand": 616695415,
+    "hash": "97a16c35c115c7d1"
+   },
+   {
+    "seed": 12358,
+    "nodes": 15,
+    "edges": 20,
+    "rand": 2959790817,
+    "hash": "70075bc6071b1a98"
+   },
+   {
+    "seed": 12371,
+    "nodes": 17,
+    "edges": 19,
+    "rand": 2895849633,
+    "hash": "8109fe6782f752d9"
+   },
+   {
+    "seed": 12384,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 3967697395,
+    "hash": "eaa000594eec1f94"
+   },
+   {
+    "seed": 12397,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 1064283846,
+    "hash": "9162e7bbf2e677eb"
+   },
+   {
+    "seed": 12410,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 4159521012,
+    "hash": "72d597cd4fffaf0d"
+   },
+   {
+    "seed": 12423,
+    "nodes": 17,
+    "edges": 19,
+    "rand": 4095579828,
+    "hash": "8a15765585c5628d"
+   },
+   {
+    "seed": 12436,
+    "nodes": 25,
+    "edges": 30,
+    "rand": 488813112,
+    "hash": "002fab05b1e14070"
+   },
+   {
+    "seed": 12449,
+    "nodes": 15,
+    "edges": 18,
+    "rand": 4159521051,
+    "hash": "6d40b84b67c23ae9"
+   },
+   {
+    "seed": 12462,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 2640084936,
+    "hash": "21a5fffacfc7276f"
+   },
+   {
+    "seed": 12475,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 2391896461,
+    "hash": "a06b9cbc50590327"
+   },
+   {
+    "seed": 12488,
+    "nodes": 22,
+    "edges": 30,
+    "rand": 3775873908,
+    "hash": "3df0d83ef59b4593"
+   },
+   {
+    "seed": 12501,
+    "nodes": 19,
+    "edges": 26,
+    "rand": 1504296029,
+    "hash": "0cb0d123d8b8c4dd"
+   },
+   {
+    "seed": 12514,
+    "nodes": 15,
+    "edges": 17,
+    "rand": 4223462313,
+    "hash": "09afd1c7c93dfb1d"
+   },
+   {
+    "seed": 12527,
+    "nodes": 21,
+    "edges": 24,
+    "rand": 176683518,
+    "hash": "deb263d46fd66229"
+   },
+   {
+    "seed": 12540,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 4095579945,
+    "hash": "0bea5292dc247616"
+   },
+   {
+    "seed": 12553,
+    "nodes": 15,
+    "edges": 17,
+    "rand": 560330726,
+    "hash": "3a96ee16eab8e22f"
+   },
+   {
+    "seed": 12566,
+    "nodes": 18,
+    "edges": 25,
+    "rand": 1568237291,
+    "hash": "bcf64cdf078ae8d8"
+   },
+   {
+    "seed": 12579,
+    "nodes": 14,
+    "edges": 19,
+    "rand": 1824002092,
+    "hash": "bb3a09f3f1bcae1d"
+   },
+   {
+    "seed": 12592,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 304565977,
+    "hash": "b4b3b5933c72fb72"
+   },
+   {
+    "seed": 12605,
+    "nodes": 24,
+    "edges": 30,
+    "rand": 2384320291,
+    "hash": "91626d9602dff09d"
+   },
+   {
+    "seed": 12618,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 304566003,
+    "hash": "e2119d0b5d99b5a0"
+   },
+   {
+    "seed": 12631,
+    "nodes": 16,
+    "edges": 21,
+    "rand": 1696119750,
+    "hash": "c74c3d6f523eaf06"
+   },
+   {
+    "seed": 12644,
+    "nodes": 21,
+    "edges": 28,
+    "rand": 744578108,
+    "hash": "19756752f7982132"
+   },
+   {
+    "seed": 12657,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 744578121,
+    "hash": "19a14e7d5bf705d9"
+   },
+   {
+    "seed": 12670,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 4159521272,
+    "hash": "6ce60a6a1ce9cd63"
+   },
+   {
+    "seed": 12683,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 3527685615,
+    "hash": "535815a0c4f36e80"
+   },
+   {
+    "seed": 12696,
+    "nodes": 25,
+    "edges": 32,
+    "rand": 2384320382,
+    "hash": "b09b8fe97e224e38"
+   },
+   {
+    "seed": 12709,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 1000342961,
+    "hash": "4079a2260944789e"
+   },
+   {
+    "seed": 12722,
+    "nodes": 20,
+    "edges": 27,
+    "rand": 3903756536,
+    "hash": "ff3c908b394be36f"
+   },
+   {
+    "seed": 12735,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 2512202815,
+    "hash": "de896958c434fce7"
+   },
+   {
+    "seed": 12748,
+    "nodes": 21,
+    "edges": 29,
+    "rand": 3839815365,
+    "hash": "f33ea9ffb2e7fdb8"
+   },
+   {
+    "seed": 12761,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 4095580166,
+    "hash": "8dee8134b651b352"
+   },
+   {
+    "seed": 12774,
+    "nodes": 21,
+    "edges": 28,
+    "rand": 2640085248,
+    "hash": "058167a57102b0f5"
+   },
+   {
+    "seed": 12787,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 2576144064,
+    "hash": "852e56daab6714d1"
+   },
+   {
+    "seed": 12800,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 2512202880,
+    "hash": "f481c4b57613857f"
+   },
+   {
+    "seed": 12813,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 1440355144,
+    "hash": "97c7afb653059569"
+   },
+   {
+    "seed": 12826,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2831908891,
+    "hash": "354a294af230eeb7"
+   },
+   {
+    "seed": 12839,
+    "nodes": 14,
+    "edges": 16,
+    "rand": 1824002352,
+    "hash": "be2f7c5015b3a28a"
+   },
+   {
+    "seed": 12852,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 2640085326,
+    "hash": "4fed2dc2957a6b0d"
+   },
+   {
+    "seed": 12865,
+    "nodes": 19,
+    "edges": 26,
+    "rand": 240625053,
+    "hash": "eb24580969eaf09f"
+   },
+   {
+    "seed": 12878,
+    "nodes": 13,
+    "edges": 17,
+    "rand": 3087673731,
+    "hash": "e6c5338b152a94b0"
+   },
+   {
+    "seed": 12891,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 3271921035,
+    "hash": "fa56447a67544ad5"
+   },
+   {
+    "seed": 12904,
+    "nodes": 21,
+    "edges": 24,
+    "rand": 3903756718,
+    "hash": "36aa9634faa3d3f2"
+   },
+   {
+    "seed": 12917,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 2200073312,
+    "hash": "8de6b41bbacb4891"
+   },
+   {
+    "seed": 12930,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 1312472867,
+    "hash": "5f558b62a8d97be9"
+   },
+   {
+    "seed": 12943,
+    "nodes": 14,
+    "edges": 16,
+    "rand": 4287403939,
+    "hash": "a98d545e11e310f0"
+   },
+   {
+    "seed": 12956,
+    "nodes": 15,
+    "edges": 19,
+    "rand": 1128225602,
+    "hash": "3291d2a1eb58ea76"
+   },
+   {
+    "seed": 12969,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2200073364,
+    "hash": "a9dbc6223f62fa76"
+   },
+   {
+    "seed": 12982,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 1696120101,
+    "hash": "92c5330b02d55cd9"
+   },
+   {
+    "seed": 12995,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 1568237720,
+    "hash": "e89927cf8c6b01bd"
+   },
+   {
+    "seed": 13008,
+    "nodes": 23,
+    "edges": 29,
+    "rand": 48801605,
+    "hash": "b8c44f83a264433c"
+   },
+   {
+    "seed": 13021,
+    "nodes": 18,
+    "edges": 25,
+    "rand": 1568237746,
+    "hash": "0ae15c23501d33ee"
+   },
+   {
+    "seed": 13034,
+    "nodes": 14,
+    "edges": 19,
+    "rand": 560331207,
+    "hash": "c39fa8fc84864266"
+   },
+   {
+    "seed": 13047,
+    "nodes": 16,
+    "edges": 22,
+    "rand": 3527685979,
+    "hash": "2762028c925d30c1"
+   },
+   {
+    "seed": 13060,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 3399803598,
+    "hash": "7308baa06dff3d46"
+   },
+   {
+    "seed": 13073,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 2072191074,
+    "hash": "41aaf76e9f10a1c9"
+   },
+   {
+    "seed": 13086,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 2576144363,
+    "hash": "3de740edfb8e9435"
+   },
+   {
+    "seed": 13099,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 1504296627,
+    "hash": "0b07a199b301dea2"
+   },
+   {
+    "seed": 13112,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 4095580517,
+    "hash": "bc17f5ab196b9c0b"
+   },
+   {
+    "seed": 13125,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2200073520,
+    "hash": "9700d1b8714d761b"
+   },
+   {
+    "seed": 13138,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 3775874558,
+    "hash": "1828014bdaa33555"
+   },
+   {
+    "seed": 13151,
+    "nodes": 16,
+    "edges": 22,
+    "rand": 2895850413,
+    "hash": "159787e4f02594d5"
+   },
+   {
+    "seed": 13164,
+    "nodes": 17,
+    "edges": 19,
+    "rand": 1632179086,
+    "hash": "7f917c83fe32f1f9"
+   },
+   {
+    "seed": 13177,
+    "nodes": 23,
+    "edges": 26,
+    "rand": 3080097730,
+    "hash": "30a005e6eeb7686c"
+   },
+   {
+    "seed": 13190,
+    "nodes": 16,
+    "edges": 22,
+    "rand": 2264014782,
+    "hash": "074c79c699f74db2"
+   },
+   {
+    "seed": 13203,
+    "nodes": 15,
+    "edges": 18,
+    "rand": 1760061519,
+    "hash": "fcb84a603f791d89"
+   },
+   {
+    "seed": 13216,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 808519877,
+    "hash": "1fd3eae6a6415637"
+   },
+   {
+    "seed": 13229,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 1064284678,
+    "hash": "4798cf50ac28f4a4"
+   },
+   {
+    "seed": 13242,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 3527686174,
+    "hash": "2d3b465f3e793130"
+   },
+   {
+    "seed": 13255,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 2576144532,
+    "hash": "4f6de11906286263"
+   },
+   {
+    "seed": 13268,
+    "nodes": 17,
+    "edges": 20,
+    "rand": 1632179190,
+    "hash": "bf3fffe32b650891"
+   },
+   {
+    "seed": 13281,
+    "nodes": 19,
+    "edges": 26,
+    "rand": 3399803819,
+    "hash": "2174033c13941644"
+   },
+   {
+    "seed": 13294,
+    "nodes": 22,
+    "edges": 29,
+    "rand": 1944308901,
+    "hash": "fecbe68483b4f0e6"
+   },
+   {
+    "seed": 13307,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 3399803845,
+    "hash": "624a2a211d70ef92"
+   },
+   {
+    "seed": 13320,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 240625508,
+    "hash": "48ea476392436832"
+   },
+   {
+    "seed": 13333,
+    "nodes": 15,
+    "edges": 20,
+    "rand": 1760061649,
+    "hash": "e3b54c09fa42f820"
+   },
+   {
+    "seed": 13346,
+    "nodes": 16,
+    "edges": 21,
+    "rand": 2895850608,
+    "hash": "8e0ee218a42116d6"
+   },
+   {
+    "seed": 13359,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 3967698370,
+    "hash": "f1039f96cf9e1adf"
+   },
+   {
+    "seed": 13372,
+    "nodes": 26,
+    "edges": 33,
+    "rand": 1056708521,
+    "hash": "4e55143a0e76c6f2"
+   },
+   {
+    "seed": 13385,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 3463745120,
+    "hash": "6a9d6eb5b61dddaf"
+   },
+   {
+    "seed": 13398,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 240625586,
+    "hash": "43f495d503e0aeb1"
+   },
+   {
+    "seed": 13411,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 4159522013,
+    "hash": "d5195e37198d96de"
+   },
+   {
+    "seed": 13424,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 936402479,
+    "hash": "43b9637ce9366814"
+   },
+   {
+    "seed": 13437,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 3463745172,
+    "hash": "22ebd0afc520570c"
+   },
+   {
+    "seed": 13450,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 2008250254,
+    "hash": "8d95c1d84d7c28ed"
+   },
+   {
+    "seed": 13463,
+    "nodes": 21,
+    "edges": 28,
+    "rand": 744578927,
+    "hash": "22e1b7ffe179e5ec"
+   },
+   {
+    "seed": 13476,
+    "nodes": 22,
+    "edges": 26,
+    "rand": 3775874896,
+    "hash": "3fa7d79fee13da39"
+   },
+   {
+    "seed": 13489,
+    "nodes": 17,
+    "edges": 23,
+    "rand": 2831909554,
+    "hash": "d4758ef4c2338278"
+   },
+   {
+    "seed": 13502,
+    "nodes": 17,
+    "edges": 23,
+    "rand": 1000343754,
+    "hash": "4ffd8b89ab30cfe4"
+   },
+   {
+    "seed": 13515,
+    "nodes": 19,
+    "edges": 26,
+    "rand": 872461373,
+    "hash": "cf911c8da7ad7c81"
+   },
+   {
+    "seed": 13528,
+    "nodes": 17,
+    "edges": 19,
+    "rand": 1632179450,
+    "hash": "cbd596810d2265d7"
+   },
+   {
+    "seed": 13541,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 3399804079,
+    "hash": "95aa8073a6116206"
+   },
+   {
+    "seed": 13554,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 2895850816,
+    "hash": "218447f9deec6a71"
+   },
+   {
+    "seed": 13567,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 3463745302,
+    "hash": "8932a5da3b7d3f5b"
+   },
+   {
+    "seed": 13580,
+    "nodes": 20,
+    "edges": 27,
+    "rand": 808520241,
+    "hash": "52109878b1cae0d6"
+   },
+   {
+    "seed": 13593,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 936402648,
+    "hash": "96ea6a8ef4b012d9"
+   },
+   {
+    "seed": 13606,
+    "nodes": 16,
+    "edges": 18,
+    "rand": 3527686538,
+    "hash": "0a0722759ed38e38"
+   },
+   {
+    "seed": 13619,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2264015211,
+    "hash": "a16ffe939e73ec0e"
+   },
+   {
+    "seed": 13632,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 176684623,
+    "hash": "520248b10143b847"
+   },
+   {
+    "seed": 13645,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 3967698656,
+    "hash": "c3b587abe4af035d"
+   },
+   {
+    "seed": 13658,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 936402713,
+    "hash": "0882c9b6e424f883"
+   },
+   {
+    "seed": 13671,
+    "nodes": 15,
+    "edges": 20,
+    "rand": 1696120790,
+    "hash": "6edaa9f875887687"
+   },
+   {
+    "seed": 13684,
+    "nodes": 21,
+    "edges": 25,
+    "rand": 744579148,
+    "hash": "208efeef11215a43"
+   },
+   {
+    "seed": 13697,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 680637964,
+    "hash": "757037a8e8c0a29c"
+   },
+   {
+    "seed": 13710,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 872461568,
+    "hash": "2e7b38431a7beeae"
+   },
+   {
+    "seed": 13723,
+    "nodes": 24,
+    "edges": 32,
+    "rand": 1752485739,
+    "hash": "d56a02789ad6101b"
+   },
+   {
+    "seed": 13736,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 560331909,
+    "hash": "c7d2016298fa29c7"
+   },
+   {
+    "seed": 13749,
+    "nodes": 22,
+    "edges": 29,
+    "rand": 3775875169,
+    "hash": "d48b0d6d15a9b43d"
+   },
+   {
+    "seed": 13762,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 3967698773,
+    "hash": "dd35a9f5bc05689c"
+   },
+   {
+    "seed": 13775,
+    "nodes": 22,
+    "edges": 29,
+    "rand": 680638042,
+    "hash": "5c921a5b6782d57e"
+   },
+   {
+    "seed": 13788,
+    "nodes": 20,
+    "edges": 27,
+    "rand": 3271921932,
+    "hash": "ebcab3da22ae4492"
+   },
+   {
+    "seed": 13801,
+    "nodes": 15,
+    "edges": 19,
+    "rand": 1760062117,
+    "hash": "b3e1b44fcc8eac00"
+   },
+   {
+    "seed": 13814,
+    "nodes": 23,
+    "edges": 29,
+    "rand": 3080098367,
+    "hash": "d86d888f11fc75d3"
+   },
+   {
+    "seed": 13827,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 2512203907,
+    "hash": "34e08d499a2d742f"
+   },
+   {
+    "seed": 13840,
+    "nodes": 23,
+    "edges": 28,
+    "rand": 1880368250,
+    "hash": "af12d4ab86057781"
+   },
+   {
+    "seed": 13853,
+    "nodes": 14,
+    "edges": 19,
+    "rand": 1192167696,
+    "hash": "81c3f4401f9fbd8d"
+   },
+   {
+    "seed": 13866,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 1632179788,
+    "hash": "4c638e8f883c5eb0"
+   },
+   {
+    "seed": 13879,
+    "nodes": 13,
+    "edges": 17,
+    "rand": 3151615929,
+    "hash": "8fc95d7cef32f9ac"
+   },
+   {
+    "seed": 13892,
+    "nodes": 15,
+    "edges": 19,
+    "rand": 496390868,
+    "hash": "a79f4bcc82d2b9cb"
+   },
+   {
+    "seed": 13905,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 3967698916,
+    "hash": "c3247e30e3bbce1e"
+   },
+   {
+    "seed": 13918,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 1376415052,
+    "hash": "59eb9be014f56090"
+   },
+   {
+    "seed": 13931,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 872461789,
+    "hash": "bd79a2be963fa31b"
+   },
+   {
+    "seed": 13944,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2200074339,
+    "hash": "0c02efd3173056d4"
+   },
+   {
+    "seed": 13957,
+    "nodes": 21,
+    "edges": 28,
+    "rand": 3207980904,
+    "hash": "b83ab33f71744e3c"
+   },
+   {
+    "seed": 13970,
+    "nodes": 23,
+    "edges": 31,
+    "rand": 680638237,
+    "hash": "6102d4feaf9d0500"
+   },
+   {
+    "seed": 13983,
+    "nodes": 20,
+    "edges": 27,
+    "rand": 3271922127,
+    "hash": "e637ad4efc1f7176"
+   },
+   {
+    "seed": 13996,
+    "nodes": 23,
+    "edges": 27,
+    "rand": 3080098549,
+    "hash": "974e997a5f40ec5f"
+   },
+   {
+    "seed": 14009,
+    "nodes": 16,
+    "edges": 21,
+    "rand": 3527686941,
+    "hash": "9a64ea2c330c4c1a"
+   },
+   {
+    "seed": 14022,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 2008250826,
+    "hash": "99d11518ff494445"
+   },
+   {
+    "seed": 14035,
+    "nodes": 15,
+    "edges": 20,
+    "rand": 560332208,
+    "hash": "6fea3b17dc6466e1"
+   },
+   {
+    "seed": 14048,
+    "nodes": 16,
+    "edges": 21,
+    "rand": 1696121167,
+    "hash": "079ea51ed108ce3b"
+   },
+   {
+    "seed": 14061,
+    "nodes": 22,
+    "edges": 29,
+    "rand": 1944309668,
+    "hash": "43bacf2b9a218a4a"
+   },
+   {
+    "seed": 14074,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 936403129,
+    "hash": "9b274f4bec797d8e"
+   },
+   {
+    "seed": 14087,
+    "nodes": 15,
+    "edges": 18,
+    "rand": 1128226733,
+    "hash": "8efb939f263e8e41"
+   },
+   {
+    "seed": 14100,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 4159522702,
+    "hash": "0e4605080bcfd9e2"
+   },
+   {
+    "seed": 14113,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 1440356444,
+    "hash": "7e0d8bad86a5f102"
+   },
+   {
+    "seed": 14126,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 4095581531,
+    "hash": "ce9ca15c2d5b547e"
+   },
+   {
+    "seed": 14139,
+    "nodes": 19,
+    "edges": 26,
+    "rand": 3335863480,
+    "hash": "6bf8e106bfd004f3"
+   },
+   {
+    "seed": 14152,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 2576145429,
+    "hash": "afd509089f46a30a"
+   },
+   {
+    "seed": 14165,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 2327956954,
+    "hash": "2afba7b0c570fe92"
+   },
+   {
+    "seed": 14178,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 1696121297,
+    "hash": "62054ce24f6b8e67"
+   },
+   {
+    "seed": 14191,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 3144039941,
+    "hash": "b0a3b9372e9717ac"
+   },
+   {
+    "seed": 14204,
+    "nodes": 25,
+    "edges": 31,
+    "rand": 1688545023,
+    "hash": "6f2f7a576edf7537"
+   },
+   {
+    "seed": 14217,
+    "nodes": 13,
+    "edges": 16,
+    "rand": 3151616267,
+    "hash": "b8e48a9a82dde953"
+   },
+   {
+    "seed": 14230,
+    "nodes": 21,
+    "edges": 28,
+    "rand": 1376415364,
+    "hash": "cefd0063b5a26d0a"
+   },
+   {
+    "seed": 14243,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 112744037,
+    "hash": "10fbcc7ecd513283"
+   },
+   {
+    "seed": 14256,
+    "nodes": 20,
+    "edges": 28,
+    "rand": 240626444,
+    "hash": "ce1c9e9d90643095"
+   },
+   {
+    "seed": 14269,
+    "nodes": 19,
+    "edges": 26,
+    "rand": 3399804807,
+    "hash": "da8c1cf5b0433850"
+   },
+   {
+    "seed": 14282,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 2640086756,
+    "hash": "8fd83d4b39d3f9d0"
+   },
+   {
+    "seed": 14295,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 1696121414,
+    "hash": "33a795f6a1c2c565"
+   },
+   {
+    "seed": 14308,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 1000344560,
+    "hash": "e37740b7d8fe9bd8"
+   },
+   {
+    "seed": 14321,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 4031640529,
+    "hash": "17cdc5ec0783528d"
+   },
+   {
+    "seed": 14334,
+    "nodes": 15,
+    "edges": 19,
+    "rand": 4223464133,
+    "hash": "da97d2f256aa1509"
+   },
+   {
+    "seed": 14347,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 3839816964,
+    "hash": "95217f5b7acc8450"
+   },
+   {
+    "seed": 14360,
+    "nodes": 21,
+    "edges": 28,
+    "rand": 3207981307,
+    "hash": "30b995d16902cf84"
+   },
+   {
+    "seed": 14373,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 3207981320,
+    "hash": "3ec9430a17ee0c69"
+   },
+   {
+    "seed": 14386,
+    "nodes": 15,
+    "edges": 19,
+    "rand": 1760062702,
+    "hash": "dfc72dbf6ddb1d0d"
+   },
+   {
+    "seed": 14399,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 1504297927,
+    "hash": "4f5cb0e727ff0353"
+   },
+   {
+    "seed": 14412,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 1064285861,
+    "hash": "96c517c1b855f534"
+   },
+   {
+    "seed": 14425,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 3463746160,
+    "hash": "bbb58a4dfc68d1b5"
+   },
+   {
+    "seed": 14438,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 936403493,
+    "hash": "35e28da5ea439f13"
+   },
+   {
+    "seed": 14451,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 1568239176,
+    "hash": "09607ddb6ddca925"
+   },
+   {
+    "seed": 14464,
+    "nodes": 15,
+    "edges": 19,
+    "rand": 3591628593,
+    "hash": "0fa8cf99cee5a2b8"
+   },
+   {
+    "seed": 14477,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 808521138,
+    "hash": "63a6521617d6adf5"
+   },
+   {
+    "seed": 14490,
+    "nodes": 15,
+    "edges": 20,
+    "rand": 560332663,
+    "hash": "716ff484b7811d5e"
+   },
+   {
+    "seed": 14503,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 2264016095,
+    "hash": "523c919e3b2b817d"
+   },
+   {
+    "seed": 14516,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 4159523118,
+    "hash": "fc17416a267f90c5"
+   },
+   {
+    "seed": 14529,
+    "nodes": 14,
+    "edges": 16,
+    "rand": 2455839712,
+    "hash": "813f8db0b3628433"
+   },
+   {
+    "seed": 14542,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 4095581947,
+    "hash": "9bd3181e6c968b2b"
+   },
+   {
+    "seed": 14555,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 1064286004,
+    "hash": "edbff381fcaf0486"
+   },
+   {
+    "seed": 14568,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 680638835,
+    "hash": "9bf6a4ac06210999"
+   },
+   {
+    "seed": 14581,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 2704028252,
+    "hash": "8aa742408df9ae36"
+   },
+   {
+    "seed": 14594,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 3527687526,
+    "hash": "e225cf883692699c"
+   },
+   {
+    "seed": 14607,
+    "nodes": 17,
+    "edges": 20,
+    "rand": 1632180529,
+    "hash": "c4afe9d39fd88b5e"
+   },
+   {
+    "seed": 14620,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 2767969488,
+    "hash": "e2c19d827ef7b8bd"
+   },
+   {
+    "seed": 14633,
+    "nodes": 20,
+    "edges": 23,
+    "rand": 240626821,
+    "hash": "84d9f1f92c4dd4bb"
+   },
+   {
+    "seed": 14646,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 744580110,
+    "hash": "da0d8d0818c1f3ef"
+   },
+   {
+    "seed": 14659,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 2200075054,
+    "hash": "5acecfcdaa2666aa"
+   },
+   {
+    "seed": 14672,
+    "nodes": 19,
+    "edges": 26,
+    "rand": 304568057,
+    "hash": "8a03508b31ad525a"
+   },
+   {
+    "seed": 14685,
+    "nodes": 15,
+    "edges": 20,
+    "rand": 1760063001,
+    "hash": "713ce019e125e40e"
+   },
+   {
+    "seed": 14698,
+    "nodes": 19,
+    "edges": 22,
+    "rand": 936403753,
+    "hash": "8fe021047c2b9b67"
+   },
+   {
+    "seed": 14711,
+    "nodes": 13,
+    "edges": 16,
+    "rand": 1887945421,
+    "hash": "c4587fc3ad8513ca"
+   },
+   {
+    "seed": 14724,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 2640087198,
+    "hash": "5a4381d32ac7e059"
+   },
+   {
+    "seed": 14737,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 1568239462,
+    "hash": "e3ac8d16737a8315"
+   },
+   {
+    "seed": 14750,
+    "nodes": 13,
+    "edges": 16,
+    "rand": 1887945460,
+    "hash": "460fe88f433581d4"
+   },
+   {
+    "seed": 14763,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 3527687695,
+    "hash": "90128b414dc824ce"
+   },
+   {
+    "seed": 14776,
+    "nodes": 13,
+    "edges": 16,
+    "rand": 1887945486,
+    "hash": "9dbe7f4e053023d6"
+   },
+   {
+    "seed": 14789,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 808521450,
+    "hash": "a4354c53940d4c9e"
+   },
+   {
+    "seed": 14802,
+    "nodes": 23,
+    "edges": 29,
+    "rand": 4279829498,
+    "hash": "e652a77e726f6a9f"
+   },
+   {
+    "seed": 14815,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 2959793274,
+    "hash": "5fb8261bd715407e"
+   },
+   {
+    "seed": 14828,
+    "nodes": 18,
+    "edges": 20,
+    "rand": 2200075223,
+    "hash": "1e9780b810e0cad2"
+   },
+   {
+    "seed": 14841,
+    "nodes": 18,
+    "edges": 21,
+    "rand": 1000345093,
+    "hash": "e36b5d7c2222d9cb"
+   },
+   {
+    "seed": 14854,
+    "nodes": 21,
+    "edges": 29,
+    "rand": 176685845,
+    "hash": "5d6b173a93acea23"
+   },
+   {
+    "seed": 14867,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 1504298395,
+    "hash": "bf0339d147db9b44"
+   },
+   {
+    "seed": 14880,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 3144040630,
+    "hash": "d8f6824f73761c07"
+   },
+   {
+    "seed": 14893,
+    "nodes": 16,
+    "edges": 21,
+    "rand": 3527687825,
+    "hash": "31d729a693b5f8c9"
+   },
+   {
+    "seed": 14906,
+    "nodes": 15,
+    "edges": 20,
+    "rand": 560333079,
+    "hash": "1ed22b69c85d00e0"
+   },
+   {
+    "seed": 14919,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 2576146196,
+    "hash": "e47746cf7b59dc6d"
+   },
+   {
+    "seed": 14932,
+    "nodes": 18,
+    "edges": 25,
+    "rand": 1504298460,
+    "hash": "19b3c1c0903517cc"
+   },
+   {
+    "seed": 14945,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 1376416079,
+    "hash": "9199df8891151bfb"
+   },
+   {
+    "seed": 14958,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 2072192959,
+    "hash": "42090adce0559c86"
+   },
+   {
+    "seed": 14971,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 432450750,
+    "hash": "b10d8b6f8c52214d"
+   },
+   {
+    "seed": 14984,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 936404039,
+    "hash": "bf9fd8e99dfbfcaa"
+   },
+   {
+    "seed": 14997,
+    "nodes": 18,
+    "edges": 21,
+    "rand": 4031641205,
+    "hash": "b75187b3a794decc"
+   },
+   {
+    "seed": 15010,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 2767969878,
+    "hash": "875afa91dc6e9d14"
+   },
+   {
+    "seed": 15023,
+    "nodes": 21,
+    "edges": 29,
+    "rand": 744580487,
+    "hash": "c0686b7a94591881"
+   },
+   {
+    "seed": 15036,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 936404091,
+    "hash": "f62ff0a5d40081b7"
+   },
+   {
+    "seed": 15049,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 368509631,
+    "hash": "d11f64a80979890b"
+   },
+   {
+    "seed": 15062,
+    "nodes": 21,
+    "edges": 24,
+    "rand": 3839817679,
+    "hash": "502b0e906c9cbda6"
+   },
+   {
+    "seed": 15075,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 4031641283,
+    "hash": "8086a98be6b3ddf7"
+   },
+   {
+    "seed": 15088,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 3144040838,
+    "hash": "37db641834328bde"
+   },
+   {
+    "seed": 15101,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 3775876521,
+    "hash": "277e16670e5de897"
+   },
+   {
+    "seed": 15114,
+    "nodes": 14,
+    "edges": 19,
+    "rand": 3719511637,
+    "hash": "be39a8808620e892"
+   },
+   {
+    "seed": 15127,
+    "nodes": 18,
+    "edges": 21,
+    "rand": 936404182,
+    "hash": "81c645d30c222f49"
+   },
+   {
+    "seed": 15140,
+    "nodes": 16,
+    "edges": 18,
+    "rand": 2327957929,
+    "hash": "757c043446b0fd9a"
+   },
+   {
+    "seed": 15153,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 1312475090,
+    "hash": "83e4d751e4ae431e"
+   },
+   {
+    "seed": 15166,
+    "nodes": 23,
+    "edges": 30,
+    "rand": 3080099719,
+    "hash": "94f5f8f0370eea96"
+   },
+   {
+    "seed": 15179,
+    "nodes": 17,
+    "edges": 19,
+    "rand": 3463746914,
+    "hash": "dcec8f8583e76168"
+   },
+   {
+    "seed": 15192,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 936404247,
+    "hash": "3e6857d1cd95f7e3"
+   },
+   {
+    "seed": 15205,
+    "nodes": 21,
+    "edges": 25,
+    "rand": 3207982152,
+    "hash": "b2405d984c145d54"
+   },
+   {
+    "seed": 15218,
+    "nodes": 22,
+    "edges": 29,
+    "rand": 1312475155,
+    "hash": "a842e29ae09646a2"
+   },
+   {
+    "seed": 15231,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 3144040981,
+    "hash": "00873bff31c032fb"
+   },
+   {
+    "seed": 15244,
+    "nodes": 24,
+    "edges": 29,
+    "rand": 3647994270,
+    "hash": "44090a3aa700e984"
+   },
+   {
+    "seed": 15257,
+    "nodes": 20,
+    "edges": 27,
+    "rand": 1440357588,
+    "hash": "182091a8d96a17f6"
+   },
+   {
+    "seed": 15270,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 2767970138,
+    "hash": "d8cddee96b1c19d8"
+   },
+   {
+    "seed": 15283,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 3271923427,
+    "hash": "943c6b9472a8645e"
+   },
+   {
+    "seed": 15296,
+    "nodes": 20,
+    "edges": 28,
+    "rand": 2072193297,
+    "hash": "ebe3fd57dd8d1ec9"
+   },
+   {
+    "seed": 15309,
+    "nodes": 22,
+    "edges": 26,
+    "rand": 3775876729,
+    "hash": "59d48a9cdeb397f9"
+   },
+   {
+    "seed": 15322,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 432451101,
+    "hash": "98cf40b49791700b"
+   },
+   {
+    "seed": 15335,
+    "nodes": 18,
+    "edges": 21,
+    "rand": 1568240060,
+    "hash": "0ac9e7e280790533"
+   },
+   {
+    "seed": 15348,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 1440357679,
+    "hash": "30cb97ca5df3e02b"
+   },
+   {
+    "seed": 15361,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 3335864702,
+    "hash": "57ecf1b7c37c3315"
+   },
+   {
+    "seed": 15374,
+    "nodes": 22,
+    "edges": 29,
+    "rand": 2512205454,
+    "hash": "6e037cab3e9c4016"
+   },
+   {
+    "seed": 15387,
+    "nodes": 18,
+    "edges": 21,
+    "rand": 2831911452,
+    "hash": "326747148ea4ec22"
+   },
+   {
+    "seed": 15400,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2200075795,
+    "hash": "8a8a347fc9ee45a2"
+   },
+   {
+    "seed": 15413,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 2200075808,
+    "hash": "3563406b08d0f777"
+   },
+   {
+    "seed": 15426,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 3775876846,
+    "hash": "5e8eaa387255ed54"
+   },
+   {
+    "seed": 15439,
+    "nodes": 17,
+    "edges": 19,
+    "rand": 2895852701,
+    "hash": "91a2b5675f35e218"
+   },
+   {
+    "seed": 15452,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 3335864793,
+    "hash": "0d0caf7716d9673e"
+   },
+   {
+    "seed": 15465,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 2767970333,
+    "hash": "5e2e2c34e0fb43dd"
+   },
+   {
+    "seed": 15478,
+    "nodes": 20,
+    "edges": 23,
+    "rand": 808522139,
+    "hash": "a259419d3ac0d790"
+   },
+   {
+    "seed": 15491,
+    "nodes": 15,
+    "edges": 19,
+    "rand": 1760063807,
+    "hash": "8b70fefbb259d61e"
+   },
+   {
+    "seed": 15504,
+    "nodes": 25,
+    "edges": 31,
+    "rand": 488816180,
+    "hash": "13cbf984c6324165"
+   },
+   {
+    "seed": 15517,
+    "nodes": 24,
+    "edges": 30,
+    "rand": 3016158873,
+    "hash": "23dd0308b2da4db9"
+   },
+   {
+    "seed": 15530,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 1312475467,
+    "hash": "b50a3594da170f66"
+   },
+   {
+    "seed": 15543,
+    "nodes": 20,
+    "edges": 23,
+    "rand": 872463401,
+    "hash": "12027917d6b58ae9"
+   },
+   {
+    "seed": 15556,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 4095582961,
+    "hash": "993ed85e93fa8397"
+   },
+   {
+    "seed": 15569,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 1632181491,
+    "hash": "068fd19080eeebef"
+   },
+   {
+    "seed": 15582,
+    "nodes": 20,
+    "edges": 27,
+    "rand": 808522243,
+    "hash": "3a3a2c92f97b217e"
+   },
+   {
+    "seed": 15595,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 936404650,
+    "hash": "a4f3a17fc389f3a2"
+   },
+   {
+    "seed": 15608,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 3463747343,
+    "hash": "420351a6bac9b8b2"
+   },
+   {
+    "seed": 15621,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 368510203,
+    "hash": "93da8894beecdd2c"
+   },
+   {
+    "seed": 15634,
+    "nodes": 15,
+    "edges": 17,
+    "rand": 1760063950,
+    "hash": "44089d1bd742ea27"
+   },
+   {
+    "seed": 15647,
+    "nodes": 24,
+    "edges": 29,
+    "rand": 3711935870,
+    "hash": "a9e69465b04e9533"
+   },
+   {
+    "seed": 15660,
+    "nodes": 21,
+    "edges": 25,
+    "rand": 176686651,
+    "hash": "0ccfd768c0563222"
+   },
+   {
+    "seed": 15673,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 432451452,
+    "hash": "a82e3fabf43a8511"
+   },
+   {
+    "seed": 15686,
+    "nodes": 23,
+    "edges": 30,
+    "rand": 1880370096,
+    "hash": "653c50bb3c2454c5"
+   },
+   {
+    "seed": 15699,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 2008252503,
+    "hash": "8336bbb27fa53eb5"
+   },
+   {
+    "seed": 15712,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 1568240437,
+    "hash": "196ebb0f953ed4ea"
+   },
+   {
+    "seed": 15725,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 2264017317,
+    "hash": "17a98e7adab2af23"
+   },
+   {
+    "seed": 15738,
+    "nodes": 23,
+    "edges": 27,
+    "rand": 3711935961,
+    "hash": "a400f37a6029e43f"
+   },
+   {
+    "seed": 15751,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 3399806289,
+    "hash": "da26cc17f47986e6"
+   },
+   {
+    "seed": 15764,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 3967700775,
+    "hash": "ce07a31b8d3bad20"
+   },
+   {
+    "seed": 15777,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 680640044,
+    "hash": "4910c90232de0078"
+   },
+   {
+    "seed": 15790,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 808522451,
+    "hash": "879a18c1d2e0d907"
+   },
+   {
+    "seed": 15803,
+    "nodes": 15,
+    "edges": 19,
+    "rand": 1760064119,
+    "hash": "a8a75544db8a408c"
+   },
+   {
+    "seed": 15816,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 2640088290,
+    "hash": "1608938a936f66e9"
+   },
+   {
+    "seed": 15829,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 3967700840,
+    "hash": "883ea08e1f4c3829"
+   },
+   {
+    "seed": 15842,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 1568240567,
+    "hash": "484425de550cb278"
+   },
+   {
+    "seed": 15855,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 1632181777,
+    "hash": "1fc042fa517fbe5a"
+   },
+   {
+    "seed": 15868,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 112745662,
+    "hash": "82fd95d3303f453f"
+   },
+   {
+    "seed": 15881,
+    "nodes": 15,
+    "edges": 18,
+    "rand": 2959794340,
+    "hash": "efd912057bd77683"
+   },
+   {
+    "seed": 15894,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 2704029565,
+    "hash": "ed578c294682233c"
+   },
+   {
+    "seed": 15907,
+    "nodes": 14,
+    "edges": 19,
+    "rand": 624275277,
+    "hash": "4f3eabfe1939cafa"
+   },
+   {
+    "seed": 15920,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 2704029591,
+    "hash": "9ef8c015e8b7a713"
+   },
+   {
+    "seed": 15933,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 496392909,
+    "hash": "8230923af07b4ed3"
+   },
+   {
+    "seed": 15946,
+    "nodes": 17,
+    "edges": 23,
+    "rand": 3463747681,
+    "hash": "1b5c2158f1e503bd"
+   },
+   {
+    "seed": 15959,
+    "nodes": 19,
+    "edges": 22,
+    "rand": 3967700970,
+    "hash": "b8851f904586add3"
+   },
+   {
+    "seed": 15972,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 2767970840,
+    "hash": "ac955c0ab981c205"
+   },
+   {
+    "seed": 15985,
+    "nodes": 22,
+    "edges": 26,
+    "rand": 1312475922,
+    "hash": "16f997a04e5fdfe9"
+   },
+   {
+    "seed": 15998,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 3967701009,
+    "hash": "23d2cdbf38fbac8b"
+   },
+   {
+    "seed": 16011,
+    "nodes": 22,
+    "edges": 28,
+    "rand": 3144041761,
+    "hash": "1b50f08ecb53c567"
+   },
+   {
+    "seed": 16024,
+    "nodes": 15,
+    "edges": 17,
+    "rand": 2391900010,
+    "hash": "420af697981bc5bd"
+   },
+   {
+    "seed": 16037,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 304569422,
+    "hash": "37ebad090831bc80"
+   },
+   {
+    "seed": 16050,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 2767970918,
+    "hash": "625485b95d8db949"
+   },
+   {
+    "seed": 16063,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 1440358394,
+    "hash": "b30ea150993cec39"
+   },
+   {
+    "seed": 16076,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 2264017668,
+    "hash": "316db3d052d016a2"
+   },
+   {
+    "seed": 16089,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 176687080,
+    "hash": "abd1d0fcab693e8c"
+   },
+   {
+    "seed": 16102,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 3903759916,
+    "hash": "c44f64a138bbe9c3"
+   },
+   {
+    "seed": 16115,
+    "nodes": 18,
+    "edges": 21,
+    "rand": 2200076510,
+    "hash": "c2b3ba29cfa4c263"
+   },
+   {
+    "seed": 16128,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 304569513,
+    "hash": "67db06a4f1f9c764"
+   },
+   {
+    "seed": 16141,
+    "nodes": 23,
+    "edges": 28,
+    "rand": 3711936364,
+    "hash": "c3de7d875cca3e6d"
+   },
+   {
+    "seed": 16154,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 3271924298,
+    "hash": "5775abc1b7496a9e"
+   },
+   {
+    "seed": 16167,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 3967701178,
+    "hash": "e5eeb4e51a91bb20"
+   },
+   {
+    "seed": 16180,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 808522841,
+    "hash": "9aca1cbf8721b1d4"
+   },
+   {
+    "seed": 16193,
+    "nodes": 13,
+    "edges": 16,
+    "rand": 3719512716,
+    "hash": "1758e4d5f39b44a6"
+   },
+   {
+    "seed": 16206,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 432451985,
+    "hash": "f37608e6c7fe24fe"
+   },
+   {
+    "seed": 16219,
+    "nodes": 23,
+    "edges": 29,
+    "rand": 3080100772,
+    "hash": "4b6b65654fef4443"
+   },
+   {
+    "seed": 16232,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 3335865573,
+    "hash": "9f7ad22ff091e9dd"
+   },
+   {
+    "seed": 16245,
+    "nodes": 15,
+    "edges": 19,
+    "rand": 3591630374,
+    "hash": "301e7cffd9fb4d70"
+   },
+   {
+    "seed": 16258,
+    "nodes": 21,
+    "edges": 28,
+    "rand": 2072194259,
+    "hash": "12e291b7f9d7c557"
+   },
+   {
+    "seed": 16271,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 1632182193,
+    "hash": "b3843a103aaac60e"
+   },
+   {
+    "seed": 16284,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 4095583689,
+    "hash": "e070353e7be20b17"
+   },
+   {
+    "seed": 16297,
+    "nodes": 18,
+    "edges": 21,
+    "rand": 1568241022,
+    "hash": "2bdb710932a28d68"
+   },
+   {
+    "seed": 16310,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2767971178,
+    "hash": "01de2898b46402e0"
+   },
+   {
+    "seed": 16323,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 176687314,
+    "hash": "8a4cf22e6cb07dd8"
+   },
+   {
+    "seed": 16336,
+    "nodes": 23,
+    "edges": 30,
+    "rand": 1816429549,
+    "hash": "b78c9361e1e628e3"
+   },
+   {
+    "seed": 16349,
+    "nodes": 22,
+    "edges": 30,
+    "rand": 2512206429,
+    "hash": "cba3ea698314a5d0"
+   },
+   {
+    "seed": 16362,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 4031642570,
+    "hash": "cda49a137a944c98"
+   },
+   {
+    "seed": 16375,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 3903760189,
+    "hash": "f024d8e913fa8ce0"
+   },
+   {
+    "seed": 16388,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 2136135586,
+    "hash": "724a98a7c2ed0f9c"
+   },
+   {
+    "seed": 16401,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 3903760215,
+    "hash": "9389c7077ffc6f32"
+   },
+   {
+    "seed": 16414,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 1504299942,
+    "hash": "d99efb5e5f251bd7"
+   },
+   {
+    "seed": 16427,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 1696123546,
+    "hash": "103d9e4a06a5c5b9"
+   },
+   {
+    "seed": 16440,
+    "nodes": 17,
+    "edges": 23,
+    "rand": 368511022,
+    "hash": "c405e763111eecfb"
+   },
+   {
+    "seed": 16453,
+    "nodes": 24,
+    "edges": 31,
+    "rand": 4215889952,
+    "hash": "e06a2b4621e678ad"
+   },
+   {
+    "seed": 16466,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 240628654,
+    "hash": "edc22f97d17ae29c"
+   },
+   {
+    "seed": 16479,
+    "nodes": 15,
+    "edges": 18,
+    "rand": 3591630608,
+    "hash": "e2dea616fd4001bd"
+   },
+   {
+    "seed": 16492,
+    "nodes": 15,
+    "edges": 20,
+    "rand": 560334665,
+    "hash": "f48de13d422b9ba4"
+   },
+   {
+    "seed": 16505,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2200076900,
+    "hash": "42e335a5778fa3c7"
+   },
+   {
+    "seed": 16518,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 3527689450,
+    "hash": "6583a4fa446881d9"
+   },
+   {
+    "seed": 16531,
+    "nodes": 16,
+    "edges": 21,
+    "rand": 496393507,
+    "hash": "08384885d137ab07"
+   },
+   {
+    "seed": 16544,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 1696123663,
+    "hash": "c2f3c5bf71a5026a"
+   },
+   {
+    "seed": 16557,
+    "nodes": 19,
+    "edges": 21,
+    "rand": 2767971425,
+    "hash": "8818e5beef73ed60"
+   },
+   {
+    "seed": 16570,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 936405625,
+    "hash": "f8af55179b51d7fa"
+   },
+   {
+    "seed": 16583,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 3399807121,
+    "hash": "b5a0202c3ccec4a3"
+   },
+   {
+    "seed": 16596,
+    "nodes": 24,
+    "edges": 33,
+    "rand": 3016159952,
+    "hash": "543eb59d02dec935"
+   },
+   {
+    "seed": 16609,
+    "nodes": 23,
+    "edges": 28,
+    "rand": 3711936832,
+    "hash": "1504d252d1b58973"
+   },
+   {
+    "seed": 16622,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 3335865963,
+    "hash": "369c60586425917f"
+   },
+   {
+    "seed": 16635,
+    "nodes": 20,
+    "edges": 27,
+    "rand": 4031642843,
+    "hash": "cca727e75d5d2e88"
+   },
+   {
+    "seed": 16648,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 2704030319,
+    "hash": "406c371660effb6a"
+   },
+   {
+    "seed": 16661,
+    "nodes": 24,
+    "edges": 29,
+    "rand": 2384324347,
+    "hash": "cb10205f9155ac43"
+   },
+   {
+    "seed": 16674,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 2072194675,
+    "hash": "0dc1747a8363a68e"
+   },
+   {
+    "seed": 16687,
+    "nodes": 23,
+    "edges": 27,
+    "rand": 1944312294,
+    "hash": "e1b6657be300121c"
+   },
+   {
+    "seed": 16700,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 2391900686,
+    "hash": "7ddeb86e8f863831"
+   },
+   {
+    "seed": 16713,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 368511295,
+    "hash": "6ce03bfa2f981ed1"
+   },
+   {
+    "seed": 16726,
+    "nodes": 16,
+    "edges": 22,
+    "rand": 1696123845,
+    "hash": "b72a45b829b12bab"
+   },
+   {
+    "seed": 16739,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 2008253543,
+    "hash": "734f699ad72ba89b"
+   },
+   {
+    "seed": 16752,
+    "nodes": 21,
+    "edges": 24,
+    "rand": 1376417886,
+    "hash": "a1b0447765f82385"
+   },
+   {
+    "seed": 16765,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 2767971633,
+    "hash": "94b8b163e72c39fc"
+   },
+   {
+    "seed": 16778,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 1696123897,
+    "hash": "b74b8f0ae636d1ef"
+   },
+   {
+    "seed": 16791,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 4095584196,
+    "hash": "414b2e85e6a60dbe"
+   },
+   {
+    "seed": 16804,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 1632182726,
+    "hash": "35291159cf274f1c"
+   },
+   {
+    "seed": 16817,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 2136136015,
+    "hash": "ad356094a10f1d27"
+   },
+   {
+    "seed": 16830,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 3903760644,
+    "hash": "1abcb94f4d59874a"
+   },
+   {
+    "seed": 16843,
+    "nodes": 24,
+    "edges": 29,
+    "rand": 4279831539,
+    "hash": "d3a05b19affb163f"
+   },
+   {
+    "seed": 16856,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 1440359187,
+    "hash": "46f1a1693dd8d928"
+   },
+   {
+    "seed": 16869,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 3527689801,
+    "hash": "ed62a850e7b4cd9f"
+   },
+   {
+    "seed": 16882,
+    "nodes": 24,
+    "edges": 30,
+    "rand": 2384324568,
+    "hash": "e851fa4a0aff9bdb"
+   },
+   {
+    "seed": 16895,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 1064288344,
+    "hash": "ff3be71729bb8ef0"
+   },
+   {
+    "seed": 16908,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 304570293,
+    "hash": "8a9203470d8f727b"
+   },
+   {
+    "seed": 16921,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 1632182843,
+    "hash": "652e1d0ddb2a6c47"
+   },
+   {
+    "seed": 16934,
+    "nodes": 18,
+    "edges": 25,
+    "rand": 1568241659,
+    "hash": "df83bef1d6b5b949"
+   },
+   {
+    "seed": 16947,
+    "nodes": 24,
+    "edges": 31,
+    "rand": 3584054776,
+    "hash": "803484d16f0a446a"
+   },
+   {
+    "seed": 16960,
+    "nodes": 22,
+    "edges": 26,
+    "rand": 2576148237,
+    "hash": "f5fc5902df4b4689"
+   },
+   {
+    "seed": 16973,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 3271925117,
+    "hash": "ee5cbc84750e31a9"
+   },
+   {
+    "seed": 16986,
+    "nodes": 21,
+    "edges": 28,
+    "rand": 3839819603,
+    "hash": "a4ae24ca50f870d7"
+   },
+   {
+    "seed": 16999,
+    "nodes": 23,
+    "edges": 28,
+    "rand": 616700069,
+    "hash": "222d69892f3e9ceb"
+   },
+   {
+    "seed": 17012,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 1000347264,
+    "hash": "d0b9c44a48d719a2"
+   },
+   {
+    "seed": 17025,
+    "nodes": 16,
+    "edges": 21,
+    "rand": 3527689957,
+    "hash": "87cc5b81358079c7"
+   },
+   {
+    "seed": 17038,
+    "nodes": 17,
+    "edges": 19,
+    "rand": 2831913103,
+    "hash": "fef72af6cc07086a"
+   },
+   {
+    "seed": 17051,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 1632182973,
+    "hash": "cde4f2688333f87e"
+   },
+   {
+    "seed": 17064,
+    "nodes": 14,
+    "edges": 17,
+    "rand": 1824006577,
+    "hash": "e4d0c7695eca58cf"
+   },
+   {
+    "seed": 17077,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 2200077472,
+    "hash": "09e8aa0b82839346"
+   },
+   {
+    "seed": 17090,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 2072195091,
+    "hash": "a43cd37de198dd1b"
+   },
+   {
+    "seed": 17103,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 3144042853,
+    "hash": "65d5437a27217f23"
+   },
+   {
+    "seed": 17116,
+    "nodes": 19,
+    "edges": 23,
+    "rand": 304570501,
+    "hash": "6f006b766e9496ba"
+   },
+   {
+    "seed": 17129,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 808523790,
+    "hash": "606c981d535d3b2d"
+   },
+   {
+    "seed": 17142,
+    "nodes": 15,
+    "edges": 18,
+    "rand": 1760065458,
+    "hash": "797ab4079026ec81"
+   },
+   {
+    "seed": 17155,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 2008253959,
+    "hash": "9b2bfe3d8baeba81"
+   },
+   {
+    "seed": 17168,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 2072195169,
+    "hash": "cabbeebeecb1068d"
+   },
+   {
+    "seed": 17181,
+    "nodes": 15,
+    "edges": 18,
+    "rand": 2327959970,
+    "hash": "880b6d9f58911ee6"
+   },
+   {
+    "seed": 17194,
+    "nodes": 14,
+    "edges": 19,
+    "rand": 3719513717,
+    "hash": "4cef646e8e46deb4"
+   },
+   {
+    "seed": 17207,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 2895854469,
+    "hash": "91258b5d31fa7b72"
+   },
+   {
+    "seed": 17220,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 2327960009,
+    "hash": "3a9322f875292c34"
+   },
+   {
+    "seed": 17233,
+    "nodes": 18,
+    "edges": 21,
+    "rand": 2831913298,
+    "hash": "5e3e77fec86ed395"
+   },
+   {
+    "seed": 17246,
+    "nodes": 18,
+    "edges": 20,
+    "rand": 368511828,
+    "hash": "04b86acddff82439"
+   },
+   {
+    "seed": 17259,
+    "nodes": 23,
+    "edges": 30,
+    "rand": 3080101812,
+    "hash": "1ed07dc97e8afcb4"
+   },
+   {
+    "seed": 17272,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 3839819889,
+    "hash": "f0f6751c01aeae69"
+   },
+   {
+    "seed": 17285,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 936406340,
+    "hash": "f50746865fa6c710"
+   },
+   {
+    "seed": 17298,
+    "nodes": 14,
+    "edges": 17,
+    "rand": 3023736954,
+    "hash": "157329034502fe90"
+   },
+   {
+    "seed": 17311,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 1000347563,
+    "hash": "e91d7aa2b8ecda86"
+   },
+   {
+    "seed": 17324,
+    "nodes": 23,
+    "edges": 30,
+    "rand": 1816430537,
+    "hash": "e2fad77b36d7acdd"
+   },
+   {
+    "seed": 17337,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 2640089811,
+    "hash": "5885a15d72e4713c"
+   },
+   {
+    "seed": 17350,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 2200077745,
+    "hash": "797bb611ef9f7c1e"
+   },
+   {
+    "seed": 17363,
+    "nodes": 24,
+    "edges": 32,
+    "rand": 552759236,
+    "hash": "c26599a6093089d9"
+   },
+   {
+    "seed": 17376,
+    "nodes": 22,
+    "edges": 25,
+    "rand": 2576148653,
+    "hash": "67761537f47e29ee"
+   },
+   {
+    "seed": 17389,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 112747183,
+    "hash": "04e77883f38fe455"
+   },
+   {
+    "seed": 17402,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 1504300930,
+    "hash": "f564e63b125db5d0"
+   },
+   {
+    "seed": 17415,
+    "nodes": 20,
+    "edges": 25,
+    "rand": 808524076,
+    "hash": "a4ebdbca62a0444a"
+   },
+   {
+    "seed": 17428,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 3399807966,
+    "hash": "35e72f1ba5b3cbd0"
+   },
+   {
+    "seed": 17441,
+    "nodes": 15,
+    "edges": 18,
+    "rand": 4223467240,
+    "hash": "a3a52c0808371679"
+   },
+   {
+    "seed": 17454,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 2264019046,
+    "hash": "91459190acb29cb3"
+   },
+   {
+    "seed": 17467,
+    "nodes": 18,
+    "edges": 25,
+    "rand": 936406522,
+    "hash": "b32575a8fe4f9759"
+   },
+   {
+    "seed": 17480,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 3463749215,
+    "hash": "bea95b8631fb2799"
+   },
+   {
+    "seed": 17493,
+    "nodes": 16,
+    "edges": 22,
+    "rand": 1696124612,
+    "hash": "e05d99d2961093bd"
+   },
+   {
+    "seed": 17506,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 1944313113,
+    "hash": "bad8b86c96cd593d"
+   },
+   {
+    "seed": 17519,
+    "nodes": 16,
+    "edges": 19,
+    "rand": 2327960308,
+    "hash": "885e2d1c984081b8"
+   },
+   {
+    "seed": 17532,
+    "nodes": 17,
+    "edges": 23,
+    "rand": 3463749267,
+    "hash": "c14d519806bd3ef9"
+   },
+   {
+    "seed": 17545,
+    "nodes": 23,
+    "edges": 30,
+    "rand": 1880371955,
+    "hash": "3a633bc1ad781585"
+   },
+   {
+    "seed": 17558,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 2136136756,
+    "hash": "653a063b1eb25e2d"
+   },
+   {
+    "seed": 17571,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 1440359902,
+    "hash": "f293a46b7363725f"
+   },
+   {
+    "seed": 17584,
+    "nodes": 25,
+    "edges": 31,
+    "rand": 1184595127,
+    "hash": "bd928992a41c0006"
+   },
+   {
+    "seed": 17597,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 872465455,
+    "hash": "018d3359b07dbc82"
+   },
+   {
+    "seed": 17610,
+    "nodes": 19,
+    "edges": 24,
+    "rand": 2767972478,
+    "hash": "2d4014255059a41f"
+   },
+   {
+    "seed": 17623,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 4031643831,
+    "hash": "eee79c05dba58def"
+   },
+   {
+    "seed": 17636,
+    "nodes": 18,
+    "edges": 25,
+    "rand": 2264019228,
+    "hash": "469b24226dc59006"
+   },
+   {
+    "seed": 17649,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 176688640,
+    "hash": "ed6f9911a47c7c92"
+   },
+   {
+    "seed": 17662,
+    "nodes": 16,
+    "edges": 22,
+    "rand": 1696124781,
+    "hash": "f18c21300c728a9a"
+   },
+   {
+    "seed": 17675,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 2831913740,
+    "hash": "8e37ed3ad6b5eff3"
+   },
+   {
+    "seed": 17688,
+    "nodes": 17,
+    "edges": 23,
+    "rand": 3463749423,
+    "hash": "5c5de63672bd0d0f"
+   },
+   {
+    "seed": 17701,
+    "nodes": 17,
+    "edges": 20,
+    "rand": 1632183623,
+    "hash": "c0a11d6e02a9328b"
+   },
+   {
+    "seed": 17714,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 1944313321,
+    "hash": "8e62c7ab9f24b9db"
+   },
+   {
+    "seed": 17727,
+    "nodes": 19,
+    "edges": 25,
+    "rand": 2136136925,
+    "hash": "03f8c21c84b3c6d7"
+   },
+   {
+    "seed": 17740,
+    "nodes": 17,
+    "edges": 20,
+    "rand": 432453519,
+    "hash": "23e8ea7c5f4b38af"
+   },
+   {
+    "seed": 17753,
+    "nodes": 21,
+    "edges": 27,
+    "rand": 2008254557,
+    "hash": "dcdc85919cce0dd8"
+   },
+   {
+    "seed": 17766,
+    "nodes": 16,
+    "edges": 20,
+    "rand": 1064289215,
+    "hash": "5544c594c5e83712"
+   },
+   {
+    "seed": 17779,
+    "nodes": 23,
+    "edges": 27,
+    "rand": 3711938002,
+    "hash": "ecd97cf90c11d589"
+   },
+   {
+    "seed": 17792,
+    "nodes": 22,
+    "edges": 27,
+    "rand": 48806389,
+    "hash": "e73f61d1a89842ca"
+   },
+   {
+    "seed": 17805,
+    "nodes": 18,
+    "edges": 24,
+    "rand": 2200078200,
+    "hash": "49b6dbf6da05a95e"
+   },
+   {
+    "seed": 17818,
+    "nodes": 20,
+    "edges": 24,
+    "rand": 3903761632,
+    "hash": "341ab6d5f18c3063"
+   },
+   {
+    "seed": 17831,
+    "nodes": 16,
+    "edges": 22,
+    "rand": 4159526433,
+    "hash": "805538f8b117ff9c"
+   },
+   {
+    "seed": 17844,
+    "nodes": 18,
+    "edges": 22,
+    "rand": 936406899,
+    "hash": "bf9e9f6cc738854c"
+   },
+   {
+    "seed": 17857,
+    "nodes": 17,
+    "edges": 22,
+    "rand": 3463749592,
+    "hash": "40e23fe08b379906"
+   },
+   {
+    "seed": 17870,
+    "nodes": 18,
+    "edges": 23,
+    "rand": 4031644078,
+    "hash": "96e0fc2d0e1e8bc3"
+   },
+   {
+    "seed": 17883,
+    "nodes": 19,
+    "edges": 22,
+    "rand": 1504301411,
+    "hash": "d85cfd29daeb263e"
+   },
+   {
+    "seed": 17896,
+    "nodes": 22,
+    "edges": 29,
+    "rand": 1312477833,
+    "hash": "ca2fb6301d8f4112"
+   },
+   {
+    "seed": 17909,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 2008254713,
+    "hash": "15850140dd8aceaf"
+   },
+   {
+    "seed": 17922,
+    "nodes": 21,
+    "edges": 24,
+    "rand": 176688913,
+    "hash": "e8477f4dd6298184"
+   },
+   {
+    "seed": 17935,
+    "nodes": 17,
+    "edges": 21,
+    "rand": 4095585340,
+    "hash": "c37b84e0dfee6959"
+   },
+   {
+    "seed": 17948,
+    "nodes": 24,
+    "edges": 31,
+    "rand": 616701018,
+    "hash": "4b7922879f9c51c5"
+   },
+   {
+    "seed": 17961,
+    "nodes": 18,
+    "edges": 20,
+    "rand": 368512543,
+    "hash": "56f3a63f93c5a7e6"
+   },
+   {
+    "seed": 17974,
+    "nodes": 20,
+    "edges": 26,
+    "rand": 1440360305,
+    "hash": "18c766d6a19f3364"
+   },
+   {
+    "seed": 17987,
+    "nodes": 21,
+    "edges": 26,
+    "rand": 3207984934,
+    "hash": "5bc3e009b233b0ff"
    }
   ]
  }

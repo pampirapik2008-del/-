@@ -119,7 +119,7 @@ function crashScreen(rec) {
 			EV = null;
 			pop = null;
 			paused = false;
-			S = "menu";
+			State.go("menu");
 		} catch (_) {}
 		close();
 	};

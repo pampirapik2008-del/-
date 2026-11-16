@@ -238,7 +238,7 @@ function cardFace(c, i, x, y, w, h) {
 function dMsg() {
 	const e = EV;
 	if (!e) {
-		S = "map";
+		State.go("map");
 		return dMap();
 	}
 	if (e.bg && BGA) {
@@ -585,7 +585,7 @@ function dShop() {
 			G.rm = G.sk = false;
 			if (G.arena) arenaNext();
 			else {
-				S = "map";
+				State.go("map");
 				autosave();
 			}
 		},
@@ -716,18 +716,18 @@ function dMenu() {
 					.sort(() => Rand.next() - 0.5)
 					.slice(0, 3);
 				PK = -1;
-				S = "pick";
+				State.go("pick");
 			},
 			"#8e24aa",
 		],
 		["Боевая арена", arenaStart, "#8e24aa"],
-		["Коллекция", () => { CODEX_TEST = null; pop = null; S = "codex"; }, "#8e24aa"],
+		["Коллекция", () => { CODEX_TEST = null; pop = null; State.go("codex"); }, "#8e24aa"],
 		[
 			"Настройки",
 			() => {
 				delAsk = false;
 				SRET = "menu";
-				S = "settings";
+				State.go("settings");
 			},
 			"#8e24aa",
 		],
@@ -914,7 +914,7 @@ function dPick() {
 function startRun() {
 	if (PK < 0) return;
 	G.slots[0] = recruit(G.choices[PK], 0);
-	S = "map";
+	State.go("map");
 	sfx("start");
 	autosave();
 }
@@ -1100,7 +1100,7 @@ function dWorld() {
 }
 // ---------- итог похода ----------
 function dEnd() {
-	const wn = S === "win",
+	const wn = State.is("win"),
 		st = G.st;
 	if (BGA) ctx.drawImage(BGA.floor, 0, 0, W, H);
 	else stageBG(G.w || 0);
@@ -1146,7 +1146,7 @@ function dEnd() {
 				.sort(() => Rand.next() - 0.5)
 				.slice(0, 3);
 			PK = -1;
-			S = "pick";
+			State.go("pick");
 		}
 	}, "#2e7d32", { sz: 20 });
 	btn(619, 468, 210, 50, "В меню", toMenu, "#8e24aa", { sz: 20 });
@@ -1157,7 +1157,7 @@ function pauseMenu() {
 	ctx.fillStyle = "rgba(8,6,14,.74)";
 	ctx.fillRect(0, 0, W, H);
 	area(0, 0, W, H, () => {});
-	const camp = G && !G.arena && S !== "pick" && S !== "win" && S !== "lose",
+	const camp = G && !G.arena && !State.is("pick") && !State.is("win") && !State.is("lose"),
 		items = [
 			["Вернуться в игру", () => (paused = false), "#2e7d32"],
 			[
@@ -1166,7 +1166,7 @@ function pauseMenu() {
 					paused = false;
 					delAsk = false;
 					SRET = S;
-					S = "settings";
+					State.go("settings");
 				},
 				"#8e24aa",
 			],
@@ -1201,33 +1201,33 @@ function draw() {
 		tx("Загрузка…", 609, 316, 14, "#b9b3c8", "center");
 		return;
 	}
-	if (S !== lastS) {
+	if (State.cur !== lastS) {
 		if (SCENE[S] !== SCENE[lastS]) {
 			Parts.clear();
 			TRT = 0.42;
 			CAM.z = 1;
 		}
-		if (S === "win" || S === "lose") ENDT = t;
-		if (S !== "prep" && S !== "fight" && S !== "shop" && S !== "map") pop = null;
+		if (State.is("win") || State.is("lose")) ENDT = t;
+		if (!State.is("prep") && !State.is("fight") && !State.is("shop") && !State.is("map")) pop = null;
 		if (lastS === "fight" || lastS === "prep") pop = null;
 		TIPN = TIPR = null;
 		lastS = S;
 	}
 	ctx.save();
 	if (SK > 0) ctx.translate(Math.round((Rand.next() - 0.5) * SK * 20) * 2, Math.round((Rand.next() - 0.5) * SK * 20) * 2);
-	if (S === "menu") dMenu();
-	else if (S === "pick") dPick();
-	else if (S === "map") dMap();
-	else if (S === "prep" || S === "fight") dFight();
-	else if (S === "msg") dMsg();
-	else if (S === "shop") dShop();
-	else if (S === "settings") dSet();
-	else if (S === "world") dWorld();
-	else if (S === "codex") dCodex();
+	if (State.is("menu")) dMenu();
+	else if (State.is("pick")) dPick();
+	else if (State.is("map")) dMap();
+	else if (State.is("prep") || State.is("fight")) dFight();
+	else if (State.is("msg")) dMsg();
+	else if (State.is("shop")) dShop();
+	else if (State.is("settings")) dSet();
+	else if (State.is("world")) dWorld();
+	else if (State.is("codex")) dCodex();
 	else dEnd();
-	if (S === "map" || S === "prep" || S === "fight" || S === "shop" || S === "codex") dPop();
-	if (S !== "menu" && S !== "win" && S !== "lose" && S !== "settings") ibtn("pause", 1142, 6, () => (paused = true));
-	if (S !== "settings") ibtn("note", S === "menu" || S === "win" || S === "lose" ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
+	if (State.is("map") || State.is("prep") || State.is("fight") || State.is("shop") || State.is("codex")) dPop();
+	if (!State.is("menu") && !State.is("win") && !State.is("lose") && !State.is("settings")) ibtn("pause", 1142, 6, () => (paused = true));
+	if (!State.is("settings")) ibtn("note", State.is("menu") || State.is("win") || State.is("lose") ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
 	Fly.draw();
 	if (FLASH) {
 		const k = (t - FLASH.t0) / FLASH.d;
