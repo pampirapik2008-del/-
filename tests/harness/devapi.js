@@ -78,6 +78,51 @@
 			return Rand.state;
 		},
 		snapshot: snap,
+		// размеры внутренних кэшей и пулов — для контроля утечек
+		mem() {
+			const cnt = (o) => (o && typeof o === "object" ? Object.keys(o).length : 0);
+			return {
+				glow: cnt(typeof GLOWC !== "undefined" ? GLOWC : null),
+				sil: typeof SILC !== "undefined" && SILC ? SILC.size : 0,
+				tint: cnt(typeof TINTC !== "undefined" ? TINTC : null),
+				recol: typeof RECOL !== "undefined" && RECOL && RECOL.size ? RECOL.size : 0,
+				fx: F && F.fx ? F.fx.length : 0,
+				nums: F && F.nums ? F.nums.length : 0,
+				proj: F && F.proj ? F.proj.length : 0,
+				parts: typeof Parts !== "undefined" && Parts && Parts.list ? Parts.list.length : -1,
+				errs: ERRS.length,
+			};
+		},
+		// замер времени симуляции и отрисовки (только для тестов производительности)
+		_timers: { upd: 0, draw: 0, n: 0 },
+		instrument(on = true) {
+			if (!on || this._wrapped) return;
+			this._wrapped = true;
+			const ACC = this._timers,
+				now = __hrnow,
+				u = upd,
+				d = draw;
+			upd = function () {
+				const t0 = now();
+				try {
+					return u.apply(this, arguments);
+				} finally {
+					ACC.upd += now() - t0;
+				}
+			};
+			draw = function () {
+				const t0 = now();
+				try {
+					return d.apply(this, arguments);
+				} finally {
+					ACC.draw += now() - t0;
+					ACC.n++;
+				}
+			};
+		},
+		get timers() {
+			return this._timers;
+		},
 		// журнал ошибок и аварийный режим
 		errs: () => ERRS.map((r) => ({ kind: r.kind, msg: r.msg, frame: r.frame, screen: r.screen })),
 		crash: () => ERR_CRASH,

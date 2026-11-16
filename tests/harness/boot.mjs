@@ -24,6 +24,7 @@ export function boot({ quiet = true } = {}) {
 		globalThis: windowObj,
 		document,
 		navigator: windowObj.navigator,
+		__hrnow: () => Number(process.hrtime.bigint()) / 1e6,
 		screen: windowObj.screen,
 		location: windowObj.location,
 		localStorage: windowObj.localStorage,
