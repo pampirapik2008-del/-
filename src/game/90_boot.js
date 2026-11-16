@@ -70,7 +70,7 @@ function loop(ts) {
 			pz = paused;
 			Music.pause(paused);
 		}
-		Music.level(S === "fight" ? 1 : 0);
+		Music.level(State.is("fight") ? 1 : 0);
 		Tune.upd();
 		if (!paused) {
 			// сбой в симуляции не должен дотянуться до отрисовки и цикла
@@ -79,10 +79,10 @@ function loop(ts) {
 				flowTick();
 				visTick(dt);
 				// атмосфера вне боя
-				if (S === "map" || S === "msg" || S === "world" || S === "shop") {
-					MAPA.w = WORLDS[S === "world" ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
-					if (!(S === "msg" && EV && EV.bg)) wxEmit(MAPA, dt, S === "shop" ? 0.5 : 0.7);
-				} else if (S === "menu" || S === "pick" || S === "settings") {
+				if (State.is("map") || State.is("msg") || State.is("world") || State.is("shop")) {
+					MAPA.w = WORLDS[State.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
+					if (!(State.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, State.is("shop") ? 0.5 : 0.7);
+				} else if (State.is("menu") || State.is("pick") || State.is("settings")) {
 					MAPA.w = WORLDS[0];
 					wxEmit(MAPA, dt, 2.2);
 				}
@@ -115,14 +115,14 @@ addEventListener("keydown", (e) => {
 	if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
 	if (!READY || e.repeat) return;
 	const k = e.key;
-	if (k === "Escape" && S === "codex" && CODEX_TEST) { CODEX_TEST = null; pop = null; e.preventDefault(); return; }
+	if (k === "Escape" && State.is("codex") && CODEX_TEST) { CODEX_TEST = null; pop = null; e.preventDefault(); return; }
 	if (k === "Escape" || k === "p" || k === "P" || k === "з" || k === "З") {
-		if (S !== "menu" && S !== "settings" && S !== "win" && S !== "lose") paused = !paused;
+		if (!State.is("menu") && !State.is("settings") && !State.is("win") && !State.is("lose")) paused = !paused;
 	} else if (paused) return;
 	else if (k === " " || k === "Enter") {
-		if (S === "prep" && G.slots.some((u) => u && u.placed)) startFight();
-		else if (S === "prep") autoPlace();
-		else if (S === "msg" && EV) {
+		if (State.is("prep") && G.slots.some((u) => u && u.placed)) startFight();
+		else if (State.is("prep")) autoPlace();
+		else if (State.is("msg") && EV) {
 			const e2 = EV;
 			if (!e2.open) {
 				e2.open = 1;
@@ -131,7 +131,7 @@ addEventListener("keydown", (e) => {
 			} else if (!e2.pick) evClose();
 		}
 		e.preventDefault();
-	} else if (S === "fight" && (k === "1" || k === "2" || k === "3")) SPDX = +k;
+	} else if (State.is("fight") && (k === "1" || k === "2" || k === "3")) SPDX = +k;
 });
 addEventListener("resize", fit);
 addEventListener("orientationchange", () => setTimeout(fit, 150));
@@ -153,5 +153,5 @@ Rand.seed((Date.now() ^ ((performance.now() * 1000) | 0)) >>> 0);
 requestAnimationFrame(loop);
 loadAll().then(() => {
 	newGame();
-	S = "menu";
+	State.go("menu");
 });

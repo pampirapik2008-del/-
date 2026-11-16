@@ -167,7 +167,7 @@ function applySave(d, v) {
 	MV = null;
 	Seq.clear();
 	Parts.clear();
-	S = "map";
+	State.go("map");
 	if (G.pend) {
 		fight(G.pend);
 		snap = JSON.stringify(d);
@@ -177,7 +177,7 @@ function applySave(d, v) {
 function saveGame() {
 	if (!G || G.arena) return false;
 	try {
-		const q = S === "prep" || S === "fight" ? snap : S === "lose" || S === "win" ? null : ser();
+		const q = State.is("prep") || State.is("fight") ? snap : State.is("lose") || State.is("win") ? null : ser();
 		if (!q) return false;
 		const inner = saveInner(q);
 		if (!inner) return false;
@@ -247,7 +247,7 @@ function loadGame() {
 }
 
 function autosave() {
-	if (G && !G.arena && (S === "map" || S === "prep" || S === "world")) saveGame();
+	if (G && !G.arena && (State.is("map") || State.is("prep") || State.is("world"))) saveGame();
 }
 
 // автосохранение при уходе со страницы и сворачивании вкладки

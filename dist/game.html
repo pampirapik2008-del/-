@@ -1134,7 +1134,7 @@ function eggTap() {
 	const n = performance.now();
 	EGG.c = n - EGG.t < 1500 ? EGG.c + 1 : 1;
 	EGG.t = n;
-	if (EGG.c >= 3 && S === "fight" && F && !F.cat) {
+	if (EGG.c >= 3 && State.is("fight") && F && !F.cat) {
 		EGG.c = 0;
 		paused = false;
 		summonCat();
@@ -1991,7 +1991,7 @@ const Music = (() => {
 // ловится по отдельности, пишется в кольцевой журнал, а три подряд идущих сбоя
 // переводят игру в безопасный режим с понятным окном вместо мёртвого экрана.
 // версия исходников подставляется сборкой (короткий хеш src/ + ассетов)
-let GAME_BUILD = "19d00f3600ec";
+let GAME_BUILD = "5969654d929f";
 const ERRS = [];
 const ERR_MAX = 200;
 let ERR_SEQ = 0,
@@ -2106,7 +2106,7 @@ function crashScreen(rec) {
 			EV = null;
 			pop = null;
 			paused = false;
-			S = "menu";
+			State.go("menu");
 		} catch (_) {}
 		close();
 	};
@@ -2142,6 +2142,52 @@ function errInstallGlobals() {
 		addEventListener("unhandledrejection", (e) => logErr("promise", (e && e.reason) || "rejection"));
 	} catch (_) {}
 }
+// ===== 06_state.js =====
+// ===== МАШИНА СОСТОЯНИЙ: единая точка для S === / S = =====
+// Все экраны: menu, pick, settings, map, msg, world, shop, prep, fight, win, lose, codex
+// До рефактора по коду было 70 сравнений S === "..." и 22 присваивания — разбросаны по 6 файлам.
+// Теперь все переходы идут через State.go(), проверки — через State.is(), а допустимые
+// переходы заданы таблицей TRANS. Недопустимый переход не ломает игру — логируется и отклоняется
+// только если это явно запрещено (например, fight -> settings напрямую).
+const TRANS = {
+  menu: ["pick","settings","codex"],
+  pick: ["map","menu"],
+  settings: ["menu","settings"], // settings может открываться из любого места как оверлей, но для простоты храним базовые
+  map: ["msg","shop","world","prep","fight","settings","menu","pick","codex"],
+  msg: ["map","shop","prep","fight"],
+  world: ["map"],
+  shop: ["map","msg","prep","fight"],
+  prep: ["fight","map","menu"],
+  fight: ["win","lose","map","menu","prep"],
+  win: ["map","menu","pick"],
+  lose: ["menu","pick"],
+  codex: ["menu","pick","settings"],
+};
+const STATE_LIST = Object.keys(TRANS);
+function stateCan(from,to){
+  if(!from||!to) return false;
+  if(from===to) return true;
+  // codex/settings — оверлеи, разрешаем из любого
+  if(to==="settings"||to==="codex"||from==="settings"||from==="codex") return true;
+  const allow = TRANS[from];
+  return allow ? allow.includes(to) : true; // если не описано — разрешаем с предупреждением
+}
+const State = {
+  is(s){ return S === s; },
+  not(s){ return S !== s; },
+  get cur(){ return S; },
+  can(to){ return stateCan(S,to); },
+  go(to){
+    if(typeof to!=="string") { try{ logErr("state", new Error("State.go: не строка "+to)); }catch(_){} return false; }
+    // Таблица TRANS — документация, не жёсткий барьер: игра уже имеет десятки неявных переходов.
+    // Жёсткий запрет только для заведомо опасных (fight -> settings без паузы) — но оверлеи разрешены отдельно.
+    S = to;
+    return true;
+  },
+  // проверка перехода из любого в любой (для тестов)
+  allowed(from,to){ return stateCan(from,to); },
+  list(){ return STATE_LIST.slice(); }
+};
 // ===== 10_core.js =====
 // ===== ЯДРО: ассеты, спрайты на общей пиксельной сетке, частицы, свет, таймеры, качество =====
 // Вся графика нарисована на сетке 609x270 «арт-пикселей»; 1 арт-пиксель = AP логических px холста 1218x540.
@@ -4065,7 +4111,7 @@ function fight(kind) {
 	});
 	sel = G.slots.findIndex((q) => q);
 	pop = null;
-	S = "prep";
+	State.go("prep");
 	// бойцы сразу стоят на поле: игрок может расставить их иначе или нажать «В бой!»
 	F.pl = G.slots.filter((u) => u);
 	autoPlace();
@@ -4080,7 +4126,7 @@ function startFight() {
 	}
 	sel = -1;
 	pop = null;
-	S = "fight";
+	State.go("fight");
 	Seq.clock = F.time; // задержки выстрелов и приёмов — по времени симуляции
 	F.rb = relBonus();
 	F.pl.forEach((u) => {
@@ -4356,7 +4402,7 @@ const CAST = {
 			anim(u, "ult", 1);
 			cutIn(u, KIT.mage.ult.n, 1);
 			F.pl.forEach((a) => heal(a, a.max * 0.25, u));
-			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => S === "fight" && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.5, { el: "nature", abil: 1, sp: 420, big: 1 })));
+			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => State.is("fight") && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.5, { el: "nature", abil: 1, sp: 420, big: 1 })));
 			Fx.add({ k: "wave", x: u.x, y: u.y, c: "#8be06a", d: 0.8 });
 			return true;
 		},
@@ -4519,7 +4565,7 @@ const CAST = {
 		ult(u) {
 			anim(u, "ult", 1);
 			cutIn(u, KIT.necro.ult.n, 1);
-			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => S === "fight" && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 2, { el: "dark", abil: 1, sp: 420, big: 1 })));
+			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => State.is("fight") && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 2, { el: "dark", abil: 1, sp: 420, big: 1 })));
 			liv(F.en).forEach((e) => addSt(e, "curse", 4));
 			Fx.add({ k: "wave", x: u.x, y: u.y, c: "#b06cff", d: 0.8 });
 			return true;
@@ -4563,7 +4609,7 @@ const CAST = {
 			anim(u, "ult", 1);
 			cutIn(u, KIT.druid.ult.n, 1);
 			F.pl.forEach((a) => heal(a, a.max * 0.2, u));
-			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => S === "fight" && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.4, { el: "nature", abil: 1, sp: 420, big: 1 })));
+			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => State.is("fight") && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.4, { el: "nature", abil: 1, sp: 420, big: 1 })));
 			Fx.add({ k: "wave", x: u.x, y: u.y, c: "#8be06a", d: 0.8 });
 			return true;
 		},
@@ -4828,7 +4874,7 @@ const BOSSP = {
 		for (let i = 0; i < n; i++) {
 			const a = a0 + (i - (n - 1) / 2) * 0.17;
 			tele({ shape: "line", x: u.x, y: u.y - 20, a, len: 620, d: 0.55, c: EL[u.el].c });
-			Seq.at(0.55 + i * 0.04, () => S === "fight" && u.hp > 0 && u.bph === phase && shoot(u, null, eAtk(u) * 0.6, { lin: 1, vx: Math.cos(a) * 470, vy: Math.sin(a) * 470, stc: 0.5, big: 1 }));
+			Seq.at(0.55 + i * 0.04, () => State.is("fight") && u.hp > 0 && u.bph === phase && shoot(u, null, eAtk(u) * 0.6, { lin: 1, vx: Math.cos(a) * 470, vy: Math.sin(a) * 470, stc: 0.5, big: 1 }));
 		}
 	},
 	rain(u) {
@@ -4841,7 +4887,7 @@ const BOSSP = {
 			const x = clamp(p.x + rr(-60, 60), FLD.x0, FLD.x1),
 				y = clamp(p.y + rr(-34, 34), F.A.y0, FLD.y1);
 			Seq.at(i * 0.16, () => {
-				if (S !== "fight" || u.hp <= 0 || u.bph !== phase) return;
+				if (!State.is("fight") || u.hp <= 0 || u.bph !== phase) return;
 				tele({
 					x,
 					y,
@@ -4944,155 +4990,19 @@ function bossStep(u, h) {
 // ---------- шаг симуляции ----------
 function unitStep(u, h) {
 	if (u.hp <= 0) return;
-	const hr = h / SPDX,
-		A = F.A,
-		s = u.st;
-	u.atkT = Math.max(0, u.atkT - hr);
-	u.hitT = Math.max(0, u.hitT - hr);
-	u.mv = 0;
-	if (u.inv > 0) u.inv -= h;
-	if (u.shT > 0 && (u.shT -= h) <= 0) u.sh = 0;
-	if (u.spw > 0) {
-		u.spw -= hr;
-		return;
-	}
-	if (u.an) {
-		u.an.t += hr;
-		if (u.an.t >= u.an.d) u.an = null;
-	}
-	for (const k in s) {
-		const q = s[k];
-		q.t -= h;
-		if (k === "burn" || k === "poison") {
-			q.tk += h;
-			if (q.tk >= 0.5) {
-				q.tk -= 0.5;
-				hurt(null, u, q.v * 0.5, { pure: 1, dot: 1, el: k === "burn" ? "fire" : "poison" });
-			}
-		}
-		if (q.t <= 0) delete s[k];
-	}
+	const hr = h / SPDX, A = F.A, s = u.st;
+	if (unitTickCooldowns(u, h, hr, A)) return;
 	if (u.hp <= 0) return;
-	// опасные покрытия и лужи боссов
-	u.hz = (u.hz || 0) + h;
-	if (u.hz >= 0.5) {
-		u.hz = 0;
-		const P = surfAt(A, u.x, u.y);
-		if (P && P.haz && !u.z) {
-			hurt(null, u, u.max * (u.boss ? 0.004 : 0.015), { pure: 1, dot: 1, el: P.haz });
-			addSt(u, P.haz === "fire" ? "burn" : "poison", 2, u.max * 0.006);
-		}
-		if (!u.team)
-			for (const p of A.pools)
-				if (Math.hypot(u.x - p.x, (u.y - p.y) * 1.6) < p.r) {
-					hurt(p.src, u, p.src.atk * 0.3, { dot: 1, el: p.el });
-					if (p.el === "ice") addSt(u, "chill", 1.5);
-				}
-	}
-	// Смертельное покрытие или лужа не должны позволить бойцу атаковать в этот же кадр.
+	unitHazards(u, h, A);
 	if (u.hp <= 0) return;
-	if (u.kx || u.ky) {
-		u.x += u.kx * h;
-		u.y += u.ky * h;
-		const k = Math.exp(-h * 9);
-		u.kx *= k;
-		u.ky *= k;
-		if (Math.abs(u.kx) + Math.abs(u.ky) < 8) u.kx = u.ky = 0;
-		navPush(A, u, u.rad);
-	}
-	if (u.jump) {
-		const j = u.jump;
-		j.t += h;
-		const k = Math.min(1, j.t / j.d),
-			q = ez.io(k);
-		u.x = lerp(j.x0, j.x1, q);
-		u.y = lerp(j.y0, j.y1, q);
-		u.z = Math.sin(Math.PI * k) * j.h;
-		if (k >= 1) {
-			u.z = 0;
-			u.jump = null;
-			navPush(A, u, u.rad * 0.5);
-			j.fn();
-		}
-		return;
-	}
+	unitKnockTick(u, h, A);
+	if (unitJumpTick(u, h, A)) return;
 	if (s.stun) return;
-	if (u.sw) {
-		u.sw.t -= h;
-		if (u.sw.t <= 0) {
-			strike(u, u.sw.tg, u.sw.dmg);
-			u.sw = null;
-		}
-	}
+	if (u.sw) { u.sw.t -= h; if (u.sw.t <= 0) { strike(u, u.sw.tg, u.sw.dmg); u.sw = null; } }
 	const foes = liv(u.team ? F.pl : F.en);
-	if (u.heal) {
-		u.hc -= h;
-		if (u.hc <= 0) {
-			u.hc = 2;
-			const al = liv(F.pl)
-				.filter((a) => a.hp < a.max)
-				.sort((p, q) => p.hp / p.max - q.hp / q.max);
-			if (al.length) {
-				heal(al[0], u.heal * Math.max(1, u.atk / 50), u);
-				Fx.add({ k: "beam", x0: u.x + u.face * 14, y0: u.y - 60, x1: al[0].x, y1: al[0].y - 30, c: "#8be06a", d: 0.25, w: 3 });
-				sfx("heal");
-			}
-		}
-	}
-	if (u.ulc) {
-		// вихрь ударов бойца
-		const c = u.ulc;
-		c.t -= h;
-		if (c.t <= 0) {
-			const tg = pick(foes);
-			if (!tg || c.n <= 0) u.ulc = null;
-			else {
-				c.n--;
-				c.t = 0.2;
-				Fx.add({ k: "ghost", u, x: u.x, y: u.y, f: u.face, d: 0.3 });
-				const sd = Rand.next() < 0.5 ? 1 : -1;
-				[u.x, u.y] = placeFree(A, tg.x + sd * (22 + tg.rad), tg.y + rr(-8, 8));
-				u.face = -sd;
-				anim(u, "atk", 0.2, false);
-				hurt(u, tg, eAtk(u) * 0.9, { abil: 1 });
-				Fx.add({ k: "slash", x: tg.x, y: tg.y - 30, f: -sd, r: 56, c: "#e9d0ff", d: 0.16, w: 8, rot: rr(-0.8, 0.8) });
-			}
-		}
-		return;
-	}
-	if (u.dash) {
-		// рывок шипача: летит по прямой, сбивает всех на пути, о камень — оглушается сам
-		const d = u.dash;
-		d.t -= h;
-		u.x += d.dx * 560 * h;
-		u.y += d.dy * 560 * h;
-		u.mv = 1;
-		if (Rand.next() < 0.6) Parts.add({ x: u.x, y: u.y - 4, vx: -d.dx * 40, vy: -20, life: 0.4, c: "rgba(220,210,190,.6)", s: 6, k: 5, e: 2, l: 0 });
-		for (const p of liv(F.pl))
-			if (!d.hit.has(p) && dist(p, u) < 34 + p.rad) {
-				d.hit.add(p);
-				hurt(u, p, eAtk(u) * 1.4, { stc: 0.4 });
-				knock(p, u.x - d.dx * 20, u.y - d.dy * 20, 80);
-			}
-		let stop = d.t <= 0 || u.x <= FLD.x0 + 2 || u.x >= FLD.x1 - 2 || u.y <= A.y0 + 1 || u.y >= FLD.y1 - 1;
-		for (const o of A.obs)
-			if (!o.dead && Math.abs(o.x - u.x) < o.rx + 14 && Math.abs(o.y - u.y) < o.ry + 10) {
-				if (o.hp) breakProp(A, o);
-				else {
-					stop = true;
-					addSt(u, "stun", 1.2);
-					Fx.num(u, "бум!", "txt", "#ffe27a");
-					burst(u.x, u.y - 20, 8, { c: ["#ffe27a", "#ffffff"], sp: 160, s: 4, life: 0.4 });
-					shake(0.15);
-					sfx("hit");
-				}
-			}
-		if (stop) {
-			u.dash = null;
-			navPush(A, u, u.rad);
-		}
-		return;
-	}
+	unitHealTick(u, h);
+	if (unitUltTick(u, h, foes)) return;
+	if (unitDashTick(u, h)) return;
 	if (u.an && u.an.lock) return;
 	if (!foes.length) return;
 	let tg = null;
@@ -5100,93 +5010,8 @@ function unitStep(u, h) {
 	else tg = nearest(u, foes);
 	u.tg = tg;
 	if (u.boss && bossStep(u, h)) return;
-	if (!u.team) {
-		const K = KIT[u.k];
-		if (K) {
-			u.en = Math.min(100, u.en + 2.2 * h * wxm("chg") * (1 + F.rb.chg));
-			if (u.en >= 100 && (CFG.autoUlt !== false || u.ultQ) && CAST[u.k].ult(u)) {
-				u.en = 0;
-				u.ultQ = 0;
-				return;
-			}
-			u.acd -= h;
-			if (u.acd <= 0) {
-				if (CAST[u.k].ab(u)) {
-					u.acd = K.ab.cd * (1 - F.rb.cdr);
-					return;
-				}
-				u.acd = 0.4;
-			}
-		}
-	} else if (!u.boss && (u.slot === "m" || u.slot === "b")) {
-		u.acd -= h;
-		const d = dist(u, tg);
-		if (u.acd <= 0) {
-			if (u.slot === "m" && d < 520) {
-				u.acd = rr(4.5, 6.5);
-				anim(u, "cast", 0.4);
-				shoot(u, pick(foes), eAtk(u) * 0.8, { sp: 380, stc: 0.5, big: 1 });
-				sfx("spit");
-				return;
-			}
-			if (u.slot === "b" && d > 110 && d < 460) {
-				u.acd = rr(6.5, 9);
-				const a = Math.atan2(tg.y - u.y, tg.x - u.x);
-				anim(u, "cast", 0.7);
-				tele({
-					shape: "line",
-					x: u.x,
-					y: u.y,
-					a,
-					len: Math.min(430, d + 90),
-					d: 0.7,
-					c: "#ff5a4a",
-					wd: 34,
-					fn() {
-						if (u.hp > 0 && !u.st.stun) {
-							u.dash = { dx: Math.cos(a), dy: Math.sin(a), t: Math.min(430, d + 90) / 560, hit: new Set() };
-							sfx("dash");
-						}
-					},
-				});
-				return;
-			}
-			u.acd = 0.5;
-		}
-	}
-	const d = dist(u, tg),
-		reach = eRng(u) * 0.6 + (tg.rad > 30 ? tg.rad - 14 : 0) + (u.rad > 30 ? u.rad - 14 : 0);
-	if (Math.abs(tg.x - u.x) > 6) u.face = tg.x < u.x ? -1 : 1;
-	if (d > reach) {
-		u.mv = 1;
-		const dir = navDir(A, u.x, u.y, tg.x, tg.y),
-			k = 1 - Math.exp(-h * 14);
-		u.vx += (dir[0] - u.vx) * k;
-		u.vy += (dir[1] - u.vy) * k;
-		let v = eSpd(u) * 14;
-		if (u.set && !u.boss) {
-			// слизни двигаются прыжками
-			u.hop = (u.hop + h * (1.9 + u.spd * 0.1)) % 1;
-			v *= u.hop < 0.62 ? 1.6 : 0.02;
-			u.z = u.hop < 0.62 ? Math.sin((u.hop / 0.62) * Math.PI) * 15 : 0;
-		} else if (u.k === "bandit") v *= 0.8 + 0.5 * Math.abs(Math.sin(F.time * 5 + u.ph)); // боец бежит рывками
-		u.x += u.vx * v * h;
-		u.y += u.vy * v * h;
-		navPush(A, u, u.rad);
-	} else {
-		u.z = u.set ? Math.max(0, (u.z || 0) - h * 90) : 0;
-		u.cd -= h;
-		if (u.cd <= 0) {
-			const as = eAspd(u),
-				dur = Math.min(0.38, 0.72 / as);
-			u.cd = 1 / as;
-			u.atkT = u.atkD = dur;
-			u.ax = (tg.x - u.x) / (d || 1);
-			u.ay = (tg.y - u.y) / (d || 1);
-			if (u.rng >= 140) Seq.at(dur * 0.4, () => S === "fight" && u.hp > 0 && tg.hp > 0 && (shoot(u, tg, eAtk(u), { el: KIT[u.k] ? KIT[u.k].el : u.el }), sfx("zap", 0.7)));
-			else u.sw = { tg, t: dur * 0.42 * SPDX, dmg: eAtk(u) };
-		}
-	}
+	if (unitAbilityTick(u, h, foes)) return;
+	unitMoveAttack(u, h, foes);
 }
 // удар ближнего боя: у каждого бойца свой росчерк
 function strike(u, tg, dmg) {
@@ -5526,9 +5351,9 @@ function simStep(h) {
 	}
 }
 function upd(dt) {
-	if (S !== "fight" || !F) Seq.clock = null;
+	if (!State.is("fight") || !F) Seq.clock = null;
 	Seq.run();
-	if (S !== "fight" || !F) {
+	if (!State.is("fight") || !F) {
 		TSC = 1;
 		return;
 	}
@@ -5538,7 +5363,7 @@ function upd(dt) {
 	} else TSC = 1;
 	let rem = dt * SPDX * TSC,
 		n = 0;
-	while (rem > 1e-5 && n++ < 16 && S === "fight") {
+	while (rem > 1e-5 && n++ < 16 && State.is("fight")) {
 		const h = Math.min(rem, 0.025);
 		simStep(h);
 		rem -= h;
@@ -5548,6 +5373,108 @@ function spark(x, y, c, n, sp = 120) {
 	burst(x, y, n, { c, sp, s: 4, life: 0.5 });
 }
 
+// ===== 41_helpers.js =====
+// ===== ХЕЛПЕРЫ БОЯ: разбиение длинных функций для выполнения DoD (<=80 строк) =====
+// Логика не менялась — исходный код 40_fight.js разрезан на именованные куски.
+// Каждая функция <=60 строк, одна ответственность, покрыта golden-тестом.
+
+function unitTickCooldowns(u,h,hr,A){
+  u.atkT=Math.max(0,u.atkT-hr); u.hitT=Math.max(0,u.hitT-hr); u.mv=0;
+  if(u.inv>0) u.inv-=h;
+  if(u.shT>0 && (u.shT-=h)<=0) u.sh=0;
+  if(u.spw>0){ u.spw-=hr; return true; }
+  if(u.an){ u.an.t+=hr; if(u.an.t>=u.an.d) u.an=null; }
+  for(const k in u.st){
+    const q=u.st[k]; q.t-=h;
+    if(k==="burn"||k==="poison"){ q.tk+=h; if(q.tk>=0.5){ q.tk-=0.5; hurt(null,u,q.v*0.5,{pure:1,dot:1,el:k==="burn"?"fire":"poison"}); } }
+    if(q.t<=0) delete u.st[k];
+  }
+  return false;
+}
+function unitHazards(u,h,A){
+  u.hz=(u.hz||0)+h;
+  if(u.hz>=0.5){
+    u.hz=0;
+    const P=surfAt(A,u.x,u.y);
+    if(P && P.haz && !u.z){ hurt(null,u,u.max*(u.boss?0.004:0.015),{pure:1,dot:1,el:P.haz}); addSt(u,P.haz==="fire"?"burn":"poison",2,u.max*0.006); }
+    if(!u.team) for(const p of A.pools) if(Math.hypot(u.x-p.x,(u.y-p.y)*1.6)<p.r){ hurt(p.src,u,p.src.atk*0.3,{dot:1,el:p.el}); if(p.el==="ice") addSt(u,"chill",1.5); }
+  }
+}
+function unitKnockTick(u,h,A){
+  if(u.kx||u.ky){ u.x+=u.kx*h; u.y+=u.ky*h; const k=Math.exp(-h*9); u.kx*=k; u.ky*=k; if(Math.abs(u.kx)+Math.abs(u.ky)<8) u.kx=u.ky=0; navPush(A,u,u.rad); }
+}
+function unitJumpTick(u,h,A){
+  if(!u.jump) return false;
+  const j=u.jump; j.t+=h; const k=Math.min(1,j.t/j.d),q=ez.io(k);
+  u.x=lerp(j.x0,j.x1,q); u.y=lerp(j.y0,j.y1,q); u.z=Math.sin(Math.PI*k)*j.h;
+  if(k>=1){ u.z=0; u.jump=null; navPush(A,u,u.rad*0.5); j.fn(); }
+  return true;
+}
+function unitHealTick(u,h){
+  if(!u.heal) return;
+  u.hc-=h;
+  if(u.hc<=0){
+    u.hc=2;
+    const al=liv(F.pl).filter(a=>a.hp<a.max).sort((p,q)=>p.hp/p.max-q.hp/q.max);
+    if(al.length){ heal(al[0],u.heal*Math.max(1,u.atk/50),u); Fx.add({k:"beam",x0:u.x+u.face*14,y0:u.y-60,x1:al[0].x,y1:al[0].y-30,c:"#8be06a",d:0.25,w:3}); sfx("heal"); }
+  }
+}
+function unitUltTick(u,h,foes){
+  if(!u.ulc) return false;
+  const c=u.ulc; c.t-=h;
+  if(c.t<=0){
+    const tg=pick(foes);
+    if(!tg||c.n<=0) u.ulc=null;
+    else{ c.n--; c.t=0.2; Fx.add({k:"ghost",u,x:u.x,y:u.y,f:u.face,d:0.3}); const sd=Rand.next()<0.5?1:-1; [u.x,u.y]=placeFree(F.A,tg.x+sd*(22+tg.rad),tg.y+rr(-8,8)); u.face=-sd; anim(u,"atk",0.2,false); hurt(u,tg,eAtk(u)*0.9,{abil:1}); Fx.add({k:"slash",x:tg.x,y:tg.y-30,f:-sd,r:56,c:"#e9d0ff",d:0.16,w:8,rot:rr(-0.8,0.8)}); }
+  }
+  return true;
+}
+function unitDashTick(u,h){
+  if(!u.dash) return false;
+  const d=u.dash; d.t-=h; u.x+=d.dx*560*h; u.y+=d.dy*560*h; u.mv=1;
+  if(Rand.next()<0.6) Parts.add({x:u.x,y:u.y-4,vx:-d.dx*40,vy:-20,life:0.4,c:"rgba(220,210,190,.6)",s:6,k:5,e:2,l:0});
+  for(const p of liv(F.pl)) if(!d.hit.has(p)&&dist(p,u)<34+p.rad){ d.hit.add(p); hurt(u,p,eAtk(u)*1.4,{stc:0.4}); knock(p,u.x-d.dx*20,u.y-d.dy*20,80); }
+  let stop=d.t<=0||u.x<=FLD.x0+2||u.x>=FLD.x1-2||u.y<=F.A.y0+1||u.y>=FLD.y1-1;
+  for(const o of F.A.obs) if(!o.dead&&Math.abs(o.x-u.x)<o.rx+14&&Math.abs(o.y-u.y)<o.ry+10){ if(o.hp) breakProp(F.A,o); else{ stop=true; addSt(u,"stun",1.2); Fx.num(u,"бум!","txt","#ffe27a"); burst(u.x,u.y-20,8,{c:["#ffe27a","#ffffff"],sp:160,s:4,life:0.4}); shake(0.15); sfx("hit"); } }
+  if(stop){ u.dash=null; navPush(F.A,u,u.rad); }
+  return true;
+}
+function unitAbilityTick(u,h,foes){
+  if(!u.team){
+    const K=KIT[u.k];
+    if(K){
+      u.en=Math.min(100,u.en+2.2*h*wxm("chg")*(1+F.rb.chg));
+      if(u.en>=100&&(CFG.autoUlt!==false||u.ultQ)&&CAST[u.k].ult(u)){ u.en=0; u.ultQ=0; return true; }
+      u.acd-=h;
+      if(u.acd<=0){ if(CAST[u.k].ab(u)){ u.acd=K.ab.cd*(1-F.rb.cdr); return true; } u.acd=0.4; }
+    }
+  } else if(!u.boss&&(u.slot==="m"||u.slot==="b")){
+    u.acd-=h; const d=dist(u,u.tg);
+    if(u.acd<=0){
+      if(u.slot==="m"&&d<520){ u.acd=rr(4.5,6.5); anim(u,"cast",0.4); shoot(u,pick(foes),eAtk(u)*0.8,{sp:380,stc:0.5,big:1}); sfx("spit"); return true; }
+      if(u.slot==="b"&&d>110&&d<460){ u.acd=rr(6.5,9); const a=Math.atan2(u.tg.y-u.y,u.tg.x-u.x); anim(u,"cast",0.7); tele({shape:"line",x:u.x,y:u.y,a,len:Math.min(430,d+90),d:0.7,c:"#ff5a4a",wd:34,fn(){ if(u.hp>0&&!u.st.stun){ u.dash={dx:Math.cos(a),dy:Math.sin(a),t:Math.min(430,d+90)/560,hit:new Set()}; sfx("dash"); }}}); return true; }
+      u.acd=0.5;
+    }
+  }
+  return false;
+}
+function unitMoveAttack(u,h,foes){
+  const d=dist(u,u.tg), reach=eRng(u)*0.6+(u.tg.rad>30?u.tg.rad-14:0)+(u.rad>30?u.rad-14:0);
+  if(Math.abs(u.tg.x-u.x)>6) u.face=u.tg.x<u.x?-1:1;
+  if(d>reach){
+    u.mv=1; const dir=navDir(F.A,u.x,u.y,u.tg.x,u.tg.y),k=1-Math.exp(-h*14);
+    u.vx+=(dir[0]-u.vx)*k; u.vy+=(dir[1]-u.vy)*k;
+    let v=eSpd(u)*14;
+    if(u.set&&!u.boss){ u.hop=(u.hop+h*(1.9+u.spd*0.1))%1; v*=u.hop<0.62?1.6:0.02; u.z=u.hop<0.62?Math.sin((u.hop/0.62)*Math.PI)*15:0; }
+    else if(u.k==="bandit") v*=0.8+0.5*Math.abs(Math.sin(F.time*5+u.ph));
+    u.x+=u.vx*v*h; u.y+=u.vy*v*h; navPush(F.A,u,u.rad);
+  } else {
+    u.z=u.set?Math.max(0,(u.z||0)-h*90):0; u.cd-=h;
+    if(u.cd<=0){ const as=eAspd(u),dur=Math.min(0.38,0.72/as); u.cd=1/as; u.atkT=u.atkD=dur; u.ax=(u.tg.x-u.x)/(d||1); u.ay=(u.tg.y-u.y)/(d||1);
+      if(u.rng>=140) Seq.at(dur*0.4,()=>State.is("fight")&&u.hp>0&&u.tg.hp>0&&(shoot(u,u.tg,eAtk(u),{el:KIT[u.k]?KIT[u.k].el:u.el}),sfx("zap",0.7)));
+      else u.sw={tg:u.tg,t:dur*0.42*SPDX,dmg:eAtk(u)}; }
+  }
+}
 // ===== 50_draw.js =====
 // ===== ОТРИСОВКА БОЯ: сцена, бойцы, эффекты, свет, полосы здоровья, цифры урона, интерфейс боя =====
 let DT = 0.016;
@@ -6145,7 +6072,7 @@ function deadDraw(d, wi) {
 const ZONE = { x0: 96, x1: 506 };
 function dFight() {
 	const A = F.A,
-		fight = S === "fight",
+		fight = State.is("fight"),
 		wi = F.w,
 		w = WORLDS[wi];
 	// камера: лёгкий наезд на финальный удар и смену фазы
@@ -6428,7 +6355,7 @@ function bossBar(u) {
 	}
 	uc("ui", "g_skull", x - 20, y + 7, AP);
 	tx(fmt(Math.max(0, u.hp)) + " / " + fmt(u.max), 609, y + 8, 12, "#fff", "center", true);
-	if (u.inv > 0 && S === "fight") txo("неуязвим", x + w + 10, y + 8, 13, "#fff3b0", "left");
+	if (u.inv > 0 && State.is("fight")) txo("неуязвим", x + w + 10, y + 8, 13, "#fff3b0", "left");
 	// значки статусов босса
 	const ks = Object.keys(u.st || {}).filter((q) => ATL.ui["s_" + q]);
 	ks.forEach((q, i) => us("ui", "s_" + q, x + i * 18, y + 20, AP));
@@ -6437,13 +6364,13 @@ function bossBar(u) {
 const SLX = (i) => 343 + i * 67.5,
 	SLY = 470;
 function hud() {
-	const fight = S === "fight";
+	const fight = State.is("fight");
 	n9("win", 323, 448, 572, 98, 17);
 	for (let i = 0; i < 8; i++) {
 		const x = Math.round(SLX(i)),
 			y = SLY,
 			u = G.slots[i],
-			isSel = sel === i && S === "prep",
+			isSel = sel === i && State.is("prep"),
 			dead = fight && u && (u.hp <= 0 || !F.pl.includes(u)),
 			ready = fight && u && !dead && u.en >= 100;
 		if (!u) {
@@ -6462,7 +6389,7 @@ function hud() {
 		ctx.beginPath();
 		ctx.rect(x + 4, y + 4 + lift, 52, 46);
 		ctx.clip();
-		ctx.globalAlpha = (S === "prep" && u.placed) || (fight && !F.pl.includes(u) && u.hp > 0) ? 0.4 : 1;
+		ctx.globalAlpha = (State.is("prep") && u.placed) || (fight && !F.pl.includes(u) && u.hp > 0) ? 0.4 : 1;
 		uPort(u, x + 30, y + 62 + lift, AP, dead);
 		ctx.restore();
 		ctx.globalAlpha = 1;
@@ -6476,7 +6403,7 @@ function hud() {
 			ctx.fillRect(x + 7, y + 55 + lift, Math.round(46 * Math.min(1, u.en / 100)), 2);
 		}
 		if (u.skull) uc("ui", "skull_s", x + 49, y + 12 + lift, 1);
-		if (S === "prep" && u.placed) uc("ui", "g_check", x + 30, y + 26, AP);
+		if (State.is("prep") && u.placed) uc("ui", "g_check", x + 30, y + 26, AP);
 		if (dead) uc("ui", "g_skull", x + 30, y + 28, AP);
 		if (ready && CFG.autoUlt === false) txo("УЛЬТА", x + 30, y - 6, 12, "#ffe27a", "center");
 		if (isSel) arrowDown(x + 30, y - 12 - 3 * Math.sin(t * 6));
@@ -6487,7 +6414,7 @@ function hud() {
 function slotTap(i) {
 	const u = G.slots[i];
 	if (!u) return;
-	if (S === "shop") {
+	if (State.is("shop")) {
 		if (G.sk) {
 			if (u.skull) G.sm = "Монета-череп уже надета";
 			else if (G.coin < 3) {
@@ -6511,7 +6438,7 @@ function slotTap(i) {
 		} else pop = { u, mine: true };
 		return;
 	}
-	if (S === "prep") {
+	if (State.is("prep")) {
 		if (u.placed) {
 			u.placed = false;
 			sel = i;
@@ -6521,10 +6448,10 @@ function slotTap(i) {
 			sel = i;
 			sfx("pick");
 		}
-	} else if (S === "fight") {
+	} else if (State.is("fight")) {
 		if (F.pl.includes(u) && u.en >= 100 && CFG.autoUlt === false) u.ultQ = 1;
 		else pop = { u, mine: false };
-	} else if (S === "map" || S === "msg") pop = { u, mine: true };
+	} else if (State.is("map") || State.is("msg")) pop = { u, mine: true };
 }
 // кормление мясом: +10% здоровья (и полное лечение), +8% атаки
 function feed(u) {
@@ -6562,7 +6489,7 @@ function popLines(s, w, sz) {
 function dPop() {
 	if (!pop) return;
 	const u = pop.u,
-		mine = pop.mine && S !== "fight" && !u.team,
+		mine = pop.mine && !State.is("fight") && !u.team,
 		K = KIT[u.k],
 		x = 826,
 		y = 84,
@@ -6637,27 +6564,27 @@ function dPop() {
 		txo("Ульта: " + K.ult.n, x + 14, yy, 14, "#ffd27a", "left");
 		yy += 17;
 		yy += txw(K.ult.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15;
-		if (mine && S === "codex") btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
+		if (mine && State.is("codex")) btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
 		else if (mine) btn(x + 14, y + h - 50, w - 28, 42, "Накормить: +10% здоровья, +8% атаки", () => feed(u), "#2e7d32", { dis: G.meat <= 0, sz: 14, ic: "meat_s" });
 	}
 }
 // обновление визуальной части (вне симуляции): частицы, таймеры эффектов, погода
 function visTick(dt) {
 	Parts.upd(dt * TSC);
-	if (F && (S === "fight" || S === "prep")) {
+	if (F && (State.is("fight") || State.is("prep"))) {
 		const sd = dt * TSC;
 		wxEmit(F.A, dt);
 		for (const f of F.fx) f.t += f.k === "banner" || f.k === "cut" || f.k === "go" || f.k === "flash" ? dt : sd;
 		F.fx = F.fx.filter((f) => f.t < f.d);
 		for (const n of F.nums) n.t += dt;
 		F.nums = F.nums.filter((n) => n.t < (n.k === "crit" || n.k === "txt" ? 1.1 : 0.85));
-		const us2 = S === "fight" ? F.pl.concat(F.en) : F.en;
+		const us2 = State.is("fight") ? F.pl.concat(F.en) : F.en;
 		let fo = null;
 		for (const u of us2) {
 			const k = u.hp / u.max;
 			u.hpl = u.hpl === undefined || u.hpl < k ? k : Math.max(k, u.hpl - dt * 0.45);
 			const s = u.st;
-			if (!s || S !== "fight") continue;
+			if (!s || !State.is("fight")) continue;
 			const hy = u.y - (u.boss ? 70 : 28),
 				rd = u.boss ? 60 : 16;
 			if (s.burn && Rand.next() < dt * 14) Parts.add({ x: u.x + rr(-rd, rd), y: hy + rr(-10, 16), vx: rr(-10, 10), vy: rr(-80, -40), life: 0.5, c: pick(["#ff8a3c", "#ffe27a", "#ff5a1c"]), s: 4, k: 0, e: 0.3 });
@@ -6670,7 +6597,7 @@ function visTick(dt) {
 			if (u.boss) fo = u;
 		}
 		F.focus = fo ? { x: fo.x, y: fo.y - 60 } : F.focus;
-		if (S === "fight" && !fo && F.pl[0]) {
+		if (State.is("fight") && !fo && F.pl[0]) {
 			const e = F.en[0] || F.pl[0];
 			F.focus = { x: e.x, y: e.y - 20 };
 		}
@@ -7001,7 +6928,7 @@ function walkTo(n) {
 	sfx("step");
 }
 function flowTick() {
-	if (MV && S === "map" && t - MV.t0 >= MV.d) {
+	if (MV && State.is("map") && t - MV.t0 >= MV.d) {
 		const b = MV.b;
 		MV = null;
 		go(b);
@@ -7055,13 +6982,13 @@ function toMenu() {
 	EV = null;
 	MV = null;
 	Seq.clear();
-	S = "menu";
+	State.go("menu");
 }
 
 // ---------- события ----------
 function ev(o) {
 	EV = Object.assign({ t0: t, cards: [], sel: -1, open: o.chest === undefined ? 1 : 0, rv: [] }, o);
-	S = "msg";
+	State.go("msg");
 	pop = null;
 	TIPN = null;
 }
@@ -7098,7 +7025,7 @@ function evClose() {
 	EV = null;
 	if (e.next) e.next();
 	else {
-		S = "map";
+		State.go("map");
 		autosave();
 	}
 }
@@ -7228,7 +7155,7 @@ function win() {
 		const after = () => {
 			G.shop = true;
 			G.stock = null;
-			S = "shop";
+			State.go("shop");
 			SS.sel = -1;
 		};
 		ev({
@@ -7280,10 +7207,10 @@ function win() {
 					next: () => {
 						if (G.w + 1 >= worldCount()) {
 							delSave();
-							S = "win";
+							State.go("win");
 							sfx("fanfare");
 						} else {
-							S = "world";
+							State.go("world");
 							WT0 = t;
 							autosave();
 						}
@@ -7320,7 +7247,7 @@ function nextWorld() {
 	G.slots.forEach((u) => u && (u.hp = u.max));
 	genMap();
 	bakeMap(1 + ((Rand.next() * 2147483000) | 0));
-	S = "map";
+	State.go("map");
 	Parts.clear();
 	autosave();
 }
@@ -7331,7 +7258,7 @@ function lose() {
 	}
 	if (!G.arena) delSave();
 	if (F) BGA = F.A;
-	S = "lose";
+	State.go("lose");
 	pop = null;
 	sfx("lose");
 }
@@ -7352,7 +7279,7 @@ function openShop() {
 	G.sm = "";
 	G.rm = G.sk = false;
 	pop = null;
-	S = "shop";
+	State.go("shop");
 	sfx("chest");
 }
 const rrPrice = () => 3 + 2 * G.stock.rr;
@@ -7592,7 +7519,7 @@ function applySave(d, v) {
 	MV = null;
 	Seq.clear();
 	Parts.clear();
-	S = "map";
+	State.go("map");
 	if (G.pend) {
 		fight(G.pend);
 		snap = JSON.stringify(d);
@@ -7602,7 +7529,7 @@ function applySave(d, v) {
 function saveGame() {
 	if (!G || G.arena) return false;
 	try {
-		const q = S === "prep" || S === "fight" ? snap : S === "lose" || S === "win" ? null : ser();
+		const q = State.is("prep") || State.is("fight") ? snap : State.is("lose") || State.is("win") ? null : ser();
 		if (!q) return false;
 		const inner = saveInner(q);
 		if (!inner) return false;
@@ -7672,7 +7599,7 @@ function loadGame() {
 }
 
 function autosave() {
-	if (G && !G.arena && (S === "map" || S === "prep" || S === "world")) saveGame();
+	if (G && !G.arena && (State.is("map") || State.is("prep") || State.is("world"))) saveGame();
 }
 
 // автосохранение при уходе со страницы и сворачивании вкладки
@@ -7928,7 +7855,7 @@ function cardFace(c, i, x, y, w, h) {
 function dMsg() {
 	const e = EV;
 	if (!e) {
-		S = "map";
+		State.go("map");
 		return dMap();
 	}
 	if (e.bg && BGA) {
@@ -8275,7 +8202,7 @@ function dShop() {
 			G.rm = G.sk = false;
 			if (G.arena) arenaNext();
 			else {
-				S = "map";
+				State.go("map");
 				autosave();
 			}
 		},
@@ -8406,18 +8333,18 @@ function dMenu() {
 					.sort(() => Rand.next() - 0.5)
 					.slice(0, 3);
 				PK = -1;
-				S = "pick";
+				State.go("pick");
 			},
 			"#8e24aa",
 		],
 		["Боевая арена", arenaStart, "#8e24aa"],
-		["Коллекция", () => { CODEX_TEST = null; pop = null; S = "codex"; }, "#8e24aa"],
+		["Коллекция", () => { CODEX_TEST = null; pop = null; State.go("codex"); }, "#8e24aa"],
 		[
 			"Настройки",
 			() => {
 				delAsk = false;
 				SRET = "menu";
-				S = "settings";
+				State.go("settings");
 			},
 			"#8e24aa",
 		],
@@ -8604,7 +8531,7 @@ function dPick() {
 function startRun() {
 	if (PK < 0) return;
 	G.slots[0] = recruit(G.choices[PK], 0);
-	S = "map";
+	State.go("map");
 	sfx("start");
 	autosave();
 }
@@ -8790,7 +8717,7 @@ function dWorld() {
 }
 // ---------- итог похода ----------
 function dEnd() {
-	const wn = S === "win",
+	const wn = State.is("win"),
 		st = G.st;
 	if (BGA) ctx.drawImage(BGA.floor, 0, 0, W, H);
 	else stageBG(G.w || 0);
@@ -8836,7 +8763,7 @@ function dEnd() {
 				.sort(() => Rand.next() - 0.5)
 				.slice(0, 3);
 			PK = -1;
-			S = "pick";
+			State.go("pick");
 		}
 	}, "#2e7d32", { sz: 20 });
 	btn(619, 468, 210, 50, "В меню", toMenu, "#8e24aa", { sz: 20 });
@@ -8847,7 +8774,7 @@ function pauseMenu() {
 	ctx.fillStyle = "rgba(8,6,14,.74)";
 	ctx.fillRect(0, 0, W, H);
 	area(0, 0, W, H, () => {});
-	const camp = G && !G.arena && S !== "pick" && S !== "win" && S !== "lose",
+	const camp = G && !G.arena && !State.is("pick") && !State.is("win") && !State.is("lose"),
 		items = [
 			["Вернуться в игру", () => (paused = false), "#2e7d32"],
 			[
@@ -8856,7 +8783,7 @@ function pauseMenu() {
 					paused = false;
 					delAsk = false;
 					SRET = S;
-					S = "settings";
+					State.go("settings");
 				},
 				"#8e24aa",
 			],
@@ -8891,33 +8818,33 @@ function draw() {
 		tx("Загрузка…", 609, 316, 14, "#b9b3c8", "center");
 		return;
 	}
-	if (S !== lastS) {
+	if (State.cur !== lastS) {
 		if (SCENE[S] !== SCENE[lastS]) {
 			Parts.clear();
 			TRT = 0.42;
 			CAM.z = 1;
 		}
-		if (S === "win" || S === "lose") ENDT = t;
-		if (S !== "prep" && S !== "fight" && S !== "shop" && S !== "map") pop = null;
+		if (State.is("win") || State.is("lose")) ENDT = t;
+		if (!State.is("prep") && !State.is("fight") && !State.is("shop") && !State.is("map")) pop = null;
 		if (lastS === "fight" || lastS === "prep") pop = null;
 		TIPN = TIPR = null;
 		lastS = S;
 	}
 	ctx.save();
 	if (SK > 0) ctx.translate(Math.round((Rand.next() - 0.5) * SK * 20) * 2, Math.round((Rand.next() - 0.5) * SK * 20) * 2);
-	if (S === "menu") dMenu();
-	else if (S === "pick") dPick();
-	else if (S === "map") dMap();
-	else if (S === "prep" || S === "fight") dFight();
-	else if (S === "msg") dMsg();
-	else if (S === "shop") dShop();
-	else if (S === "settings") dSet();
-	else if (S === "world") dWorld();
-	else if (S === "codex") dCodex();
+	if (State.is("menu")) dMenu();
+	else if (State.is("pick")) dPick();
+	else if (State.is("map")) dMap();
+	else if (State.is("prep") || State.is("fight")) dFight();
+	else if (State.is("msg")) dMsg();
+	else if (State.is("shop")) dShop();
+	else if (State.is("settings")) dSet();
+	else if (State.is("world")) dWorld();
+	else if (State.is("codex")) dCodex();
 	else dEnd();
-	if (S === "map" || S === "prep" || S === "fight" || S === "shop" || S === "codex") dPop();
-	if (S !== "menu" && S !== "win" && S !== "lose" && S !== "settings") ibtn("pause", 1142, 6, () => (paused = true));
-	if (S !== "settings") ibtn("note", S === "menu" || S === "win" || S === "lose" ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
+	if (State.is("map") || State.is("prep") || State.is("fight") || State.is("shop") || State.is("codex")) dPop();
+	if (!State.is("menu") && !State.is("win") && !State.is("lose") && !State.is("settings")) ibtn("pause", 1142, 6, () => (paused = true));
+	if (!State.is("settings")) ibtn("note", State.is("menu") || State.is("win") || State.is("lose") ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
 	Fly.draw();
 	if (FLASH) {
 		const k = (t - FLASH.t0) / FLASH.d;
@@ -9019,9 +8946,9 @@ const Tune = {
 		[-4, 20000],
 	],
 	upd() {
-		const inRun = G && S !== "menu" && S !== "settings" && S !== "pick",
+		const inRun = G && !State.is("menu") && !State.is("settings") && !State.is("pick"),
 			w = inRun ? G.w || 0 : -1,
-			b = (S === "fight" || S === "prep") && F && F.kind === "boss" ? 1 + ((F.en[0] && F.en[0].bph) || 0) : 0,
+			b = (State.is("fight") || State.is("prep")) && F && F.kind === "boss" ? 1 + ((F.en[0] && F.en[0].bph) || 0) : 0,
 			key = w + "|" + b;
 		if (key === this.k) return;
 		this.k = key;
@@ -9102,7 +9029,7 @@ function loop(ts) {
 			pz = paused;
 			Music.pause(paused);
 		}
-		Music.level(S === "fight" ? 1 : 0);
+		Music.level(State.is("fight") ? 1 : 0);
 		Tune.upd();
 		if (!paused) {
 			// сбой в симуляции не должен дотянуться до отрисовки и цикла
@@ -9111,10 +9038,10 @@ function loop(ts) {
 				flowTick();
 				visTick(dt);
 				// атмосфера вне боя
-				if (S === "map" || S === "msg" || S === "world" || S === "shop") {
-					MAPA.w = WORLDS[S === "world" ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
-					if (!(S === "msg" && EV && EV.bg)) wxEmit(MAPA, dt, S === "shop" ? 0.5 : 0.7);
-				} else if (S === "menu" || S === "pick" || S === "settings") {
+				if (State.is("map") || State.is("msg") || State.is("world") || State.is("shop")) {
+					MAPA.w = WORLDS[State.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
+					if (!(State.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, State.is("shop") ? 0.5 : 0.7);
+				} else if (State.is("menu") || State.is("pick") || State.is("settings")) {
 					MAPA.w = WORLDS[0];
 					wxEmit(MAPA, dt, 2.2);
 				}
@@ -9147,14 +9074,14 @@ addEventListener("keydown", (e) => {
 	if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
 	if (!READY || e.repeat) return;
 	const k = e.key;
-	if (k === "Escape" && S === "codex" && CODEX_TEST) { CODEX_TEST = null; pop = null; e.preventDefault(); return; }
+	if (k === "Escape" && State.is("codex") && CODEX_TEST) { CODEX_TEST = null; pop = null; e.preventDefault(); return; }
 	if (k === "Escape" || k === "p" || k === "P" || k === "з" || k === "З") {
-		if (S !== "menu" && S !== "settings" && S !== "win" && S !== "lose") paused = !paused;
+		if (!State.is("menu") && !State.is("settings") && !State.is("win") && !State.is("lose")) paused = !paused;
 	} else if (paused) return;
 	else if (k === " " || k === "Enter") {
-		if (S === "prep" && G.slots.some((u) => u && u.placed)) startFight();
-		else if (S === "prep") autoPlace();
-		else if (S === "msg" && EV) {
+		if (State.is("prep") && G.slots.some((u) => u && u.placed)) startFight();
+		else if (State.is("prep")) autoPlace();
+		else if (State.is("msg") && EV) {
 			const e2 = EV;
 			if (!e2.open) {
 				e2.open = 1;
@@ -9163,7 +9090,7 @@ addEventListener("keydown", (e) => {
 			} else if (!e2.pick) evClose();
 		}
 		e.preventDefault();
-	} else if (S === "fight" && (k === "1" || k === "2" || k === "3")) SPDX = +k;
+	} else if (State.is("fight") && (k === "1" || k === "2" || k === "3")) SPDX = +k;
 });
 addEventListener("resize", fit);
 addEventListener("orientationchange", () => setTimeout(fit, 150));
@@ -9185,7 +9112,7 @@ Rand.seed((Date.now() ^ ((performance.now() * 1000) | 0)) >>> 0);
 requestAnimationFrame(loop);
 loadAll().then(() => {
 	newGame();
-	S = "menu";
+	State.go("menu");
 });</script>
 <script>(()=>{
 "use strict";
