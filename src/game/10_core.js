@@ -7,6 +7,7 @@ const IMG = {},
 	ATL = ATLAS,
 	SILC = new Map(),
 	GLOWC = {};
+let GLOWN = 0; // сколько холстов свечения в кэше (предохранитель от динамических цветов)
 let READY = false,
 	LOADP = 0,
 	TSC = 1; // масштаб времени боя (слоумо)
@@ -42,6 +43,142 @@ const fmt = (n) => {
 	return a >= 1e9 ? (n / 1e9).toFixed(1) + "B" : a >= 1e6 ? (n / 1e6).toFixed(1) + "M" : a >= 1e4 ? (n / 1e3).toFixed(1) + "K" : "" + n;
 };
 const pct = (v) => Math.round(v * 100) + "%";
+// Санитайз чисел: любое внешнее значение (сейв, формула, параметр способности) проходит сюда.
+// NaN/Infinity/не-число → fallback; затем зажим в [min, max]. В логике боя NaN появиться не должен.
+function num(v, fallback = 0, min = -Infinity, max = Infinity) {
+	const n = typeof v === "number" ? v : v == null || v === "" ? NaN : +v;
+	const r = Number.isFinite(n) ? n : fallback;
+	return r < min ? min : r > max ? max : r;
+}
+
+// Сжатие массива на месте (без аллокации нового): оставляет элементы, для которых keep(v) истинно.
+// Порядок сохраняется — результат тот же, что у filter, но в горячем цикле нет мусора.
+function compact(a, keep) {
+	let j = 0;
+	for (let i = 0; i < a.length; i++) {
+		const v = a[i];
+		if (keep(v)) a[j++] = v;
+	}
+	a.length = j;
+	return a;
+}
+
+// ---------- шина событий ----------
+// Логика сообщает «что случилось», а звук, частицы и статистика подписываются.
+// Обработчики вызываются синхронно в порядке подписки; сбой одного не трогает остальных.
+const Events = {
+	h: Object.create(null),
+	on(ev, fn) {
+		(this.h[ev] || (this.h[ev] = [])).push(fn);
+		return fn;
+	},
+	off(ev, fn) {
+		const a = this.h[ev];
+		if (!a) return;
+		const i = a.indexOf(fn);
+		if (i >= 0) a.splice(i, 1);
+	},
+	emit(ev, a, b, c) {
+		const l = this.h[ev];
+		if (!l) return 0;
+		for (let i = 0; i < l.length; i++) {
+			try {
+				l[i](a, b, c);
+			} catch (e) {
+				if (typeof logErr === "function") logErr("event:" + ev, e);
+			}
+		}
+		return l.length;
+	},
+};
+
+// ---------- менеджер таймеров и слушателей ----------
+// Всё, что ставится через setTimeout/setInterval/addEventListener, регистрируется здесь
+// с меткой владельца (экран или подсистема) и снимается одним вызовом при выходе.
+const Timers = {
+	list: [],
+	seq: 0,
+	after(ms, fn, owner = "app") {
+		const rec = { id: ++this.seq, owner, kind: "t" };
+		rec.h = setTimeout(() => {
+			this.drop(rec);
+			fn();
+		}, ms);
+		this.list.push(rec);
+		return rec.id;
+	},
+	every(ms, fn, owner = "app") {
+		const rec = { id: ++this.seq, owner, kind: "i", h: setInterval(fn, ms) };
+		this.list.push(rec);
+		return rec.id;
+	},
+	on(target, ev, fn, opts, owner = "app") {
+		target.addEventListener(ev, fn, opts);
+		const rec = { id: ++this.seq, owner, kind: "l", target, ev, fn, opts };
+		this.list.push(rec);
+		return rec.id;
+	},
+	drop(rec) {
+		const i = this.list.indexOf(rec);
+		if (i >= 0) this.list.splice(i, 1);
+	},
+	clear(id) {
+		const rec = this.list.find((r) => r.id === id);
+		if (rec) this.kill(rec);
+	},
+	kill(rec) {
+		if (rec.kind === "t") clearTimeout(rec.h);
+		else if (rec.kind === "i") clearInterval(rec.h);
+		else
+			try {
+				rec.target.removeEventListener(rec.ev, rec.fn, rec.opts);
+			} catch (_) {}
+		this.drop(rec);
+	},
+	// снять всё, что принадлежит владельцу (например, экрану при выходе)
+	clearOwner(owner) {
+		for (const rec of this.list.filter((r) => r.owner === owner)) this.kill(rec);
+	},
+	count(owner) {
+		return owner ? this.list.filter((r) => r.owner === owner).length : this.list.length;
+	},
+};
+
+// ---------- цикл: фиксированный шаг симуляции ----------
+// Симуляция идёт шагами ровно 1/60 с через накопитель: не более MAX шагов за кадр
+// (защита от «спирали смерти» после сворачивания вкладки или долгого кадра).
+// Кадры с периодом, близким к k/60 с (60, 30, 20 Гц ± 8 %), привязываются к сетке,
+// чтобы на обычных экранах каждый кадр давал ровно k шагов без дрожания.
+// alpha — доля шага, не вошедшая в симуляцию; отрисовка боя дотягивает позиции на alpha
+// (экстраполяция по последнему смещению), поэтому на 90/120 Гц движение остаётся плавным.
+const Loop = {
+	STEP: 1 / 60,
+	MAX: 5,
+	acc: 0,
+	alpha: 0,
+	steps: 0,
+	// разложить реальное время кадра на число шагов; возвращает число шагов
+	feed(sec) {
+		const st = this.STEP;
+		if (!(sec > 0)) sec = 0;
+		for (let k = 1; k <= 3; k++) if (Math.abs(sec - k * st) < st * 0.08) sec = k * st;
+		this.acc = Math.min(this.acc + sec, st * this.MAX);
+		let n = 0;
+		while (this.acc >= st - 1e-7 && n < this.MAX) {
+			this.acc -= st;
+			n++;
+		}
+		if (this.acc < 1e-7) this.acc = 0;
+		this.alpha = this.acc / st;
+		this.steps = n;
+		return n;
+	},
+	reset() {
+		this.acc = 0;
+		this.alpha = 0;
+		this.steps = 0;
+	},
+};
 
 // ---------- загрузка ----------
 function loadAll() {
@@ -52,9 +189,14 @@ function loadAll() {
 			new Promise((res) => {
 				const i = new Image();
 				i.onload = () => {
-					IMG[k] = i;
-					LOADP = ++n / names.length;
-					res();
+					const done = () => {
+						IMG[k] = i;
+						LOADP = ++n / names.length;
+						res();
+					};
+					// декодируем заранее: первый drawImage большого атласа не должен фризить кадр
+					if (typeof i.decode === "function") i.decode().then(done, done);
+					else done();
 				};
 				i.onerror = () => {
 					n++;
@@ -197,6 +339,12 @@ function recolor(img, rules) {
 }
 function glowSpr(col) {
 	if (!GLOWC[col]) {
+		// предохранитель: если цветов-ключей стало слишком много (динамический цвет), кэш сбрасывается,
+		// а не растёт без предела — спрайт 48×48 дешевле утечки
+		if (++GLOWN > 512) {
+			for (const k in GLOWC) delete GLOWC[k];
+			GLOWN = 1;
+		}
 		const c = mkC(48, 48),
 			x = c.getContext("2d"),
 			g = x.createRadialGradient(24, 24, 0, 24, 24, 24);
@@ -229,7 +377,8 @@ function glow(x, y, r, col, a = 1) {
 }
 
 // ---------- качество графики ----------
-const QL = { lv: 2, auto: true, bad: 0, ft: 16 };
+// lv: 0 низкое, 1 среднее, 2 высокое; ft — сглаженное время кадра; bad/good — накопители гистерезиса
+const QL = { lv: 2, auto: true, bad: 0, good: 0, ft: 16, upWait: 20000, max: 2 };
 function guessQ() {
 	const m = navigator.deviceMemory || 4,
 		c = navigator.hardwareConcurrency || 4;
@@ -238,20 +387,36 @@ function guessQ() {
 function setQ(v) {
 	QL.auto = v === "auto" || v === undefined || v === null;
 	QL.lv = QL.auto ? guessQ() : v;
+	QL.max = 2;
+	QL.upWait = 20000;
 	CFG.q = QL.auto ? "auto" : v;
 	applyQ();
 }
 function applyQ() {
 	Parts.cap = [130, 300, 620][QL.lv];
 	QL.bad = 0;
+	QL.good = 0;
 }
-// авто-режим: если кадр стабильно дольше 26 мс — снижаем уровень (частицы, свет, тени, разрешение)
+// авто-режим с гистерезисом: вниз — быстро (3 с кадров дольше 26 мс), вверх — только после
+// QL.upWait мс стабильно быстрых кадров (< 15 мс); каждое понижение удваивает время ожидания,
+// чтобы качество не «мигало» на устройстве, которое держит уровень на грани.
 function perfTick(ms) {
 	QL.ft += (ms - QL.ft) * 0.05;
-	if (!QL.auto || QL.lv === 0) return;
-	QL.bad = QL.ft > 26 ? QL.bad + ms : Math.max(0, QL.bad - ms * 2);
-	if (QL.bad > 3000) {
+	if (!QL.auto) return;
+	if (QL.ft > 26) {
+		QL.bad += ms;
+		QL.good = 0;
+	} else {
+		QL.bad = Math.max(0, QL.bad - ms * 2);
+		QL.good = QL.ft < 15 ? QL.good + ms : 0;
+	}
+	if (QL.bad > 3000 && QL.lv > 0) {
 		QL.lv--;
+		QL.upWait = Math.min(QL.upWait * 2, 160000);
+		applyQ();
+		if (typeof hiDpi === "function") hiDpi();
+	} else if (QL.good > QL.upWait && QL.lv < QL.max) {
+		QL.lv++;
 		applyQ();
 		if (typeof hiDpi === "function") hiDpi();
 	}

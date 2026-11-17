@@ -81,7 +81,7 @@ function fight(kind) {
 		A = mkArena(seed, w, kind),
 		y0 = A.y0,
 		y1 = FLD.y1;
-	F = { kind, A, w, en: [], pl: [], timer: kind === "boss" ? 200 : 110, time: 0, fx: [], nums: [], proj: [], tele: [], dd: [], fl: [], pt: [], rg: [], lock: 0, out: null, rb: relBonus(), phx: 0, avg: 0, flux: null, slowT: 0, slowS: 1, st: { dmg: 0, taken: 0, kills: 0, crits: 0 }, t0: t, m };
+	F = { kind, A, w, en: [], pl: [], timer: kind === "boss" ? BAL.fight.bossTimer : BAL.fight.timer, time: 0, fx: [], nums: [], proj: [], tele: [], dd: [], fl: [], pt: [], rg: [], lock: 0, out: null, rb: relBonus(), phx: 0, avg: 0, flux: null, slowT: 0, slowS: 1, st: { dmg: 0, taken: 0, kills: 0, crits: 0 }, t0: t, m };
 	// строй врагов: до трёх колонок, ряды поровну, чтобы спрайты не наезжали друг на друга
 	const cols = Math.min(3, l.length),
 		per = Math.ceil(l.length / cols);
@@ -114,7 +114,7 @@ function fight(kind) {
 	});
 	sel = G.slots.findIndex((q) => q);
 	pop = null;
-	S = "prep";
+	Machine.go("prep");
 	// бойцы сразу стоят на поле: игрок может расставить их иначе или нажать «В бой!»
 	F.pl = G.slots.filter((u) => u);
 	autoPlace();
@@ -129,7 +129,7 @@ function startFight() {
 	}
 	sel = -1;
 	pop = null;
-	S = "fight";
+	Machine.go("fight");
 	Seq.clock = F.time; // задержки выстрелов и приёмов — по времени симуляции
 	F.rb = relBonus();
 	F.pl.forEach((u) => {
@@ -222,9 +222,27 @@ const Fx = {
 	},
 	add(o) {
 		o.t = 0;
+		// лимит эффектов: при переполнении выбрасываем самый старый «косметический» эффект,
+		// баннеры фаз, заставки и вспышки (они задают ритм боя) не трогаем
+		if (F.fx.length >= FX_CAP) {
+			const i = F.fx.findIndex((f) => f.k !== "banner" && f.k !== "cut" && f.k !== "go" && f.k !== "flash");
+			if (i >= 0) F.fx.splice(i, 1);
+		}
 		F.fx.push(o);
 	},
 };
+const FX_CAP = 240;
+// общие буферы для обхода «все бойцы» без аллокации на каждом шаге
+const ALL_STEP = [],
+	ALL_LOCK = [],
+	ALL_DEATH = [];
+function allUnits(buf) {
+	buf.length = 0;
+	for (let i = 0; i < F.pl.length; i++) buf.push(F.pl[i]);
+	for (let i = 0; i < F.en.length; i++) buf.push(F.en[i]);
+	return buf;
+}
+const ddAlive = (d) => d.t < d.d;
 function hitProps(x, y, r, pow = 1) {
 	for (const o of F.A.obs) {
 		if (o.dead || !o.hp) continue;
@@ -239,12 +257,11 @@ function hitProps(x, y, r, pow = 1) {
 function heal(tg, v, src) {
 	if (!tg || tg.hp <= 0) return 0;
 	v *= wxm("heal");
-	if (tg.st.curse) v *= 0.5;
+	if (tg.st.curse) v *= BAL.dmg.curseHeal;
 	v = Math.min(Math.round(v), tg.max - tg.hp);
 	if (v <= 0) return 0;
 	tg.hp += v;
-	Fx.num(tg, "+" + fmt(v), "heal");
-	burst(tg.x, tg.y - 30, 6, { c: ["#6dff7a", "#d6ffb0"], sp: 50, g: -120, life: 0.7, s: 4, rad: 24 });
+	Events.emit("unit:healed", tg, v, src);
 	return v;
 }
 // единая точка урона: броня, крит, щит, фазы босса, вампиризм, срабатывания реликвий, эффекты
@@ -255,16 +272,16 @@ function hurt(src, tg, raw, o = {}) {
 		return 0;
 	}
 	const el = o.el || (src && src.el) || "phys";
-	let dm = o.pure ? raw : (raw * 100) / (100 + Math.max(0, tg.arm)),
+	let dm = o.pure ? raw : (raw * BAL.dmg.armK) / (BAL.dmg.armK + Math.max(0, tg.arm)),
 		crit = false;
 	if (src && !o.dot && !o.nocrit) {
-		const cc = (src.team ? 0.05 : ((KIT[src.k] && KIT[src.k].crit) || 0.06) + F.rb.crit) + wxm("crit", 0);
+		const cc = (src.team ? BAL.dmg.critFoe : ((KIT[src.k] && KIT[src.k].crit) || BAL.dmg.critHero) + F.rb.crit) + wxm("crit", 0);
 		if (o.crit === 1 || Rand.next() < cc) {
 			crit = true;
-			dm *= 1.8 + (src.team ? 0 : F.rb.crd);
+			dm *= BAL.dmg.critMul + (src.team ? 0 : F.rb.crd);
 		}
 	}
-	if (tg.st.shock) dm *= 1.15;
+	if (tg.st.shock) dm *= BAL.dmg.shockMul;
 	if (o.abil && src && !src.team) dm *= 1 + F.rb.abil;
 	dm = Math.max(1, Math.round(dm));
 	if (tg.sh > 0) {
@@ -290,28 +307,11 @@ function hurt(src, tg, raw, o = {}) {
 		if (crit) F.st.crits++;
 	} else F.st.taken += tg.team ? 0 : dm;
 	const chg = wxm("chg");
-	if (src && !o.dot && !o.proc) src.en = Math.min(100, (src.en || 0) + 8 * chg * (src.team ? 1 : 1 + F.rb.chg));
-	if (!o.dot) tg.en = Math.min(100, (tg.en || 0) + 4 * chg);
-	// визуал удара
-	const c = EL[el] || EL.phys,
-		hy = tg.y - (tg.rad > 30 ? 60 : 28) - (tg.z || 0);
-	if (o.dot) Fx.num(tg, dm, "dot", c.c);
-	else {
-		Fx.num(tg, crit ? fmt(dm) + "!" : dm, crit ? "crit" : tg.team ? "dmg" : "hit");
-		burst(tg.x, hy, crit ? 14 : 5, { c: [c.c, c.c2], sp: crit ? 260 : 150, s: crit ? 6 : 4, life: 0.35, sv: 0.6 });
-		if (el === "fire") burst(tg.x, hy, 3, { c: ["#ff8a3c", "#ffe27a"], k: 1, s: 7, g: -160, sp: 40, life: 0.5 });
-		else if (el === "ice") burst(tg.x, hy, 4, { c: ["#ffffff", "#9fe8ff"], k: 4, s: 6, sp: 130, life: 0.45, g: 300 });
-		else if (el === "poison") burst(tg.x, hy, 3, { c: "rgba(155,224,78,.6)", k: 5, s: 6, e: 2, g: -40, sp: 30, life: 0.6 });
-		else if (el === "dark") burst(tg.x, hy, 4, { c: ["#b06cff", "#5a2a9a"], k: 1, s: 7, g: -60, sp: 60, life: 0.55 });
-		else if (el === "holy") burst(tg.x, hy, 4, { c: ["#fff3b0", "#ffffff"], k: 1, s: 6, g: -90, sp: 70, life: 0.5 });
-		else if (el === "bolt" || el === "prism") Fx.add({ k: "bolt", x0: tg.x + rr(-30, 30), y0: hy - 50, x1: tg.x, y1: hy, c: c.c, d: 0.12 });
-		if (crit) {
-			ring(tg.x, hy, 70, c.c2, 0.28, 6, 1, 1);
-			Fx.add({ k: "star", x: tg.x, y: hy, c: c.c2, d: 0.2 });
-			shake(0.12);
-			sfx("crit");
-		} else if (!o.quiet) sfx(o.snd || (el === "phys" || el === "nature" ? "hit" : el), 0.8);
-	}
+	if (src && !o.dot && !o.proc) src.en = Math.min(BAL.dmg.enMax, (src.en || 0) + BAL.dmg.enHit * chg * (src.team ? 1 : 1 + F.rb.chg));
+	if (!o.dot) tg.en = Math.min(BAL.dmg.enMax, (tg.en || 0) + BAL.dmg.enTaken * chg);
+	// визуал и звук удара — подписчики события (50_draw.js, 70_audio.js)
+	const hy = tg.y - (tg.rad > 30 ? 60 : 28) - (tg.z || 0);
+	Events.emit("unit:hit", tg, { dm, crit, el, hy, dot: !!o.dot, quiet: !!o.quiet, snd: o.snd }, src);
 	// срабатывания
 	if (src && !o.dot && !o.proc) {
 		if (!src.team) {
@@ -991,218 +991,266 @@ function bossStep(u, h) {
 	return false;
 }
 // ---------- шаг симуляции ----------
+// ---------- шаг бойца: разбит на фазы, порядок и ранние выходы — как в исходной версии ----------
+// Каждая фаза возвращает true, если шаг бойца на этом заканчивается.
 function unitStep(u, h) {
 	if (u.hp <= 0) return;
 	const hr = h / SPDX,
 		A = F.A,
 		s = u.st;
+	stepCooldowns(u, h, hr);
+	if (u.spw > 0) {
+		u.spw -= hr;
+		return;
+	}
+	stepAnim(u, hr);
+	stepStatuses(u, s, h);
+	if (u.hp <= 0) return;
+	stepHazards(u, A, h);
+	// Смертельное покрытие или лужа не должны позволить бойцу атаковать в этот же кадр.
+	if (u.hp <= 0) return;
+	stepKnock(u, A, h);
+	if (u.jump) {
+		stepJump(u, A, h);
+		return;
+	}
+	if (s.stun) return;
+	stepSwing(u, h);
+	const foes = liv(u.team ? F.pl : F.en);
+	stepHealer(u, h);
+	if (u.ulc) {
+		stepWhirl(u, A, h, foes);
+		return;
+	}
+	if (u.dash) {
+		stepDash(u, A, h);
+		return;
+	}
+	if (u.an && u.an.lock) return;
+	if (!foes.length) return;
+	const tg = pickTarget(u, foes, h);
+	u.tg = tg;
+	if (u.boss && bossStep(u, h)) return;
+	if (!u.team) {
+		if (stepHeroKit(u, h)) return;
+	} else if (!u.boss && (u.slot === "m" || u.slot === "b")) {
+		if (stepFoeSpecial(u, tg, h, foes)) return;
+	}
+	stepApproach(u, A, tg, h);
+}
+// перезарядки, неуязвимость, щит
+function stepCooldowns(u, h, hr) {
 	u.atkT = Math.max(0, u.atkT - hr);
 	u.hitT = Math.max(0, u.hitT - hr);
 	u.mv = 0;
 	if (u.inv > 0) u.inv -= h;
 	if (u.shT > 0 && (u.shT -= h) <= 0) u.sh = 0;
-	if (u.spw > 0) {
-		u.spw -= hr;
-		return;
-	}
+}
+function stepAnim(u, hr) {
 	if (u.an) {
 		u.an.t += hr;
 		if (u.an.t >= u.an.d) u.an = null;
 	}
+}
+// статусы: тики горения/яда, истечение
+function stepStatuses(u, s, h) {
 	for (const k in s) {
 		const q = s[k];
 		q.t -= h;
 		if (k === "burn" || k === "poison") {
 			q.tk += h;
-			if (q.tk >= 0.5) {
-				q.tk -= 0.5;
-				hurt(null, u, q.v * 0.5, { pure: 1, dot: 1, el: k === "burn" ? "fire" : "poison" });
+			if (q.tk >= BAL.dmg.dotTick) {
+				q.tk -= BAL.dmg.dotTick;
+				hurt(null, u, q.v * BAL.dmg.dotTick, { pure: 1, dot: 1, el: k === "burn" ? "fire" : "poison" });
 			}
 		}
 		if (q.t <= 0) delete s[k];
 	}
-	if (u.hp <= 0) return;
-	// опасные покрытия и лужи боссов
+}
+// опасные покрытия и лужи боссов
+function stepHazards(u, A, h) {
 	u.hz = (u.hz || 0) + h;
-	if (u.hz >= 0.5) {
-		u.hz = 0;
-		const P = surfAt(A, u.x, u.y);
-		if (P && P.haz && !u.z) {
-			hurt(null, u, u.max * (u.boss ? 0.004 : 0.015), { pure: 1, dot: 1, el: P.haz });
-			addSt(u, P.haz === "fire" ? "burn" : "poison", 2, u.max * 0.006);
-		}
-		if (!u.team)
-			for (const p of A.pools)
-				if (Math.hypot(u.x - p.x, (u.y - p.y) * 1.6) < p.r) {
-					hurt(p.src, u, p.src.atk * 0.3, { dot: 1, el: p.el });
-					if (p.el === "ice") addSt(u, "chill", 1.5);
-				}
+	if (u.hz < BAL.dmg.hazTick) return;
+	u.hz = 0;
+	const P = surfAt(A, u.x, u.y);
+	if (P && P.haz && !u.z) {
+		hurt(null, u, u.max * (u.boss ? BAL.dmg.hazDmgBoss : BAL.dmg.hazDmg), { pure: 1, dot: 1, el: P.haz });
+		addSt(u, P.haz === "fire" ? "burn" : "poison", 2, u.max * BAL.dmg.hazSt);
 	}
-	// Смертельное покрытие или лужа не должны позволить бойцу атаковать в этот же кадр.
-	if (u.hp <= 0) return;
-	if (u.kx || u.ky) {
-		u.x += u.kx * h;
-		u.y += u.ky * h;
-		const k = Math.exp(-h * 9);
-		u.kx *= k;
-		u.ky *= k;
-		if (Math.abs(u.kx) + Math.abs(u.ky) < 8) u.kx = u.ky = 0;
+	if (!u.team)
+		for (const p of A.pools)
+			if (Math.hypot(u.x - p.x, (u.y - p.y) * 1.6) < p.r) {
+				hurt(p.src, u, p.src.atk * BAL.dmg.poolDmg, { dot: 1, el: p.el });
+				if (p.el === "ice") addSt(u, "chill", 1.5);
+			}
+}
+// отбрасывание
+function stepKnock(u, A, h) {
+	if (!(u.kx || u.ky)) return;
+	u.x += u.kx * h;
+	u.y += u.ky * h;
+	const k = Math.exp(-h * 9);
+	u.kx *= k;
+	u.ky *= k;
+	if (Math.abs(u.kx) + Math.abs(u.ky) < 8) u.kx = u.ky = 0;
+	navPush(A, u, u.rad);
+}
+// прыжок (способности и боссы): по дуге в точку, в конце — обработчик
+function stepJump(u, A, h) {
+	const j = u.jump;
+	j.t += h;
+	const k = Math.min(1, j.t / j.d),
+		q = ez.io(k);
+	u.x = lerp(j.x0, j.x1, q);
+	u.y = lerp(j.y0, j.y1, q);
+	u.z = Math.sin(Math.PI * k) * j.h;
+	if (k >= 1) {
+		u.z = 0;
+		u.jump = null;
+		navPush(A, u, u.rad * 0.5);
+		j.fn();
+	}
+}
+// отложенный удар ближнего боя
+function stepSwing(u, h) {
+	if (!u.sw) return;
+	u.sw.t -= h;
+	if (u.sw.t <= 0) {
+		strike(u, u.sw.tg, u.sw.dmg);
+		u.sw = null;
+	}
+}
+// лекарь: раз в 2 с лечит самого раненого союзника
+function stepHealer(u, h) {
+	if (!u.heal) return;
+	u.hc -= h;
+	if (u.hc > 0) return;
+	u.hc = 2;
+	const al = liv(F.pl)
+		.filter((a) => a.hp < a.max)
+		.sort((p, q) => p.hp / p.max - q.hp / q.max);
+	if (al.length) {
+		heal(al[0], u.heal * Math.max(1, u.atk / 50), u);
+		Fx.add({ k: "beam", x0: u.x + u.face * 14, y0: u.y - 60, x1: al[0].x, y1: al[0].y - 30, c: "#8be06a", d: 0.25, w: 3 });
+		sfx("heal");
+	}
+}
+// вихрь ударов бойца
+function stepWhirl(u, A, h, foes) {
+	const c = u.ulc;
+	c.t -= h;
+	if (c.t > 0) return;
+	const tg = pick(foes);
+	if (!tg || c.n <= 0) {
+		u.ulc = null;
+		return;
+	}
+	c.n--;
+	c.t = 0.2;
+	Fx.add({ k: "ghost", u, x: u.x, y: u.y, f: u.face, d: 0.3 });
+	const sd = Rand.next() < 0.5 ? 1 : -1;
+	[u.x, u.y] = placeFree(A, tg.x + sd * (22 + tg.rad), tg.y + rr(-8, 8));
+	u.face = -sd;
+	anim(u, "atk", 0.2, false);
+	hurt(u, tg, eAtk(u) * 0.9, { abil: 1 });
+	Fx.add({ k: "slash", x: tg.x, y: tg.y - 30, f: -sd, r: 56, c: "#e9d0ff", d: 0.16, w: 8, rot: rr(-0.8, 0.8) });
+}
+// рывок шипача: летит по прямой, сбивает всех на пути, о камень — оглушается сам
+function stepDash(u, A, h) {
+	const d = u.dash;
+	d.t -= h;
+	u.x += d.dx * 560 * h;
+	u.y += d.dy * 560 * h;
+	u.mv = 1;
+	if (Rand.next() < 0.6) Parts.add({ x: u.x, y: u.y - 4, vx: -d.dx * 40, vy: -20, life: 0.4, c: "rgba(220,210,190,.6)", s: 6, k: 5, e: 2, l: 0 });
+	for (const p of liv(F.pl))
+		if (!d.hit.has(p) && dist(p, u) < 34 + p.rad) {
+			d.hit.add(p);
+			hurt(u, p, eAtk(u) * 1.4, { stc: 0.4 });
+			knock(p, u.x - d.dx * 20, u.y - d.dy * 20, 80);
+		}
+	let stop = d.t <= 0 || u.x <= FLD.x0 + 2 || u.x >= FLD.x1 - 2 || u.y <= A.y0 + 1 || u.y >= FLD.y1 - 1;
+	for (const o of A.obs)
+		if (!o.dead && Math.abs(o.x - u.x) < o.rx + 14 && Math.abs(o.y - u.y) < o.ry + 10) {
+			if (o.hp) breakProp(A, o);
+			else {
+				stop = true;
+				addSt(u, "stun", 1.2);
+				Fx.num(u, "бум!", "txt", "#ffe27a");
+				burst(u.x, u.y - 20, 8, { c: ["#ffe27a", "#ffffff"], sp: 160, s: 4, life: 0.4 });
+				shake(0.15);
+				sfx("hit");
+			}
+		}
+	if (stop) {
+		u.dash = null;
 		navPush(A, u, u.rad);
 	}
-	if (u.jump) {
-		const j = u.jump;
-		j.t += h;
-		const k = Math.min(1, j.t / j.d),
-			q = ez.io(k);
-		u.x = lerp(j.x0, j.x1, q);
-		u.y = lerp(j.y0, j.y1, q);
-		u.z = Math.sin(Math.PI * k) * j.h;
-		if (k >= 1) {
-			u.z = 0;
-			u.jump = null;
-			navPush(A, u, u.rad * 0.5);
-			j.fn();
-		}
-		return;
+}
+// цель: насмешка держит цель, иначе ближайший враг
+function pickTarget(u, foes, h) {
+	if (u.tau && (u.tau.t -= h) > 0 && u.tau.u.hp > 0) return u.tau.u;
+	return nearest(u, foes);
+}
+// набор бойца: энергия, ульта, способность. true — шаг закончен
+function stepHeroKit(u, h) {
+	const K = KIT[u.k];
+	if (!K) return false;
+	u.en = Math.min(BAL.dmg.enMax, u.en + BAL.dmg.enTick * h * wxm("chg") * (1 + F.rb.chg));
+	if (u.en >= BAL.dmg.enMax && (CFG.autoUlt !== false || u.ultQ) && CAST[u.k].ult(u)) {
+		u.en = 0;
+		u.ultQ = 0;
+		return true;
 	}
-	if (s.stun) return;
-	if (u.sw) {
-		u.sw.t -= h;
-		if (u.sw.t <= 0) {
-			strike(u, u.sw.tg, u.sw.dmg);
-			u.sw = null;
+	u.acd -= h;
+	if (u.acd <= 0) {
+		if (CAST[u.k].ab(u)) {
+			u.acd = K.ab.cd * (1 - F.rb.cdr);
+			return true;
 		}
+		u.acd = 0.4;
 	}
-	const foes = liv(u.team ? F.pl : F.en);
-	if (u.heal) {
-		u.hc -= h;
-		if (u.hc <= 0) {
-			u.hc = 2;
-			const al = liv(F.pl)
-				.filter((a) => a.hp < a.max)
-				.sort((p, q) => p.hp / p.max - q.hp / q.max);
-			if (al.length) {
-				heal(al[0], u.heal * Math.max(1, u.atk / 50), u);
-				Fx.add({ k: "beam", x0: u.x + u.face * 14, y0: u.y - 60, x1: al[0].x, y1: al[0].y - 30, c: "#8be06a", d: 0.25, w: 3 });
-				sfx("heal");
-			}
-		}
+	return false;
+}
+// особые приёмы врагов: плевок болотника, рывок шипача. true — шаг закончен
+function stepFoeSpecial(u, tg, h, foes) {
+	u.acd -= h;
+	const d = dist(u, tg);
+	if (u.acd > 0) return false;
+	if (u.slot === "m" && d < 520) {
+		u.acd = rr(4.5, 6.5);
+		anim(u, "cast", 0.4);
+		shoot(u, pick(foes), eAtk(u) * 0.8, { sp: 380, stc: 0.5, big: 1 });
+		sfx("spit");
+		return true;
 	}
-	if (u.ulc) {
-		// вихрь ударов бойца
-		const c = u.ulc;
-		c.t -= h;
-		if (c.t <= 0) {
-			const tg = pick(foes);
-			if (!tg || c.n <= 0) u.ulc = null;
-			else {
-				c.n--;
-				c.t = 0.2;
-				Fx.add({ k: "ghost", u, x: u.x, y: u.y, f: u.face, d: 0.3 });
-				const sd = Rand.next() < 0.5 ? 1 : -1;
-				[u.x, u.y] = placeFree(A, tg.x + sd * (22 + tg.rad), tg.y + rr(-8, 8));
-				u.face = -sd;
-				anim(u, "atk", 0.2, false);
-				hurt(u, tg, eAtk(u) * 0.9, { abil: 1 });
-				Fx.add({ k: "slash", x: tg.x, y: tg.y - 30, f: -sd, r: 56, c: "#e9d0ff", d: 0.16, w: 8, rot: rr(-0.8, 0.8) });
-			}
-		}
-		return;
-	}
-	if (u.dash) {
-		// рывок шипача: летит по прямой, сбивает всех на пути, о камень — оглушается сам
-		const d = u.dash;
-		d.t -= h;
-		u.x += d.dx * 560 * h;
-		u.y += d.dy * 560 * h;
-		u.mv = 1;
-		if (Rand.next() < 0.6) Parts.add({ x: u.x, y: u.y - 4, vx: -d.dx * 40, vy: -20, life: 0.4, c: "rgba(220,210,190,.6)", s: 6, k: 5, e: 2, l: 0 });
-		for (const p of liv(F.pl))
-			if (!d.hit.has(p) && dist(p, u) < 34 + p.rad) {
-				d.hit.add(p);
-				hurt(u, p, eAtk(u) * 1.4, { stc: 0.4 });
-				knock(p, u.x - d.dx * 20, u.y - d.dy * 20, 80);
-			}
-		let stop = d.t <= 0 || u.x <= FLD.x0 + 2 || u.x >= FLD.x1 - 2 || u.y <= A.y0 + 1 || u.y >= FLD.y1 - 1;
-		for (const o of A.obs)
-			if (!o.dead && Math.abs(o.x - u.x) < o.rx + 14 && Math.abs(o.y - u.y) < o.ry + 10) {
-				if (o.hp) breakProp(A, o);
-				else {
-					stop = true;
-					addSt(u, "stun", 1.2);
-					Fx.num(u, "бум!", "txt", "#ffe27a");
-					burst(u.x, u.y - 20, 8, { c: ["#ffe27a", "#ffffff"], sp: 160, s: 4, life: 0.4 });
-					shake(0.15);
-					sfx("hit");
+	if (u.slot === "b" && d > 110 && d < 460) {
+		u.acd = rr(6.5, 9);
+		const a = Math.atan2(tg.y - u.y, tg.x - u.x);
+		anim(u, "cast", 0.7);
+		tele({
+			shape: "line",
+			x: u.x,
+			y: u.y,
+			a,
+			len: Math.min(430, d + 90),
+			d: 0.7,
+			c: "#ff5a4a",
+			wd: 34,
+			fn() {
+				if (u.hp > 0 && !u.st.stun) {
+					u.dash = { dx: Math.cos(a), dy: Math.sin(a), t: Math.min(430, d + 90) / 560, hit: new Set() };
+					sfx("dash");
 				}
-			}
-		if (stop) {
-			u.dash = null;
-			navPush(A, u, u.rad);
-		}
-		return;
+			},
+		});
+		return true;
 	}
-	if (u.an && u.an.lock) return;
-	if (!foes.length) return;
-	let tg = null;
-	if (u.tau && (u.tau.t -= h) > 0 && u.tau.u.hp > 0) tg = u.tau.u;
-	else tg = nearest(u, foes);
-	u.tg = tg;
-	if (u.boss && bossStep(u, h)) return;
-	if (!u.team) {
-		const K = KIT[u.k];
-		if (K) {
-			u.en = Math.min(100, u.en + 2.2 * h * wxm("chg") * (1 + F.rb.chg));
-			if (u.en >= 100 && (CFG.autoUlt !== false || u.ultQ) && CAST[u.k].ult(u)) {
-				u.en = 0;
-				u.ultQ = 0;
-				return;
-			}
-			u.acd -= h;
-			if (u.acd <= 0) {
-				if (CAST[u.k].ab(u)) {
-					u.acd = K.ab.cd * (1 - F.rb.cdr);
-					return;
-				}
-				u.acd = 0.4;
-			}
-		}
-	} else if (!u.boss && (u.slot === "m" || u.slot === "b")) {
-		u.acd -= h;
-		const d = dist(u, tg);
-		if (u.acd <= 0) {
-			if (u.slot === "m" && d < 520) {
-				u.acd = rr(4.5, 6.5);
-				anim(u, "cast", 0.4);
-				shoot(u, pick(foes), eAtk(u) * 0.8, { sp: 380, stc: 0.5, big: 1 });
-				sfx("spit");
-				return;
-			}
-			if (u.slot === "b" && d > 110 && d < 460) {
-				u.acd = rr(6.5, 9);
-				const a = Math.atan2(tg.y - u.y, tg.x - u.x);
-				anim(u, "cast", 0.7);
-				tele({
-					shape: "line",
-					x: u.x,
-					y: u.y,
-					a,
-					len: Math.min(430, d + 90),
-					d: 0.7,
-					c: "#ff5a4a",
-					wd: 34,
-					fn() {
-						if (u.hp > 0 && !u.st.stun) {
-							u.dash = { dx: Math.cos(a), dy: Math.sin(a), t: Math.min(430, d + 90) / 560, hit: new Set() };
-							sfx("dash");
-						}
-					},
-				});
-				return;
-			}
-			u.acd = 0.5;
-		}
-	}
+	u.acd = 0.5;
+	return false;
+}
+// сближение с целью или обычная атака
+function stepApproach(u, A, tg, h) {
 	const d = dist(u, tg),
 		reach = eRng(u) * 0.6 + (tg.rad > 30 ? tg.rad - 14 : 0) + (u.rad > 30 ? u.rad - 14 : 0);
 	if (Math.abs(tg.x - u.x) > 6) u.face = tg.x < u.x ? -1 : 1;
@@ -1222,20 +1270,19 @@ function unitStep(u, h) {
 		u.x += u.vx * v * h;
 		u.y += u.vy * v * h;
 		navPush(A, u, u.rad);
-	} else {
-		u.z = u.set ? Math.max(0, (u.z || 0) - h * 90) : 0;
-		u.cd -= h;
-		if (u.cd <= 0) {
-			const as = eAspd(u),
-				dur = Math.min(0.38, 0.72 / as);
-			u.cd = 1 / as;
-			u.atkT = u.atkD = dur;
-			u.ax = (tg.x - u.x) / (d || 1);
-			u.ay = (tg.y - u.y) / (d || 1);
-			if (u.rng >= 140) Seq.at(dur * 0.4, () => S === "fight" && u.hp > 0 && tg.hp > 0 && (shoot(u, tg, eAtk(u), { el: KIT[u.k] ? KIT[u.k].el : u.el }), sfx("zap", 0.7)));
-			else u.sw = { tg, t: dur * 0.42 * SPDX, dmg: eAtk(u) };
-		}
+		return;
 	}
+	u.z = u.set ? Math.max(0, (u.z || 0) - h * 90) : 0;
+	u.cd -= h;
+	if (u.cd > 0) return;
+	const as = eAspd(u),
+		dur = Math.min(0.38, 0.72 / as);
+	u.cd = 1 / as;
+	u.atkT = u.atkD = dur;
+	u.ax = (tg.x - u.x) / (d || 1);
+	u.ay = (tg.y - u.y) / (d || 1);
+	if (u.rng >= 140) Seq.at(dur * 0.4, () => S === "fight" && u.hp > 0 && tg.hp > 0 && (shoot(u, tg, eAtk(u), { el: KIT[u.k] ? KIT[u.k].el : u.el }), sfx("zap", 0.7)));
+	else u.sw = { tg, t: dur * 0.42 * SPDX, dmg: eAtk(u) };
 }
 // удар ближнего боя: у каждого бойца свой росчерк
 function strike(u, tg, dmg) {
@@ -1437,7 +1484,7 @@ function catStep(sd) {
 	}
 }
 function deaths() {
-	for (const u of [...F.pl, ...F.en]) {
+	for (const u of allUnits(ALL_DEATH)) {
 		if (u.hp > 0 || u.dead) continue;
 		if (!u.team && F.rb.phx && !F.phx) {
 			// перо феникса
@@ -1445,19 +1492,15 @@ function deaths() {
 			u.hp = Math.max(1, Math.round(u.max * F.rb.phx));
 			u.inv = 1.5;
 			u.st = {};
-			Fx.add({ k: "pillar", x: u.x, y: u.y, c: "#ff9a3c", w: 70, d: 0.7 });
-			burst(u.x, u.y - 30, 24, { c: ["#ff9a3c", "#ffe27a", "#ff4a2a"], sp: 220, s: 6, g: -200, life: 0.9 });
-			Fx.txt(u.x, u.y - 100, "Феникс!", "#ffb03c", 22);
-			sfx("holy");
+			Events.emit("unit:phoenix", u);
 			continue;
 		}
 		u.dead = 1;
 		u.hp = 0;
 		if (u.skull && !u.team) {
 			u.skull = false;
-			G.coin += 8;
-			Fx.txt(u.x, u.y - 96, "+8", "#ffd600", 22);
-			sfx("coin");
+			G.coin += BAL.dmg.skullCoin;
+			Events.emit("coin:gain", BAL.dmg.skullCoin, u);
 		}
 		if (!u.team && F.rb.avg) {
 			F.avg += F.rb.avg;
@@ -1465,14 +1508,11 @@ function deaths() {
 		}
 		if (u.team) {
 			F.st.kills++;
-			if (wxm("soul", 0) && u.lastHit && u.lastHit.hp > 0) heal(u.lastHit, u.lastHit.max * 0.05);
+			if (wxm("soul", 0) && u.lastHit && u.lastHit.hp > 0) heal(u.lastHit, u.lastHit.max * BAL.dmg.soulHeal);
 		}
 		const c = u.team ? EL[u.el] || EL.phys : { c: "#ffe9a8", c2: "#ffffff" };
 		F.dd.push({ u, t: 0, d: u.boss ? 2.6 : 0.9 });
-		burst(u.x, u.y - 24, u.boss ? 50 : 16, { c: [c.c, c.c2, "#ffffff"], sp: u.boss ? 380 : 220, s: 6, sv: 0.8, life: 0.8, up: 60, fl: u.y + 6, bn: 0.4 });
-		ring(u.x, u.y, u.boss ? 300 : 70, c.c, 0.45, u.boss ? 10 : 4);
-		if (!u.team) for (let i = 0; i < 5; i++) Parts.add({ x: u.x + rr(-10, 10), y: u.y - 30, vx: rr(-10, 10), vy: rr(-80, -40), life: 1.2, c: "#cfe8ff", s: 7, k: 1, wob: 30, wf: 4, ph: rr(0, 6) });
-		sfx(u.boss ? "bossdie" : "die");
+		Events.emit("unit:died", u, c);
 		if (u.boss) {
 			shake(0.9);
 			slowmo(0.2, 0.9);
@@ -1492,37 +1532,21 @@ function deaths() {
 		} else if (u.team && !liv(F.en).length) slowmo(0.3, 0.45); // добивающий удар
 		else if (!u.team) shake(0.2);
 	}
-	F.pl = F.pl.filter((u) => !u.dead);
-	F.en = F.en.filter((u) => !u.dead);
+	compact(F.pl, notDead);
+	compact(F.en, notDead);
 }
+const notDead = (u) => !u.dead;
+// ---------- шаг симуляции боя: таймеры → исход → блокировка → события → бойцы → снаряды → смерти → конец ----------
 function simStep(h) {
 	const A = F.A,
 		hr = h / SPDX;
-	for (const d of F.dd) d.t += hr;
-	F.dd = F.dd.filter((d) => d.t < d.d);
-	for (const o of A.obs) if (o.hitT > 0) o.hitT -= hr;
-	A.pools = A.pools.filter((p) => (p.t += h) < p.life);
+	stepFightTimers(A, h, hr);
 	if (F.out) {
-		F.out.t += hr;
-		if (F.out.t >= F.out.d) {
-			if (F.out.win) win();
-			else lose();
-		}
+		stepOutcome(hr);
 		return;
 	}
 	if (F.lock > 0) {
-		F.lock -= hr;
-		for (const u of [...F.pl, ...F.en]) {
-			u.hitT = Math.max(0, u.hitT - hr);
-			if (u.an && (u.an.t += hr) >= u.an.d) u.an = null;
-			if (u.kx || u.ky) {
-				u.x += u.kx * h;
-				u.y += u.ky * h;
-				u.kx *= 0.9;
-				u.ky *= 0.9;
-				navPush(A, u, u.rad);
-			}
-		}
+		stepLocked(A, h, hr);
 		return;
 	}
 	F.timer -= h;
@@ -1532,7 +1556,56 @@ function simStep(h) {
 	if (F.lock > 0) return;
 	wxStep(h);
 	if (F.lock > 0) return;
-	const telegraphs = F.tele, telegraphCount = telegraphs.length;
+	stepTelegraphs(h);
+	// Переход фазы останавливает текущий шаг, а не только следующий.
+	if (F.lock > 0) return;
+	for (const u of allUnits(ALL_STEP)) {
+		unitStep(u, h);
+		if (F.lock > 0) return;
+	}
+	projStep(h);
+	if (F.lock > 0) return;
+	// бойцы не толкают друг друга (без расталкивания, чтобы не заталкивались к краю и могли атаковать)
+	const all = liv(F.pl).concat(liv(F.en));
+	for (const u of all) if (!u.jump) navPush(A, u, u.rad);
+	deaths();
+	checkFightEnd();
+}
+// числа урона, подсветка препятствий, лужи
+function stepFightTimers(A, h, hr) {
+	for (const d of F.dd) d.t += hr;
+	compact(F.dd, ddAlive);
+	for (const o of A.obs) if (o.hitT > 0) o.hitT -= hr;
+	for (const p of A.pools) p.t += h;
+	compact(A.pools, (p) => p.t < p.life);
+}
+// исход уже решён: ждём паузу и переходим к победе/поражению
+function stepOutcome(hr) {
+	F.out.t += hr;
+	if (F.out.t >= F.out.d) {
+		if (F.out.win) win();
+		else lose();
+	}
+}
+// блокировка (смена фазы босса, заставка): только анимации и отбрасывание
+function stepLocked(A, h, hr) {
+	F.lock -= hr;
+	for (const u of allUnits(ALL_LOCK)) {
+		u.hitT = Math.max(0, u.hitT - hr);
+		if (u.an && (u.an.t += hr) >= u.an.d) u.an = null;
+		if (u.kx || u.ky) {
+			u.x += u.kx * h;
+			u.y += u.ky * h;
+			u.kx *= 0.9;
+			u.ky *= 0.9;
+			navPush(A, u, u.rad);
+		}
+	}
+}
+// телеграфы способностей: по истечении срабатывает обработчик
+function stepTelegraphs(h) {
+	const telegraphs = F.tele,
+		telegraphCount = telegraphs.length;
 	const pendingTelegraphs = telegraphs.filter((q) => {
 		if (F.tele !== telegraphs) return false;
 		q.t += h;
@@ -1544,21 +1617,12 @@ function simStep(h) {
 	});
 	// Смена фазы может очистить очередь, а обработчик — добавить новое событие.
 	if (F.tele === telegraphs) F.tele = pendingTelegraphs.concat(telegraphs.slice(telegraphCount));
-	// Переход фазы останавливает текущий шаг, а не только следующий.
-	if (F.lock > 0) return;
-	for (const u of [...F.pl, ...F.en]) {
-		unitStep(u, h);
-		if (F.lock > 0) return;
-	}
-	projStep(h);
-	if (F.lock > 0) return;
-	// бойцы не толкают друг друга (без расталкивания, чтобы не заталкивались к краю и могли атаковать)
-	const all = liv(F.pl).concat(liv(F.en));
-	for (const u of all) if (!u.jump) navPush(A, u, u.rad);
-	deaths();
+}
+// условия конца боя: враги кончились / отряд пал / время вышло
+function checkFightEnd() {
 	if (!F.en.length) {
 		if (!(F.cat && F.cat.st === "dance" && F.cat.t < 1.6)) {
-			F.out = { win: true, t: 0, d: F.kind === "boss" ? 3.1 : 1.5 };
+			F.out = { win: true, t: 0, d: F.kind === "boss" ? BAL.fight.outWinBoss : BAL.fight.outWin };
 			F.proj = [];
 			F.tele = [];
 			F.pl.forEach((u) => anim(u, "win", 9, false));
@@ -1567,12 +1631,18 @@ function simStep(h) {
 	} else if (!F.pl.length || F.timer <= 0) {
 		// время вышло: если отряд измотал врагов сильнее, чем они его, бой засчитывается победой
 		const frac = (list) => list.reduce((a, u) => a + Math.max(0, u.hp), 0) / Math.max(1, list.reduce((a, u) => a + u.max, 0));
-		const byTime = F.timer <= 0 && F.pl.length > 0 && frac(F.pl) > frac(F.en) + 0.05;
-		F.out = { win: byTime, t: 0, d: 1.3, time: F.timer <= 0 };
+		const byTime = F.timer <= 0 && F.pl.length > 0 && frac(F.pl) > frac(F.en) + BAL.fight.timeoutEdge;
+		F.out = { win: byTime, t: 0, d: BAL.fight.outLose, time: F.timer <= 0 };
 		F.proj = [];
 		(byTime ? F.pl : F.en).forEach((u) => anim(u, "win", 9, false));
 		if (byTime) sfx("win");
 	}
+}
+// экраны без симуляции: очередь Seq тикает, множитель времени сброшен (хук update машины экранов)
+function idleUpd(dt) {
+	Seq.clock = null;
+	Seq.run();
+	TSC = 1;
 }
 function upd(dt) {
 	if (S !== "fight" || !F) Seq.clock = null;
@@ -1585,10 +1655,14 @@ function upd(dt) {
 		F.slowT -= dt;
 		TSC = F.slowS;
 	} else TSC = 1;
+	// запоминаем позиции до шага — отрисовка экстраполирует движение между шагами
+	lerpRemember(F.pl);
+	lerpRemember(F.en);
+	if (F.proj) lerpRemember(F.proj);
 	let rem = dt * SPDX * TSC,
 		n = 0;
-	while (rem > 1e-5 && n++ < 16 && S === "fight") {
-		const h = Math.min(rem, 0.025);
+	while (rem > 1e-5 && n++ < BAL.fight.maxSub && S === "fight") {
+		const h = Math.min(rem, BAL.fight.subStep);
 		simStep(h);
 		rem -= h;
 	}

@@ -6,7 +6,6 @@ let BGA = null, // последняя арена — фон для экрана 
 	SRET = "menu",
 	MERCH = { t: -9, s: "" };
 const MAPA = { em: {}, wx: "clear", w: null };
-const SCENE = { menu: "menu", settings: "menu", pick: "menu", codex: "menu", map: "map", msg: "map", world: "map", prep: "fight", fight: "fight", shop: "shop", win: "end", lose: "end" };
 function stageBG(wi, dark = 0) {
 	const im = IMG[WORLDS[wi].stage] || IMG.stage_taiga;
 	ctx.drawImage(im, 0, 0, W, H);
@@ -238,7 +237,7 @@ function cardFace(c, i, x, y, w, h) {
 function dMsg() {
 	const e = EV;
 	if (!e) {
-		S = "map";
+		Machine.go("map", "событие потеряно");
 		return dMap();
 	}
 	if (e.bg && BGA) {
@@ -248,7 +247,7 @@ function dMsg() {
 		stageBG(G.w);
 		resBar();
 	} else dMap();
-	hits = [];
+	Input.layer(); // карта под окном события не получает касаний
 	const a = Math.min(1, (t - e.t0) * 5),
 		n = e.cards.length,
 		cw = 164,
@@ -585,7 +584,7 @@ function dShop() {
 			G.rm = G.sk = false;
 			if (G.arena) arenaNext();
 			else {
-				S = "map";
+				Machine.go("map");
 				autosave();
 			}
 		},
@@ -716,18 +715,18 @@ function dMenu() {
 					.sort(() => Rand.next() - 0.5)
 					.slice(0, 3);
 				PK = -1;
-				S = "pick";
+				Machine.go("pick");
 			},
 			"#8e24aa",
 		],
 		["Боевая арена", arenaStart, "#8e24aa"],
-		["Коллекция", () => { CODEX_TEST = null; pop = null; S = "codex"; }, "#8e24aa"],
+		["Коллекция", () => { CODEX_TEST = null; pop = null; Machine.go("codex"); }, "#8e24aa"],
 		[
 			"Настройки",
 			() => {
 				delAsk = false;
 				SRET = "menu";
-				S = "settings";
+				Machine.go("settings");
 			},
 			"#8e24aa",
 		],
@@ -817,9 +816,10 @@ function dCodex() {
 	menuBG(false);
 	ctx.fillStyle = "rgba(10,8,18,.6)";
 	ctx.fillRect(0, 0, W, H);
-	title("Коллекция бойцов", 40);
-	txo("Все герои отряда · редкость влияет на здоровье и атаку · нажми на карточку для подробностей", 609, 62, 13, "#e8e2f4", "center", INK, false);
-	const cw = 164, chh = 204, gx = 12, gy = 70;
+	// баннер заголовка занимает 74 px по высоте, поэтому подсказка живёт внизу, рядом с «Назад»
+	title("Коллекция бойцов", 36);
+	txo("Все герои отряда · редкость влияет на здоровье и атаку · нажми на карточку для подробностей", 609, 506, 13, "#e8e2f4", "center", INK, false);
+	const cw = 164, chh = 200, gx = 12, gy = 74;
 	HEROES.forEach((h, i) => {
 		const col = i % 7, row = (i / 7) | 0;
 		const x = gx + col * (cw + 8), y = gy + row * (chh + 6);
@@ -844,7 +844,7 @@ function dCodex() {
 			gly(q[0], sx + 6, sy, 12, j === 0 ? "#ff6a6a" : "#ffd27a", "#17121f");
 			tx("" + q[1], sx + 18, sy + 1, 12, "#fff");
 		});
-		txo(K.ab.n, x + 10, y + 154, 11, EL[K.el].c, "left");
+		txo(K.ab.n, x + 14, y + 154, 11, EL[K.el].c, "left"); // x + 14: левее — под рамкой, первая буква пропадает
 		rframe(rar, x, y, cw, chh);
 		rfx(rar, x, y, cw, chh, i * 0.7);
 		area(x, y, cw, chh, () => { pop = { u: mkHero(h, rar), mine: true }; sfx("pick"); });
@@ -914,7 +914,7 @@ function dPick() {
 function startRun() {
 	if (PK < 0) return;
 	G.slots[0] = recruit(G.choices[PK], 0);
-	S = "map";
+	Machine.go("map");
 	sfx("start");
 	autosave();
 }
@@ -1057,8 +1057,11 @@ function dSet() {
 	btn(233, 414, 268, 44, window.__mxStorage.getItem("mx_dev") === "1" ? "Разработчик: включён" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
 	btn(529, 414, 160, 44, "Назад", () => {
 		delAsk = false;
-		S = SRET;
+		Machine.go(SRET, "назад из настроек");
 	});
+	// перенос сохранения файлом/текстом — запасной путь, когда хранилище браузера недоступно
+	btn(705, 414, 140, 44, "Экспорт", () => saveDialog("export"), "#8e24aa", { sz: 15 });
+	btn(851, 414, 140, 44, "Импорт", () => saveDialog("import"), "#8e24aa", { sz: 15 });
 }
 // ---------- мир пройден ----------
 function dWorld() {
@@ -1146,7 +1149,7 @@ function dEnd() {
 				.sort(() => Rand.next() - 0.5)
 				.slice(0, 3);
 			PK = -1;
-			S = "pick";
+			Machine.go("pick");
 		}
 	}, "#2e7d32", { sz: 20 });
 	btn(619, 468, 210, 50, "В меню", toMenu, "#8e24aa", { sz: 20 });
@@ -1166,7 +1169,7 @@ function pauseMenu() {
 					paused = false;
 					delAsk = false;
 					SRET = S;
-					S = "settings";
+					Machine.go("settings");
 				},
 				"#8e24aa",
 			],
@@ -1194,37 +1197,18 @@ function draw() {
 	ctx.globalCompositeOperation = "source-over";
 	ctx.fillStyle = "#0c0a12";
 	ctx.fillRect(0, 0, W, H);
-	hits = [];
+	Input.begin();
 	if (!READY) {
 		txo("Пробуждение монстров", 609, 230, 34, "#ffd23c", "center");
 		pbar(409, 280, 400, 12, LOADP, "#ffd23c");
 		tx("Загрузка…", 609, 316, 14, "#b9b3c8", "center");
 		return;
 	}
-	if (S !== lastS) {
-		if (SCENE[S] !== SCENE[lastS]) {
-			Parts.clear();
-			TRT = 0.42;
-			CAM.z = 1;
-		}
-		if (S === "win" || S === "lose") ENDT = t;
-		if (S !== "prep" && S !== "fight" && S !== "shop" && S !== "map") pop = null;
-		if (lastS === "fight" || lastS === "prep") pop = null;
-		TIPN = TIPR = null;
-		lastS = S;
-	}
+	// смена экрана: exit предыдущего, enter нового (см. Machine.sync и таблицу экранов ниже)
+	Machine.sync();
 	ctx.save();
 	if (SK > 0) ctx.translate(Math.round((Rand.next() - 0.5) * SK * 20) * 2, Math.round((Rand.next() - 0.5) * SK * 20) * 2);
-	if (S === "menu") dMenu();
-	else if (S === "pick") dPick();
-	else if (S === "map") dMap();
-	else if (S === "prep" || S === "fight") dFight();
-	else if (S === "msg") dMsg();
-	else if (S === "shop") dShop();
-	else if (S === "settings") dSet();
-	else if (S === "world") dWorld();
-	else if (S === "codex") dCodex();
-	else dEnd();
+	Machine.drawScreen();
 	if (S === "map" || S === "prep" || S === "fight" || S === "shop" || S === "codex") dPop();
 	if (S !== "menu" && S !== "win" && S !== "lose" && S !== "settings") ibtn("pause", 1142, 6, () => (paused = true));
 	if (S !== "settings") ibtn("note", S === "menu" || S === "win" || S === "lose" ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
@@ -1246,4 +1230,30 @@ function draw() {
 	if (CFG.fps) fpsDraw();
 }
 
-
+// ---------- таблица экранов ----------
+// Экран = запись в машине: scene (общая сцена — при её смене очищаются частицы и идёт
+// затемнение), draw, при необходимости update/enter/exit. Бой и расстановка делят отрисовку
+// dFight с интерполяцией движения между шагами симуляции.
+function dFightScreen() {
+	fightLerpIn();
+	try {
+		dFight();
+	} finally {
+		fightLerpOut();
+	}
+}
+function enterEnd() {
+	ENDT = t;
+}
+Machine.reg("menu", { scene: "menu", draw: dMenu });
+Machine.reg("pick", { scene: "menu", draw: dPick });
+Machine.reg("settings", { scene: "menu", draw: dSet });
+Machine.reg("codex", { scene: "menu", draw: dCodex });
+Machine.reg("map", { scene: "map", draw: dMap });
+Machine.reg("msg", { scene: "map", draw: dMsg });
+Machine.reg("world", { scene: "map", draw: dWorld });
+Machine.reg("prep", { scene: "fight", draw: dFightScreen });
+Machine.reg("fight", { scene: "fight", draw: dFightScreen, update: upd });
+Machine.reg("shop", { scene: "shop", draw: dShop });
+Machine.reg("win", { scene: "end", draw: dEnd, enter: enterEnd });
+Machine.reg("lose", { scene: "end", draw: dEnd, enter: enterEnd });

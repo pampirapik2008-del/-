@@ -91,3 +91,14 @@ const Tune = {
 	},
 };
 
+// ---------- звук по событиям боя ----------
+// Подписки стоят после частиц (50_draw.js): порядок обращений к Rand тот же, что при прямых вызовах.
+Events.on("unit:hit", (tg, e) => {
+	if (e.dot) return;
+	if (e.crit) sfx("crit");
+	else if (!e.quiet) sfx(e.snd || (e.el === "phys" || e.el === "nature" ? "hit" : e.el), 0.8);
+});
+Events.on("unit:phoenix", () => sfx("holy"));
+Events.on("coin:gain", () => sfx("coin"));
+Events.on("unit:died", (u) => sfx(u.boss ? "bossdie" : "die"));
+

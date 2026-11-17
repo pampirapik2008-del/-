@@ -10,12 +10,27 @@ const cmul = () => 1 + 0.5 * (G.w || 0); // доход растёт с номе�
 const luck = () => (G.w || 0) * 0.7;
 
 // ---------- карта мира ----------
+// ---------- карта: слои узлов → рёбра → раздвижка → типы узлов → смежность ----------
+// Порядок вызовов Rand.next() сохранён в точности (эталон 500 карт).
 function genMap() {
 	const R = Rand.next,
 		L = 6 + ((R() * 3) | 0),
 		sx = 84 + R() * 30,
 		ex = 1118,
 		gp = (ex - sx) / (L + 1);
+	const ly = mapLayers(R, L, sx, ex, gp);
+	mapEdges(R, ly);
+	mapSpread();
+	E.forEach((e) => (e[2] = 0));
+	mapKinds(R);
+	ADJ = N.map(() => []);
+	E.forEach(([a, b]) => {
+		ADJ[a].push(b);
+		ADJ[b].push(a);
+	});
+}
+// узлы по слоям: старт, L промежуточных слоёв по 1–4 узла, босс
+function mapLayers(R, L, sx, ex, gp) {
 	N = [{ x: sx, y: 200 + R() * 110, ly: 0 }];
 	E = [];
 	const ly = [[0]];
@@ -31,6 +46,10 @@ function genMap() {
 	}
 	N.push({ x: ex, y: 200 + R() * 100, k: "boss", ly: L + 1 });
 	ly.push([N.length - 1]);
+	return ly;
+}
+// рёбра: каждый узел связан с ближайшим по высоте соседом, плюс случайная развилка
+function mapEdges(R, ly) {
 	for (let l = 0; l < ly.length - 1; l++) {
 		const A = ly[l],
 			Bl = ly[l + 1];
@@ -50,7 +69,9 @@ function genMap() {
 			if (b !== undefined && !E.some((e) => e[0] === a && e[1] === b)) E.push([a, b]);
 		}
 	}
-	// значки не налезают друг на друга: раздвигаем по вертикали
+}
+// значки не налезают друг на друга: раздвигаем по вертикали
+function mapSpread() {
 	for (let it = 0; it < 40; it++)
 		for (let i = 1; i < N.length; i++)
 			for (let j = i + 1; j < N.length; j++) {
@@ -66,7 +87,9 @@ function genMap() {
 					b.y = clamp(b.y + s * p, 126, 386);
 				}
 			}
-	E.forEach((e) => (e[2] = 0));
+}
+// типы узлов: события и элитные бои раскладываются по свободным узлам
+function mapKinds(R) {
 	const free = N.map((_, i) => i)
 			.filter((i) => i > 0 && N[i].k !== "boss")
 			.sort(() => R() - 0.5),
@@ -83,11 +106,6 @@ function genMap() {
 		const c = N.filter((n) => n.ly > 0 && n.ly <= 2 && !n.k);
 		(c[0] || N.find((n) => n.ly === 1)).k = "tribe";
 	}
-	ADJ = N.map(() => []);
-	E.forEach(([a, b]) => {
-		ADJ[a].push(b);
-		ADJ[b].push(a);
-	});
 }
 // палитры карты для каждого мира: земля, дорога, доля леса, перекраска деревьев и воды
 const MAPT = {
@@ -376,13 +394,13 @@ function toMenu() {
 	EV = null;
 	MV = null;
 	Seq.clear();
-	S = "menu";
+	Machine.go("menu");
 }
 
 // ---------- события ----------
 function ev(o) {
 	EV = Object.assign({ t0: t, cards: [], sel: -1, open: o.chest === undefined ? 1 : 0, rv: [] }, o);
-	S = "msg";
+	Machine.go("msg");
 	pop = null;
 	TIPN = null;
 }
@@ -419,7 +437,7 @@ function evClose() {
 	EV = null;
 	if (e.next) e.next();
 	else {
-		S = "map";
+		Machine.go("map");
 		autosave();
 	}
 }
@@ -513,6 +531,7 @@ function enter(kind) {
 	snap = ser();
 	autosave();
 }
+// ---------- победа: общая часть, затем ветка арены / босса / обычного боя ----------
 function win() {
 	const kind = F.kind,
 		rb = relBonus(),
@@ -525,7 +544,7 @@ function win() {
 	G.slots.forEach((u) => {
 		if (u) {
 			u.placed = false;
-			u.hp = Math.min(u.max, Math.max(u.hp, Math.ceil(u.max * 0.25)) + Math.round(u.max * 0.2));
+			u.hp = Math.min(u.max, Math.max(u.hp, Math.ceil(u.max * BAL.win.healFloor)) + Math.round(u.max * BAL.win.healBonus));
 			resetU(u);
 		}
 	});
@@ -533,87 +552,94 @@ function win() {
 	BGA = F.A;
 	F = null;
 	pop = null;
-	if (G.arena) {
-		const c = 8 + 2 * G.wave + rb.coin,
-			m = 1 + (G.wave % 3 === 0 ? 1 : 0),
-			cards = [
-				{ t: "res", ic: "coin", n: c },
-				{ t: "res", ic: "meat", n: m },
-			];
-		G.coin += c;
-		G.meat += m;
-		if (G.wave > (CFG.arenaBest || 0)) {
-			CFG.arenaBest = G.wave;
-			saveCfg();
-		}
-		const after = () => {
-			G.shop = true;
-			G.stock = null;
-			S = "shop";
-			SS.sel = -1;
-		};
-		ev({
-			bg: 1,
-			title: "Волна " + G.wave + " пройдена",
-			sub: kind === "boss" ? "Босс повержен!" : "Арена ликует",
-			stats,
-			cards,
-			next:
-				G.wave % 2 === 0
-					? () => {
-							const f = G.slots.indexOf(null);
-							if (G.wave % 4 === 0 && f >= 0) {
-								const u = recruit(rnd(HEROES), rollRar(G.wave * 0.25));
-								G.slots[f] = u;
-								ev({ title: "Новобранец", sub: "Толпа выдвинула своего бойца", cards: [{ t: "hero", u, r: u.r }], next: after });
-							} else ev({ title: "Трофей арены", sub: "Выбери одну реликвию", pick: 1, chest: 1, cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(G.wave * 0.3) })), next: after });
-						}
-					: after,
-		});
-		return;
+	Events.emit("fight:won", kind, st);
+	if (G.arena) winArena(kind, rb, stats);
+	else if (kind === "boss") winBoss(rb, stats);
+	else winFight(kind, rb, stats);
+}
+// арена: монеты и мясо за волну, каждую вторую волну — трофей или новобранец, затем лавка
+function winArena(kind, rb, stats) {
+	const c = BAL.win.arenaCoin + BAL.win.arenaCoinWave * G.wave + rb.coin,
+		m = 1 + (G.wave % 3 === 0 ? 1 : 0),
+		cards = [
+			{ t: "res", ic: "coin", n: c },
+			{ t: "res", ic: "meat", n: m },
+		];
+	G.coin += c;
+	G.meat += m;
+	if (G.wave > (CFG.arenaBest || 0)) {
+		CFG.arenaBest = G.wave;
+		saveCfg();
 	}
-	if (kind === "boss") {
-		const c = Math.round(20 * cmul()) + rb.coin,
-			m = 3 + (G.w || 0);
-		G.coin += c;
-		G.meat += m;
-		G.slots.forEach((u) => u && (u.hp = u.max));
-		if ((G.w || 0) + 1 > (CFG.best || 0)) {
-			CFG.best = (G.w || 0) + 1;
-			saveCfg();
-		}
-		ev({
-			bg: 1,
-			title: WORLDS[G.w].boss.n + " повержен!",
-			sub: "Трофеи босса",
-			stats,
-			cards: [
-				{ t: "res", ic: "coin", n: c },
-				{ t: "res", ic: "meat", n: m },
-			],
-			next: () =>
-				ev({
-					title: "Сокровищница босса",
-					sub: "Выбери одну реликвию",
-					pick: 1,
-					chest: 2,
-					cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(luck() + 1, 2) })),
-					next: () => {
-						if (G.w + 1 >= worldCount()) {
-							delSave();
-							S = "win";
-							sfx("fanfare");
-						} else {
-							S = "world";
-							WT0 = t;
-							autosave();
-						}
-					},
-				}),
-		});
-		return;
+	const after = () => {
+		G.shop = true;
+		G.stock = null;
+		Machine.go("shop");
+		SS.sel = -1;
+	};
+	ev({
+		bg: 1,
+		title: "Волна " + G.wave + " пройдена",
+		sub: kind === "boss" ? "Босс повержен!" : "Арена ликует",
+		stats,
+		cards,
+		next:
+			G.wave % 2 === 0
+				? () => {
+						const f = G.slots.indexOf(null);
+						if (G.wave % 4 === 0 && f >= 0) {
+							const u = recruit(rnd(HEROES), rollRar(G.wave * 0.25));
+							G.slots[f] = u;
+							ev({ title: "Новобранец", sub: "Толпа выдвинула своего бойца", cards: [{ t: "hero", u, r: u.r }], next: after });
+						} else ev({ title: "Трофей арены", sub: "Выбери одну реликвию", pick: 1, chest: 1, cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(G.wave * 0.3) })), next: after });
+					}
+				: after,
+	});
+}
+// босс: трофеи, полное лечение, сокровищница, затем следующий мир или финал
+function winBoss(rb, stats) {
+	const c = Math.round(BAL.win.bossCoin * cmul()) + rb.coin,
+		m = BAL.win.bossMeat + (G.w || 0);
+	G.coin += c;
+	G.meat += m;
+	G.slots.forEach((u) => u && (u.hp = u.max));
+	if ((G.w || 0) + 1 > (CFG.best || 0)) {
+		CFG.best = (G.w || 0) + 1;
+		saveCfg();
 	}
-	const c = Math.round((kind === "arena" ? 10 : 6 + G.depth) * cmul()) + rb.coin,
+	ev({
+		bg: 1,
+		title: WORLDS[G.w].boss.n + " повержен!",
+		sub: "Трофеи босса",
+		stats,
+		cards: [
+			{ t: "res", ic: "coin", n: c },
+			{ t: "res", ic: "meat", n: m },
+		],
+		next: () =>
+			ev({
+				title: "Сокровищница босса",
+				sub: "Выбери одну реликвию",
+				pick: 1,
+				chest: 2,
+				cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(luck() + 1, 2) })),
+				next: () => {
+					if (G.w + 1 >= worldCount()) {
+						delSave();
+						Machine.go("win");
+						sfx("fanfare");
+					} else {
+						Machine.go("world");
+						WT0 = t;
+						autosave();
+					}
+				},
+			}),
+	});
+}
+// обычный бой / узел арены / логово: награда, шанс реликвии, открывается лавка
+function winFight(kind, rb, stats) {
+	const c = Math.round((kind === "arena" ? BAL.win.arenaNodeCoin : BAL.win.fightCoin + G.depth) * cmul()) + rb.coin,
 		m = (kind === "arena" ? 2 : 1) + ((G.w || 0) >> 1),
 		cards = [
 			{ t: "res", ic: "coin", n: c },
@@ -621,7 +647,7 @@ function win() {
 		];
 	G.coin += c;
 	G.meat += m;
-	if (kind === "arena" || Rand.next() < (kind === "swamp" ? 0.4 : 0.14)) {
+	if (kind === "arena" || Rand.next() < (kind === "swamp" ? BAL.win.swampRelicChance : BAL.win.relicChance)) {
 		const q = rollRelic(luck() + (kind === "arena" ? 0.8 : 0), kind === "arena" ? 1 : 0);
 		grantRelic(q);
 		cards.push({ t: "relic", id: q.id, r: q.r });
@@ -641,7 +667,7 @@ function nextWorld() {
 	G.slots.forEach((u) => u && (u.hp = u.max));
 	genMap();
 	bakeMap(1 + ((Rand.next() * 2147483000) | 0));
-	S = "map";
+	Machine.go("map");
 	Parts.clear();
 	autosave();
 }
@@ -652,14 +678,14 @@ function lose() {
 	}
 	if (!G.arena) delSave();
 	if (F) BGA = F.A;
-	S = "lose";
+	Machine.go("lose");
 	pop = null;
 	sfx("lose");
 }
 
 // ---------- магазин ----------
 function shopStock() {
-	if (!G.stock) G.stock = { rel: rollRelics(3, luck() + (G.arena ? G.wave * 0.2 : 0)), rr: 0 };
+	if (!G.stock) G.stock = { rel: rollRelics(BAL.shop.stock, luck() + (G.arena ? G.wave * 0.2 : 0)), rr: 0 };
 	return G.stock;
 }
 function openShop() {
@@ -673,10 +699,10 @@ function openShop() {
 	G.sm = "";
 	G.rm = G.sk = false;
 	pop = null;
-	S = "shop";
+	Machine.go("shop");
 	sfx("chest");
 }
-const rrPrice = () => 3 + 2 * G.stock.rr;
+const rrPrice = () => BAL.shop.rrBase + BAL.shop.rrStep * G.stock.rr;
 function buyRelic(i) {
 	const q = G.stock.rel[i],
 		p = relPrice(q.r, G.w);
@@ -703,7 +729,7 @@ function reroll() {
 	G.coin -= p;
 	G.stock.rr++;
 	const keep = G.stock.rel.filter((q) => q.sold),
-		fresh = rollRelics(3 - keep.length, luck() + (G.arena ? G.wave * 0.2 : 0));
+		fresh = rollRelics(BAL.shop.stock - keep.length, luck() + (G.arena ? G.wave * 0.2 : 0));
 	fresh.forEach((q) => (q.nw = t));
 	G.stock.rel = [...keep, ...fresh];
 	G.sm = "Товар обновлён";

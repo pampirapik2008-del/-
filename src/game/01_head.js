@@ -740,9 +740,9 @@ function doExit() {
 	try {
 		window.close();
 	} catch (e) {}
-	setTimeout(() => {
+	Timers.after(250, () => {
 		location.replace("about:blank");
-	}, 250);
+	}, "boot");
 }
 function mbtn(x, y, w, h, q, f, c, dis) {
 	const cx = x + w / 2,
@@ -1306,7 +1306,7 @@ function stall() {
 	if (Math.sin(t * 1.7) < 0.96) {
 		ctx.save();
 		ctx.shadowColor = "#ff2b2b";
-		ctx.shadowBlur = 8 * R;
+		ctx.shadowBlur = QL.lv === 0 ? 0 : 8 * R; // на низком качестве размытие тени выключено
 		R_(cx - 10, 240 + bob, 7, 4, "#ff4040");
 		R_(cx + 3, 240 + bob, 7, 4, "#ff4040");
 		ctx.restore();
@@ -1805,14 +1805,15 @@ const Music = (() => {
 				r.g.gain.setTargetAtTime(0, T, 0.12);
 				const ss = r.srcs;
 				r.srcs = [];
-				setTimeout(
+				Timers.after(
+					900,
 					() =>
 						ss.forEach((x) => {
 							try {
 								x.stop();
 							} catch (e) {}
 						}),
-					900,
+					"audio",
 				);
 			}
 		});
@@ -1871,7 +1872,7 @@ const Music = (() => {
 				pc.resume().catch(() => {});
 				bank();
 				apply();
-				setInterval(tick, 120);
+				Timers.every(120, tick, "audio");
 				for (let h = 0; h < 2; h++) for (let i = 0; i < PLAN[h].length; i++) TR[h].bufs[i] = await renderSec(h, PLAN[h][i]);
 			} catch (e) {
 				console.warn(e);

@@ -593,6 +593,50 @@ function deadDraw(d, wi) {
 }
 // ---------- сцена боя ----------
 const ZONE = { x0: 96, x1: 506 };
+// ---------- экстраполяция позиций между шагами симуляции ----------
+// Loop.alpha — доля шага 1/60, не вошедшая в симуляцию в этом кадре (0 на ровных 60 Гц).
+// Бойцы и снаряды на время отрисовки сдвигаются на alpha последнего смещения, затем
+// позиции возвращаются: логика видит только «настоящие» координаты.
+const LERP_PREV = new WeakMap(),
+	LERP_UNDO = [];
+function lerpRemember(list) {
+	for (let i = 0; i < list.length; i++) {
+		const u = list[i];
+		let r = LERP_PREV.get(u);
+		if (!r) LERP_PREV.set(u, (r = { x: 0, y: 0 }));
+		r.x = u.x;
+		r.y = u.y;
+	}
+}
+function lerpApply(list, k) {
+	for (let i = 0; i < list.length; i++) {
+		const u = list[i],
+			r = LERP_PREV.get(u);
+		if (!r) continue;
+		const dx = u.x - r.x,
+			dy = u.y - r.y;
+		// телепорт/рывок (больше 40 px за шаг) не экстраполируем — иначе на кадр промелькнёт «перелёт»
+		if (dx * dx + dy * dy > 1600 || (dx === 0 && dy === 0)) continue;
+		LERP_UNDO.push(u, u.x, u.y);
+		u.x += dx * k;
+		u.y += dy * k;
+	}
+}
+function fightLerpIn() {
+	LERP_UNDO.length = 0;
+	if (!F || S !== "fight" || paused || !(Loop.alpha > 0.01) || F.lock > 0 || F.out) return;
+	lerpApply(F.pl, Loop.alpha);
+	lerpApply(F.en, Loop.alpha);
+	if (F.proj) lerpApply(F.proj, Loop.alpha);
+}
+function fightLerpOut() {
+	for (let i = LERP_UNDO.length - 3; i >= 0; i -= 3) {
+		const u = LERP_UNDO[i];
+		u.x = LERP_UNDO[i + 1];
+		u.y = LERP_UNDO[i + 2];
+	}
+	LERP_UNDO.length = 0;
+}
 function dFight() {
 	const A = F.A,
 		fight = S === "fight",
@@ -1092,15 +1136,17 @@ function dPop() {
 	}
 }
 // обновление визуальной части (вне симуляции): частицы, таймеры эффектов, погода
+const fxAlive = (f) => f.t < f.d,
+	numAlive = (n) => n.t < (n.k === "crit" || n.k === "txt" ? 1.1 : 0.85);
 function visTick(dt) {
 	Parts.upd(dt * TSC);
 	if (F && (S === "fight" || S === "prep")) {
 		const sd = dt * TSC;
 		wxEmit(F.A, dt);
 		for (const f of F.fx) f.t += f.k === "banner" || f.k === "cut" || f.k === "go" || f.k === "flash" ? dt : sd;
-		F.fx = F.fx.filter((f) => f.t < f.d);
+		compact(F.fx, fxAlive);
 		for (const n of F.nums) n.t += dt;
-		F.nums = F.nums.filter((n) => n.t < (n.k === "crit" || n.k === "txt" ? 1.1 : 0.85));
+		compact(F.nums, numAlive);
 		const us2 = S === "fight" ? F.pl.concat(F.en) : F.en;
 		let fo = null;
 		for (const u of us2) {
@@ -1126,4 +1172,47 @@ function visTick(dt) {
 		}
 	}
 }
+
+// ---------- частицы и числа по событиям боя ----------
+// Логика (hurt/heal/deaths) только сообщает о событии; порядок подписчиков: сначала частицы
+// (этот файл), затем звук (70_audio.js) — ровно тот порядок, что был при прямых вызовах.
+Events.on("unit:healed", (tg, v) => {
+	Fx.num(tg, "+" + fmt(v), "heal");
+	burst(tg.x, tg.y - 30, 6, { c: ["#6dff7a", "#d6ffb0"], sp: 50, g: -120, life: 0.7, s: 4, rad: 24 });
+});
+Events.on("unit:hit", (tg, e) => {
+	const c = EL[e.el] || EL.phys,
+		hy = e.hy,
+		el = e.el;
+	if (e.dot) {
+		Fx.num(tg, e.dm, "dot", c.c);
+		return;
+	}
+	Fx.num(tg, e.crit ? fmt(e.dm) + "!" : e.dm, e.crit ? "crit" : tg.team ? "dmg" : "hit");
+	burst(tg.x, hy, e.crit ? 14 : 5, { c: [c.c, c.c2], sp: e.crit ? 260 : 150, s: e.crit ? 6 : 4, life: 0.35, sv: 0.6 });
+	if (el === "fire") burst(tg.x, hy, 3, { c: ["#ff8a3c", "#ffe27a"], k: 1, s: 7, g: -160, sp: 40, life: 0.5 });
+	else if (el === "ice") burst(tg.x, hy, 4, { c: ["#ffffff", "#9fe8ff"], k: 4, s: 6, sp: 130, life: 0.45, g: 300 });
+	else if (el === "poison") burst(tg.x, hy, 3, { c: "rgba(155,224,78,.6)", k: 5, s: 6, e: 2, g: -40, sp: 30, life: 0.6 });
+	else if (el === "dark") burst(tg.x, hy, 4, { c: ["#b06cff", "#5a2a9a"], k: 1, s: 7, g: -60, sp: 60, life: 0.55 });
+	else if (el === "holy") burst(tg.x, hy, 4, { c: ["#fff3b0", "#ffffff"], k: 1, s: 6, g: -90, sp: 70, life: 0.5 });
+	else if (el === "bolt" || el === "prism") Fx.add({ k: "bolt", x0: tg.x + rr(-30, 30), y0: hy - 50, x1: tg.x, y1: hy, c: c.c, d: 0.12 });
+	if (e.crit) {
+		ring(tg.x, hy, 70, c.c2, 0.28, 6, 1, 1);
+		Fx.add({ k: "star", x: tg.x, y: hy, c: c.c2, d: 0.2 });
+		shake(0.12);
+	}
+});
+Events.on("unit:phoenix", (u) => {
+	Fx.add({ k: "pillar", x: u.x, y: u.y, c: "#ff9a3c", w: 70, d: 0.7 });
+	burst(u.x, u.y - 30, 24, { c: ["#ff9a3c", "#ffe27a", "#ff4a2a"], sp: 220, s: 6, g: -200, life: 0.9 });
+	Fx.txt(u.x, u.y - 100, "Феникс!", "#ffb03c", 22);
+});
+Events.on("coin:gain", (n, u) => {
+	if (u) Fx.txt(u.x, u.y - 96, "+" + n, "#ffd600", 22);
+});
+Events.on("unit:died", (u, c) => {
+	burst(u.x, u.y - 24, u.boss ? 50 : 16, { c: [c.c, c.c2, "#ffffff"], sp: u.boss ? 380 : 220, s: 6, sv: 0.8, life: 0.8, up: 60, fl: u.y + 6, bn: 0.4 });
+	ring(u.x, u.y, u.boss ? 300 : 70, c.c, 0.45, u.boss ? 10 : 4);
+	if (!u.team) for (let i = 0; i < 5; i++) Parts.add({ x: u.x + rr(-10, 10), y: u.y - 30, vx: rr(-10, 10), vy: rr(-80, -40), life: 1.2, c: "#cfe8ff", s: 7, k: 1, wob: 30, wf: 4, ph: rr(0, 6) });
+});
 

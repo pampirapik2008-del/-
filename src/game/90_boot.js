@@ -38,17 +38,6 @@ function unlock() {
 	} catch (_) {}
 	fit();
 }
-function lp(e) {
-	const w = innerWidth,
-		h = innerHeight,
-		po = h > w,
-		bw = po ? h : w,
-		bh = po ? w : h,
-		lx = po ? e.clientY : e.clientX,
-		ly = po ? w - e.clientX : e.clientY,
-		s = Math.min(bw / W, bh / H);
-	return [(lx - (bw - W * s) / 2) / s, (ly - (bh - H * s) / 2) / s];
-}
 function loop(ts) {
 	FRAME_N++;
 	FC++;
@@ -69,13 +58,19 @@ function loop(ts) {
 		if (paused !== pz) {
 			pz = paused;
 			Music.pause(paused);
+			// после паузы накопленное время не должно превратиться в рывок симуляции
+			Loop.reset();
 		}
 		Music.level(S === "fight" ? 1 : 0);
 		Tune.upd();
 		if (!paused) {
 			// сбой в симуляции не должен дотянуться до отрисовки и цикла
 			try {
-				upd(dt);
+				// симуляция — фиксированным шагом 1/60 с (накопитель, не более Loop.MAX шагов за кадр)
+				const steps = Loop.feed(raw / 1000),
+					t0 = performance.now();
+				for (let i = 0; i < steps; i++) Machine.update(Loop.STEP);
+				dbgMark("upd", performance.now() - t0);
 				flowTick();
 				visTick(dt);
 				// атмосфера вне боя
@@ -92,50 +87,29 @@ function loop(ts) {
 		}
 	}
 	try {
+		const t1 = performance.now();
 		draw();
+		dbgMark("draw", performance.now() - t1);
+		dbgDraw();
 		errFrameOk();
 	} catch (e) {
 		logErr("draw", e);
 	}
 	requestAnimationFrame(loop);
 }
-cv.addEventListener("pointerdown", (e) => {
-	if (!READY) return;
-	const [px, py] = lp(e);
-	for (let i = hits.length - 1; i >= 0; i--) {
-		const h = hits[i];
-		if (px >= h.x && px <= h.x + h.w && py >= h.y && py <= h.y + h.h) {
-			Music.sfx("click");
-			h.f(px, py);
-			break;
-		}
+// касания, клавиатура и отмена указателей — в Input (13_input.js)
+Input.install(cv);
+addEventListener("resize", fit);
+addEventListener("orientationchange", () => Timers.after(150, fit, "boot"));
+document.addEventListener("visibilitychange", () => {
+	Music.pause(document.hidden || paused);
+	// свёрнутая вкладка: время не копится, бой встаёт на паузу — без скачка после возврата
+	if (document.hidden) {
+		Loop.reset();
+		Input.reset();
+		if (S === "fight" || S === "prep") paused = true;
 	}
 });
-addEventListener("keydown", (e) => {
-	if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
-	if (!READY || e.repeat) return;
-	const k = e.key;
-	if (k === "Escape" && S === "codex" && CODEX_TEST) { CODEX_TEST = null; pop = null; e.preventDefault(); return; }
-	if (k === "Escape" || k === "p" || k === "P" || k === "з" || k === "З") {
-		if (S !== "menu" && S !== "settings" && S !== "win" && S !== "lose") paused = !paused;
-	} else if (paused) return;
-	else if (k === " " || k === "Enter") {
-		if (S === "prep" && G.slots.some((u) => u && u.placed)) startFight();
-		else if (S === "prep") autoPlace();
-		else if (S === "msg" && EV) {
-			const e2 = EV;
-			if (!e2.open) {
-				e2.open = 1;
-				e2.to = t;
-				sfx("chest");
-			} else if (!e2.pick) evClose();
-		}
-		e.preventDefault();
-	} else if (S === "fight" && (k === "1" || k === "2" || k === "3")) SPDX = +k;
-});
-addEventListener("resize", fit);
-addEventListener("orientationchange", () => setTimeout(fit, 150));
-document.addEventListener("visibilitychange", () => Music.pause(document.hidden || paused));
 ["pointerdown", "touchstart", "keydown"].forEach((ev2) => addEventListener(ev2, unlock, { passive: true }));
 errInstallGlobals();
 if (CFG.q === undefined) CFG.q = "auto";
@@ -146,12 +120,12 @@ Music.cfg(CFG.music, CFG.vol);
 Music.start();
 sfxBank();
 Music.sfxv = CFG.sfx === undefined ? 1 : CFG.sfx;
-setInterval(() => Music.wake(), 1000);
+Timers.every(1000, () => Music.wake(), "audio");
 // Сид случайности: в браузере партии не должны повторяться, поэтому берём время.
 // Тесты выставляют сид сами: Rand.seed(N) сразу после загрузки (см. tests/harness).
 Rand.seed((Date.now() ^ ((performance.now() * 1000) | 0)) >>> 0);
 requestAnimationFrame(loop);
 loadAll().then(() => {
 	newGame();
-	S = "menu";
+	Machine.go("menu");
 });

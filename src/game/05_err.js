@@ -67,6 +67,7 @@ function errReport() {
 			time: Date.now(),
 			quality: typeof QL === "object" && QL ? QL.lv : "?",
 			cfg: { music: C.music, vol: C.vol, sfx: C.sfx, q: C.q, fps: C.fps },
+			screens: typeof Machine === "object" && Machine ? Machine.trail.slice(-16) : [],
 			errors: ERRS.slice(-40),
 		},
 		null,
@@ -119,6 +120,7 @@ function crashScreen(rec) {
 			EV = null;
 			pop = null;
 			paused = false;
+			// аварийный выход минует машину экранов: окно должно работать, даже если сломана она сама
 			S = "menu";
 		} catch (_) {}
 		close();
@@ -147,6 +149,57 @@ function crashScreen(rec) {
 }
 
 // глобальные перехватчики: сюда попадают и сбои вне кадра
+// ---------- скрытый экран отладки ----------
+// Тройное касание левого нижнего угла (60×60) за 0,9 с включает/выключает панель:
+// FPS, время update/draw, объекты и частицы, куча (если браузер даёт), последние ошибки, версия и сборка.
+const DBG = { on: false, taps: [], upd: 0, draw: 0, updS: 0, drawS: 0 };
+function dbgTap(px, py, now) {
+	if (!(px < 60 && py > H - 60)) return false;
+	DBG.taps.push(now);
+	while (DBG.taps.length && now - DBG.taps[0] > 900) DBG.taps.shift();
+	if (DBG.taps.length >= 3) {
+		DBG.taps.length = 0;
+		DBG.on = !DBG.on;
+		return true;
+	}
+	return false;
+}
+function dbgMark(kind, ms) {
+	// сглаженное время (EMA), чтобы цифры можно было прочитать
+	if (kind === "upd") DBG.updS += (ms - DBG.updS) * 0.1;
+	else DBG.drawS += (ms - DBG.drawS) * 0.1;
+}
+function dbgDraw() {
+	if (!DBG.on) return;
+	const L = [];
+	L.push("FPS " + FV + "  кадр " + QL.ft.toFixed(1) + " мс  качество " + QL.lv + (QL.auto ? " (авто)" : "") + "  R=" + R);
+	L.push("update " + DBG.updS.toFixed(2) + " мс   draw " + DBG.drawS.toFixed(2) + " мс   шагов/кадр " + Loop.steps + "  alpha " + Loop.alpha.toFixed(2));
+	if (F) L.push("бойцы " + F.pl.length + "+" + F.en.length + "  снаряды " + (F.proj ? F.proj.length : 0) + "  эффекты " + F.fx.length + "  числа " + F.nums.length + "  телеграфы " + F.tele.length);
+	L.push("частицы " + Parts.a.length + "/" + Parts.cap + "  таймеры " + Timers.count() + "  очередь " + Seq.q.length + "  экран " + S + (paused ? " (пауза)" : "") + "  переходов откл. " + Machine.rejected);
+	L.push("цели " + hits.length + "  слои " + Input.layers + "  указатели " + Input.active.size + "  касаний " + Input.taps + "  вторичных " + Input.ignored + "  путь " + Machine.trail.slice(-3).join(" "));
+	const mem = typeof performance !== "undefined" && performance.memory;
+	if (mem) L.push("куча " + (mem.usedJSHeapSize / 1048576).toFixed(1) + " / " + (mem.totalJSHeapSize / 1048576).toFixed(1) + " МБ");
+	let ver = "orig";
+	try {
+		ver = window.__mxStorage.getItem("mx_active") || "orig";
+	} catch (_) {}
+	L.push("версия кода " + ver + "  сборка " + GAME_BUILD + "  ошибок " + ERRS.length);
+	for (const e of ERRS.slice(-3)) L.push("  #" + e.i + " [" + e.kind + "] " + e.msg.slice(0, 90));
+	const h = 14 * L.length + 12;
+	ctx.save();
+	ctx.setTransform(R, 0, 0, R, 0, 0);
+	ctx.globalAlpha = 1;
+	ctx.fillStyle = "rgba(0,0,0,.72)";
+	ctx.fillRect(6, 40, 600, h);
+	ctx.font = '11px ui-monospace,Menlo,Consolas,monospace';
+	ctx.textAlign = "left";
+	ctx.textBaseline = "top";
+	L.forEach((s, i) => {
+		ctx.fillStyle = i >= L.length - Math.min(3, ERRS.length) && ERRS.length ? "#ff9a9a" : "#c8f0c8";
+		ctx.fillText(s, 12, 46 + i * 14);
+	});
+	ctx.restore();
+}
 function errInstallGlobals() {
 	try {
 		addEventListener("error", (e) => {
