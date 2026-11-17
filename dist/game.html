@@ -792,9 +792,9 @@ function doExit() {
 	try {
 		window.close();
 	} catch (e) {}
-	setTimeout(() => {
+	Timers.after(250, () => {
 		location.replace("about:blank");
-	}, 250);
+	}, "boot");
 }
 function mbtn(x, y, w, h, q, f, c, dis) {
 	const cx = x + w / 2,
@@ -1358,7 +1358,7 @@ function stall() {
 	if (Math.sin(t * 1.7) < 0.96) {
 		ctx.save();
 		ctx.shadowColor = "#ff2b2b";
-		ctx.shadowBlur = 8 * R;
+		ctx.shadowBlur = QL.lv === 0 ? 0 : 8 * R; // на низком качестве размытие тени выключено
 		R_(cx - 10, 240 + bob, 7, 4, "#ff4040");
 		R_(cx + 3, 240 + bob, 7, 4, "#ff4040");
 		ctx.restore();
@@ -1857,14 +1857,15 @@ const Music = (() => {
 				r.g.gain.setTargetAtTime(0, T, 0.12);
 				const ss = r.srcs;
 				r.srcs = [];
-				setTimeout(
+				Timers.after(
+					900,
 					() =>
 						ss.forEach((x) => {
 							try {
 								x.stop();
 							} catch (e) {}
 						}),
-					900,
+					"audio",
 				);
 			}
 		});
@@ -1923,7 +1924,7 @@ const Music = (() => {
 				pc.resume().catch(() => {});
 				bank();
 				apply();
-				setInterval(tick, 120);
+				Timers.every(120, tick, "audio");
 				for (let h = 0; h < 2; h++) for (let i = 0; i < PLAN[h].length; i++) TR[h].bufs[i] = await renderSec(h, PLAN[h][i]);
 			} catch (e) {
 				console.warn(e);
@@ -1991,7 +1992,7 @@ const Music = (() => {
 // ловится по отдельности, пишется в кольцевой журнал, а три подряд идущих сбоя
 // переводят игру в безопасный режим с понятным окном вместо мёртвого экрана.
 // версия исходников подставляется сборкой (короткий хеш src/ + ассетов)
-let GAME_BUILD = "19d00f3600ec";
+let GAME_BUILD = "b7f25c166a83";
 const ERRS = [];
 const ERR_MAX = 200;
 let ERR_SEQ = 0,
@@ -2054,6 +2055,7 @@ function errReport() {
 			time: Date.now(),
 			quality: typeof QL === "object" && QL ? QL.lv : "?",
 			cfg: { music: C.music, vol: C.vol, sfx: C.sfx, q: C.q, fps: C.fps },
+			screens: typeof Machine === "object" && Machine ? Machine.trail.slice(-16) : [],
 			errors: ERRS.slice(-40),
 		},
 		null,
@@ -2106,6 +2108,7 @@ function crashScreen(rec) {
 			EV = null;
 			pop = null;
 			paused = false;
+			// аварийный выход минует машину экранов: окно должно работать, даже если сломана она сама
 			S = "menu";
 		} catch (_) {}
 		close();
@@ -2134,6 +2137,57 @@ function crashScreen(rec) {
 }
 
 // глобальные перехватчики: сюда попадают и сбои вне кадра
+// ---------- скрытый экран отладки ----------
+// Тройное касание левого нижнего угла (60×60) за 0,9 с включает/выключает панель:
+// FPS, время update/draw, объекты и частицы, куча (если браузер даёт), последние ошибки, версия и сборка.
+const DBG = { on: false, taps: [], upd: 0, draw: 0, updS: 0, drawS: 0 };
+function dbgTap(px, py, now) {
+	if (!(px < 60 && py > H - 60)) return false;
+	DBG.taps.push(now);
+	while (DBG.taps.length && now - DBG.taps[0] > 900) DBG.taps.shift();
+	if (DBG.taps.length >= 3) {
+		DBG.taps.length = 0;
+		DBG.on = !DBG.on;
+		return true;
+	}
+	return false;
+}
+function dbgMark(kind, ms) {
+	// сглаженное время (EMA), чтобы цифры можно было прочитать
+	if (kind === "upd") DBG.updS += (ms - DBG.updS) * 0.1;
+	else DBG.drawS += (ms - DBG.drawS) * 0.1;
+}
+function dbgDraw() {
+	if (!DBG.on) return;
+	const L = [];
+	L.push("FPS " + FV + "  кадр " + QL.ft.toFixed(1) + " мс  качество " + QL.lv + (QL.auto ? " (авто)" : "") + "  R=" + R);
+	L.push("update " + DBG.updS.toFixed(2) + " мс   draw " + DBG.drawS.toFixed(2) + " мс   шагов/кадр " + Loop.steps + "  alpha " + Loop.alpha.toFixed(2));
+	if (F) L.push("бойцы " + F.pl.length + "+" + F.en.length + "  снаряды " + (F.proj ? F.proj.length : 0) + "  эффекты " + F.fx.length + "  числа " + F.nums.length + "  телеграфы " + F.tele.length);
+	L.push("частицы " + Parts.a.length + "/" + Parts.cap + "  таймеры " + Timers.count() + "  очередь " + Seq.q.length + "  экран " + S + (paused ? " (пауза)" : "") + "  переходов откл. " + Machine.rejected);
+	L.push("цели " + hits.length + "  слои " + Input.layers + "  указатели " + Input.active.size + "  касаний " + Input.taps + "  вторичных " + Input.ignored + "  путь " + Machine.trail.slice(-3).join(" "));
+	const mem = typeof performance !== "undefined" && performance.memory;
+	if (mem) L.push("куча " + (mem.usedJSHeapSize / 1048576).toFixed(1) + " / " + (mem.totalJSHeapSize / 1048576).toFixed(1) + " МБ");
+	let ver = "orig";
+	try {
+		ver = window.__mxStorage.getItem("mx_active") || "orig";
+	} catch (_) {}
+	L.push("версия кода " + ver + "  сборка " + GAME_BUILD + "  ошибок " + ERRS.length);
+	for (const e of ERRS.slice(-3)) L.push("  #" + e.i + " [" + e.kind + "] " + e.msg.slice(0, 90));
+	const h = 14 * L.length + 12;
+	ctx.save();
+	ctx.setTransform(R, 0, 0, R, 0, 0);
+	ctx.globalAlpha = 1;
+	ctx.fillStyle = "rgba(0,0,0,.72)";
+	ctx.fillRect(6, 40, 600, h);
+	ctx.font = '11px ui-monospace,Menlo,Consolas,monospace';
+	ctx.textAlign = "left";
+	ctx.textBaseline = "top";
+	L.forEach((s, i) => {
+		ctx.fillStyle = i >= L.length - Math.min(3, ERRS.length) && ERRS.length ? "#ff9a9a" : "#c8f0c8";
+		ctx.fillText(s, 12, 46 + i * 14);
+	});
+	ctx.restore();
+}
 function errInstallGlobals() {
 	try {
 		addEventListener("error", (e) => {
@@ -2151,6 +2205,7 @@ const IMG = {},
 	ATL = ATLAS,
 	SILC = new Map(),
 	GLOWC = {};
+let GLOWN = 0; // сколько холстов свечения в кэше (предохранитель от динамических цветов)
 let READY = false,
 	LOADP = 0,
 	TSC = 1; // масштаб времени боя (слоумо)
@@ -2186,6 +2241,142 @@ const fmt = (n) => {
 	return a >= 1e9 ? (n / 1e9).toFixed(1) + "B" : a >= 1e6 ? (n / 1e6).toFixed(1) + "M" : a >= 1e4 ? (n / 1e3).toFixed(1) + "K" : "" + n;
 };
 const pct = (v) => Math.round(v * 100) + "%";
+// Санитайз чисел: любое внешнее значение (сейв, формула, параметр способности) проходит сюда.
+// NaN/Infinity/не-число → fallback; затем зажим в [min, max]. В логике боя NaN появиться не должен.
+function num(v, fallback = 0, min = -Infinity, max = Infinity) {
+	const n = typeof v === "number" ? v : v == null || v === "" ? NaN : +v;
+	const r = Number.isFinite(n) ? n : fallback;
+	return r < min ? min : r > max ? max : r;
+}
+
+// Сжатие массива на месте (без аллокации нового): оставляет элементы, для которых keep(v) истинно.
+// Порядок сохраняется — результат тот же, что у filter, но в горячем цикле нет мусора.
+function compact(a, keep) {
+	let j = 0;
+	for (let i = 0; i < a.length; i++) {
+		const v = a[i];
+		if (keep(v)) a[j++] = v;
+	}
+	a.length = j;
+	return a;
+}
+
+// ---------- шина событий ----------
+// Логика сообщает «что случилось», а звук, частицы и статистика подписываются.
+// Обработчики вызываются синхронно в порядке подписки; сбой одного не трогает остальных.
+const Events = {
+	h: Object.create(null),
+	on(ev, fn) {
+		(this.h[ev] || (this.h[ev] = [])).push(fn);
+		return fn;
+	},
+	off(ev, fn) {
+		const a = this.h[ev];
+		if (!a) return;
+		const i = a.indexOf(fn);
+		if (i >= 0) a.splice(i, 1);
+	},
+	emit(ev, a, b, c) {
+		const l = this.h[ev];
+		if (!l) return 0;
+		for (let i = 0; i < l.length; i++) {
+			try {
+				l[i](a, b, c);
+			} catch (e) {
+				if (typeof logErr === "function") logErr("event:" + ev, e);
+			}
+		}
+		return l.length;
+	},
+};
+
+// ---------- менеджер таймеров и слушателей ----------
+// Всё, что ставится через setTimeout/setInterval/addEventListener, регистрируется здесь
+// с меткой владельца (экран или подсистема) и снимается одним вызовом при выходе.
+const Timers = {
+	list: [],
+	seq: 0,
+	after(ms, fn, owner = "app") {
+		const rec = { id: ++this.seq, owner, kind: "t" };
+		rec.h = setTimeout(() => {
+			this.drop(rec);
+			fn();
+		}, ms);
+		this.list.push(rec);
+		return rec.id;
+	},
+	every(ms, fn, owner = "app") {
+		const rec = { id: ++this.seq, owner, kind: "i", h: setInterval(fn, ms) };
+		this.list.push(rec);
+		return rec.id;
+	},
+	on(target, ev, fn, opts, owner = "app") {
+		target.addEventListener(ev, fn, opts);
+		const rec = { id: ++this.seq, owner, kind: "l", target, ev, fn, opts };
+		this.list.push(rec);
+		return rec.id;
+	},
+	drop(rec) {
+		const i = this.list.indexOf(rec);
+		if (i >= 0) this.list.splice(i, 1);
+	},
+	clear(id) {
+		const rec = this.list.find((r) => r.id === id);
+		if (rec) this.kill(rec);
+	},
+	kill(rec) {
+		if (rec.kind === "t") clearTimeout(rec.h);
+		else if (rec.kind === "i") clearInterval(rec.h);
+		else
+			try {
+				rec.target.removeEventListener(rec.ev, rec.fn, rec.opts);
+			} catch (_) {}
+		this.drop(rec);
+	},
+	// снять всё, что принадлежит владельцу (например, экрану при выходе)
+	clearOwner(owner) {
+		for (const rec of this.list.filter((r) => r.owner === owner)) this.kill(rec);
+	},
+	count(owner) {
+		return owner ? this.list.filter((r) => r.owner === owner).length : this.list.length;
+	},
+};
+
+// ---------- цикл: фиксированный шаг симуляции ----------
+// Симуляция идёт шагами ровно 1/60 с через накопитель: не более MAX шагов за кадр
+// (защита от «спирали смерти» после сворачивания вкладки или долгого кадра).
+// Кадры с периодом, близким к k/60 с (60, 30, 20 Гц ± 8 %), привязываются к сетке,
+// чтобы на обычных экранах каждый кадр давал ровно k шагов без дрожания.
+// alpha — доля шага, не вошедшая в симуляцию; отрисовка боя дотягивает позиции на alpha
+// (экстраполяция по последнему смещению), поэтому на 90/120 Гц движение остаётся плавным.
+const Loop = {
+	STEP: 1 / 60,
+	MAX: 5,
+	acc: 0,
+	alpha: 0,
+	steps: 0,
+	// разложить реальное время кадра на число шагов; возвращает число шагов
+	feed(sec) {
+		const st = this.STEP;
+		if (!(sec > 0)) sec = 0;
+		for (let k = 1; k <= 3; k++) if (Math.abs(sec - k * st) < st * 0.08) sec = k * st;
+		this.acc = Math.min(this.acc + sec, st * this.MAX);
+		let n = 0;
+		while (this.acc >= st - 1e-7 && n < this.MAX) {
+			this.acc -= st;
+			n++;
+		}
+		if (this.acc < 1e-7) this.acc = 0;
+		this.alpha = this.acc / st;
+		this.steps = n;
+		return n;
+	},
+	reset() {
+		this.acc = 0;
+		this.alpha = 0;
+		this.steps = 0;
+	},
+};
 
 // ---------- загрузка ----------
 function loadAll() {
@@ -2196,9 +2387,14 @@ function loadAll() {
 			new Promise((res) => {
 				const i = new Image();
 				i.onload = () => {
-					IMG[k] = i;
-					LOADP = ++n / names.length;
-					res();
+					const done = () => {
+						IMG[k] = i;
+						LOADP = ++n / names.length;
+						res();
+					};
+					// декодируем заранее: первый drawImage большого атласа не должен фризить кадр
+					if (typeof i.decode === "function") i.decode().then(done, done);
+					else done();
 				};
 				i.onerror = () => {
 					n++;
@@ -2341,6 +2537,12 @@ function recolor(img, rules) {
 }
 function glowSpr(col) {
 	if (!GLOWC[col]) {
+		// предохранитель: если цветов-ключей стало слишком много (динамический цвет), кэш сбрасывается,
+		// а не растёт без предела — спрайт 48×48 дешевле утечки
+		if (++GLOWN > 512) {
+			for (const k in GLOWC) delete GLOWC[k];
+			GLOWN = 1;
+		}
 		const c = mkC(48, 48),
 			x = c.getContext("2d"),
 			g = x.createRadialGradient(24, 24, 0, 24, 24, 24);
@@ -2373,7 +2575,8 @@ function glow(x, y, r, col, a = 1) {
 }
 
 // ---------- качество графики ----------
-const QL = { lv: 2, auto: true, bad: 0, ft: 16 };
+// lv: 0 низкое, 1 среднее, 2 высокое; ft — сглаженное время кадра; bad/good — накопители гистерезиса
+const QL = { lv: 2, auto: true, bad: 0, good: 0, ft: 16, upWait: 20000, max: 2 };
 function guessQ() {
 	const m = navigator.deviceMemory || 4,
 		c = navigator.hardwareConcurrency || 4;
@@ -2382,20 +2585,36 @@ function guessQ() {
 function setQ(v) {
 	QL.auto = v === "auto" || v === undefined || v === null;
 	QL.lv = QL.auto ? guessQ() : v;
+	QL.max = 2;
+	QL.upWait = 20000;
 	CFG.q = QL.auto ? "auto" : v;
 	applyQ();
 }
 function applyQ() {
 	Parts.cap = [130, 300, 620][QL.lv];
 	QL.bad = 0;
+	QL.good = 0;
 }
-// авто-режим: если кадр стабильно дольше 26 мс — снижаем уровень (частицы, свет, тени, разрешение)
+// авто-режим с гистерезисом: вниз — быстро (3 с кадров дольше 26 мс), вверх — только после
+// QL.upWait мс стабильно быстрых кадров (< 15 мс); каждое понижение удваивает время ожидания,
+// чтобы качество не «мигало» на устройстве, которое держит уровень на грани.
 function perfTick(ms) {
 	QL.ft += (ms - QL.ft) * 0.05;
-	if (!QL.auto || QL.lv === 0) return;
-	QL.bad = QL.ft > 26 ? QL.bad + ms : Math.max(0, QL.bad - ms * 2);
-	if (QL.bad > 3000) {
+	if (!QL.auto) return;
+	if (QL.ft > 26) {
+		QL.bad += ms;
+		QL.good = 0;
+	} else {
+		QL.bad = Math.max(0, QL.bad - ms * 2);
+		QL.good = QL.ft < 15 ? QL.good + ms : 0;
+	}
+	if (QL.bad > 3000 && QL.lv > 0) {
 		QL.lv--;
+		QL.upWait = Math.min(QL.upWait * 2, 160000);
+		applyQ();
+		if (typeof hiDpi === "function") hiDpi();
+	} else if (QL.good > QL.upWait && QL.lv < QL.max) {
+		QL.lv++;
 		applyQ();
 		if (typeof hiDpi === "function") hiDpi();
 	}
@@ -2598,6 +2817,206 @@ function sfx(n, v) {
 	Music.sfx(n, v);
 }
 
+// ===== 12_state.js =====
+// ===== МАШИНА ЭКРАНОВ: таблица переходов, enter/update/draw/exit =====
+// Правила:
+//  - экран переключается только через Machine.go(name); переход, которого нет в таблице,
+//    пишется в журнал ошибок и отклоняется (S не меняется, функция возвращает false);
+//  - строка S остаётся совместимым алиасом текущего экрана (её читают 70+ мест кода
+//    и редактор); вход/выход экрана фиксируются лениво, в начале кадра (Machine.sync),
+//    поэтому даже прямое присваивание S = "…" из старого кода или правки ИИ получает
+//    те же enter/exit, что и переход через go();
+//  - при выходе с экрана снимаются таймеры и слушатели, принадлежащие ему
+//    (Timers.after/every/on с owner "screen:<имя>").
+const SCREEN_NAMES = ["menu", "pick", "map", "prep", "fight", "msg", "shop", "settings", "world", "codex", "win", "lose"];
+// Откуда → куда. «menu» разрешён отовсюду (пауза → «В меню», аварийное окно), переход
+// экрана в самого себя — тоже (цепочки событий msg → msg, старт игры menu → menu).
+const TRANS = {
+	menu: ["pick", "map", "prep", "codex", "settings"], // новая игра / продолжить / арена / коллекция / настройки
+	pick: ["map", "settings"], // «В поход!» / пауза → настройки
+	map: ["prep", "msg", "shop", "settings"], // узел боя / событие / лавка / пауза
+	prep: ["fight", "settings"], // «В бой!» / пауза
+	fight: ["msg", "lose", "settings"], // награда / поражение / пауза
+	msg: ["map", "prep", "shop", "win", "world", "settings"], // «В путь» / следующая волна арены / лавка арены / финал / новый мир
+	shop: ["map", "prep", "settings"], // «В путь» / «Следующая волна» (арена)
+	settings: SCREEN_NAMES.slice(), // назад на экран, с которого открыли (SRET)
+	world: ["map", "settings"], // «В путь!» в следующий мир
+	codex: ["settings"], // только назад в меню и пауза
+	win: ["pick", "prep"], // «Новый поход» / «Ещё раз» (арена)
+	lose: ["pick", "prep"],
+};
+const Machine = {
+	def: {}, // имя экрана → { scene, enter(from), update(dt), draw(), exit(to) }
+	prev: "", // предыдущий экран (после sync)
+	trail: [], // последние переходы — попадают в аварийный отчёт
+	TRAIL_MAX: 32,
+	rejected: 0, // счётчик отклонённых переходов (виден на экране отладки)
+	reg(name, hooks) {
+		this.def[name] = Object.assign({ scene: name }, this.def[name] || {}, hooks);
+	},
+	scene(name) {
+		const d = this.def[name];
+		return d ? d.scene : undefined;
+	},
+	can(from, to) {
+		if (to === from || to === "menu") return SCREEN_NAMES.indexOf(to) >= 0;
+		const row = TRANS[from];
+		return !!row && row.indexOf(to) >= 0;
+	},
+	// единственная точка смены экрана
+	go(to, why) {
+		const from = S;
+		if (!this.can(from, to)) {
+			this.rejected++;
+			logErr("state", new Error("переход " + from + " → " + to + " запрещён таблицей" + (why ? " (" + why + ")" : "")), { from, to });
+			return false;
+		}
+		if (to !== from) {
+			this.trail.push(from + ">" + to + "@" + FRAME_N);
+			if (this.trail.length > this.TRAIL_MAX) this.trail.shift();
+		}
+		S = to;
+		return true;
+	},
+	// ленивая фиксация смены экрана — вызывается в начале каждого кадра отрисовки
+	sync() {
+		if (S === lastS) return;
+		const from = lastS,
+			to = S,
+			df = this.def[from],
+			dt = this.def[to];
+		if (df && df.exit) df.exit(to);
+		Timers.clearOwner("screen:" + from);
+		if (this.scene(to) !== this.scene(from)) {
+			Parts.clear();
+			TRT = 0.42;
+			CAM.z = 1;
+		}
+		if (dt && dt.enter) dt.enter(from);
+		if (to !== "prep" && to !== "fight" && to !== "shop" && to !== "map") pop = null;
+		if (from === "fight" || from === "prep") pop = null;
+		TIPN = TIPR = null;
+		this.prev = from;
+		lastS = to;
+	},
+	update(dt) {
+		const d = this.def[S];
+		if (d && d.update) d.update(dt);
+		else idleUpd(dt);
+	},
+	drawScreen() {
+		const d = this.def[S] || this.def.lose;
+		d.draw();
+	},
+};
+// ===== 13_input.js =====
+// ===== ВВОД: слои касаний, указатели, клавиатура, поворот экрана =====
+// Экран каждый кадр заново объявляет свои цели касания (area/btn/ibtn → массив hits).
+// Касание получает самая верхняя цель (последняя объявленная). Модальный слой
+// (Input.layer) отбрасывает всё, что объявлено до него: карта под окном события,
+// пауза поверх боя и т.п. не получают ввод. Массив hits остаётся как совместимый
+// алиас Input.hits для обвязки тестов и редактора.
+const Input = {
+	get hits() {
+		return hits;
+	},
+	layers: 0, // сколько модальных слоёв объявлено в текущем кадре
+	active: new Map(), // id указателя → { x, y, t } — удержанные пальцы/кнопки
+	taps: 0, // принятых касаний за сессию (экран отладки)
+	ignored: 0, // отброшенных вторичных касаний (мультитач)
+	// новый кадр: цели прошлого кадра забываются
+	begin() {
+		hits.length = 0;
+		this.layers = 0;
+	},
+	// модальный слой: цели, объявленные раньше, недостижимы
+	layer() {
+		hits.length = 0;
+		this.layers++;
+	},
+	// верхняя цель под точкой или null
+	pick(px, py) {
+		for (let i = hits.length - 1; i >= 0; i--) {
+			const h = hits[i];
+			if (px >= h.x && px <= h.x + h.w && py >= h.y && py <= h.y + h.h) return h;
+		}
+		return null;
+	},
+	// касание/клик. Вторичные указатели (второй палец при удержанном первом) не считаются
+	// нажатием: иначе два пальца = две покупки/два хода.
+	down(e) {
+		if (!READY) return;
+		if (e.isPrimary === false) {
+			this.ignored++;
+			return;
+		}
+		const [px, py] = lp(e);
+		const id = e.pointerId === undefined ? 0 : e.pointerId;
+		this.active.set(id, { x: px, y: py, t: performance.now() });
+		if (dbgTap(px, py, performance.now())) return;
+		const h = this.pick(px, py);
+		if (!h) return;
+		this.taps++;
+		Music.sfx("click");
+		h.f(px, py);
+	},
+	// палец убран или касание отменено системой (жест, звонок, сворачивание)
+	release(e) {
+		this.active.delete(e && e.pointerId !== undefined ? e.pointerId : 0);
+	},
+	reset() {
+		this.active.clear();
+	},
+	// клавиатура (ПК): пауза, старт/подтверждение, скорость боя
+	key(e) {
+		if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+		if (!READY || e.repeat) return;
+		const k = e.key;
+		if (k === "Escape" && S === "codex" && CODEX_TEST) {
+			CODEX_TEST = null;
+			pop = null;
+			e.preventDefault();
+			return;
+		}
+		if (k === "Escape" || k === "p" || k === "P" || k === "з" || k === "З") {
+			if (S !== "menu" && S !== "settings" && S !== "win" && S !== "lose") paused = !paused;
+		} else if (paused) return;
+		else if (k === " " || k === "Enter") {
+			if (S === "prep" && G.slots.some((u) => u && u.placed)) startFight();
+			else if (S === "prep") autoPlace();
+			else if (S === "msg" && EV) {
+				const e2 = EV;
+				if (!e2.open) {
+					e2.open = 1;
+					e2.to = t;
+					sfx("chest");
+				} else if (!e2.pick) evClose();
+			}
+			e.preventDefault();
+		} else if (S === "fight" && (k === "1" || k === "2" || k === "3")) SPDX = +k;
+	},
+	// подписка на события холста и окна (вызывается при запуске)
+	install(canvas) {
+		canvas.addEventListener("pointerdown", (e) => this.down(e));
+		canvas.addEventListener("pointerup", (e) => this.release(e));
+		canvas.addEventListener("pointercancel", (e) => this.release(e));
+		canvas.addEventListener("lostpointercapture", (e) => this.release(e));
+		addEventListener("keydown", (e) => this.key(e));
+	},
+};
+// координаты события → логические координаты холста 1218x540 с учётом letterbox-полей
+// и поворота на 90° в портретной ориентации (холст развёрнут CSS-трансформом в fit()).
+function lp(e) {
+	const w = innerWidth,
+		h = innerHeight,
+		po = h > w,
+		bw = po ? h : w,
+		bh = po ? w : h,
+		lx = po ? e.clientY : e.clientX,
+		ly = po ? w - e.clientX : e.clientY,
+		s = Math.min(bw / W, bh / H);
+	return [(lx - (bw - W * s) / 2) / s, (ly - (bh - H * s) / 2) / s];
+}
 // ===== 15_ui.js =====
 // ===== UI-ПРИМИТИВЫ: шрифт, панели, кнопки с анимацией, рамки редкости, полосы, тосты, переходы =====
 const FNT = '"GameFont","Trebuchet MS",system-ui,sans-serif';
@@ -2693,6 +3112,9 @@ function btn(x, y, w, h, s, f, bg = "#8e24aa", o = {}) {
 	});
 }
 // квадратная кнопка-иконка (пауза, музыка, скорость, магазин)
+// запас цели касания вокруг иконок-кнопок, px холста: иконка 68 px + 2×3 = 74 px холста,
+// на телефоне (масштаб ≈ 0,66) это ≈ 49 px экрана; соседние иконки стоят через 74 px, больше нельзя
+const HIT_PAD = 3;
 function ibtn(n, x, y, f, o = {}) {
 	const key = "i" + n + x,
 		pr = t - (BTS[key] || -9) < 0.13,
@@ -2714,7 +3136,7 @@ function ibtn(n, x, y, f, o = {}) {
 		ctx.fill();
 		txo("!", x + r[2] * AP - 8, y + 10, 14, "#fff", "center");
 	}
-	area(x - 3, y - 3, r[2] * AP + 6, r[3] * AP + 6, () => {
+	area(x - HIT_PAD, y - HIT_PAD, r[2] * AP + HIT_PAD * 2, r[3] * AP + HIT_PAD * 2, () => {
 		BTS[key] = t;
 		f();
 	});
@@ -2752,7 +3174,9 @@ function rfx(r, x, y, w, h, ph = 0) {
 		}
 	}
 	ctx.restore();
-	if (r >= 3) glow(x + w / 2, y + h / 2, Math.max(w, h) * 0.8, r >= 5 ? `hsl(${(t * 120 + ph * 90) % 360},90%,60%)` : col, 0.1 + 0.06 * Math.sin(t * 3 + ph));
+	// тон радужного свечения округлён до градуса: glowSpr кэширует холст на каждый уникальный цвет,
+	// а дробный тон давал новый холст каждый кадр (утечка ~5 МБ за 10 с на телефоне)
+	if (r >= 3) glow(x + w / 2, y + h / 2, Math.max(w, h) * 0.8, r >= 5 ? `hsl(${((t * 120 + ph * 90) % 360) | 0},90%,60%)` : col, 0.1 + 0.06 * Math.sin(t * 3 + ph));
 	if (r >= 4) {
 		// искры, бегущие по контуру
 		const n = r >= 5 ? 6 : 4,
@@ -2895,9 +3319,74 @@ const RAR = [
 	{ n: "Мифическая", c: "#ff466e", m: 6.5, um: 2 },
 	{ n: "Секретная", c: "#5ff0e0", m: 9, um: 2.6 },
 ];
+// ---------- баланс: числа логики в одном месте ----------
+// Логика боя, лавки, наград и врагов читает отсюда. Значения ровно те, что раньше были
+// рассыпаны по коду (сверка — tests/unit/data.test.mjs, поведение — golden-эталон).
+const BAL = {
+	fight: {
+		timer: 110, // секунд на обычный бой
+		bossTimer: 200, // секунд на босса
+		timeoutEdge: 0.05, // по таймеру побеждает отряд, если его доля HP выше вражеской на столько
+		subStep: 0.025, // максимальный подшаг симуляции, с
+		maxSub: 16, // подшагов за один вызов upd
+		outWin: 1.5, // пауза до экрана победы, с
+		outWinBoss: 3.1,
+		outLose: 1.3, // пауза до экрана поражения / исхода по таймеру
+	},
+	dmg: {
+		armK: 100, // урон × armK / (armK + броня)
+		critHero: 0.06, // базовый шанс крита бойца (если у набора нет своего)
+		critFoe: 0.05, // шанс крита врага
+		critMul: 1.8,
+		shockMul: 1.15, // множитель урона по цели в шоке
+		enMax: 100, // энергия ульты
+		enHit: 8, // энергия атакующему за удар
+		enTaken: 4, // энергия цели за полученный удар
+		enTick: 2.2, // пассивная энергия бойца в секунду
+		dotTick: 0.5, // период тика горения/яда, с
+		hazTick: 0.5, // период проверки опасных покрытий, с
+		hazDmg: 0.015, // доля max HP за тик покрытия
+		hazDmgBoss: 0.004,
+		hazSt: 0.006, // сила статуса от покрытия (доля max HP)
+		poolDmg: 0.3, // доля атаки хозяина лужи за тик
+		curseHeal: 0.5, // лечение под проклятием
+		soulHeal: 0.05, // «души» (погода): доля max HP убийце
+		skullCoin: 8, // монет за врага с черепом
+	},
+	rar: {
+		w: [52, 27, 14, 5.2, 1.5, 0.3, 0.08], // веса редкостей 0..6
+		luckK: 0.28, // удача сдвигает веса: w_i × (1 + luck × luckK)^i
+	},
+	shop: {
+		relPrice: [8, 12, 18, 28, 45, 80, 140], // цена реликвии по редкости
+		relPriceW: 2, // + столько за каждый пройденный мир
+		rrBase: 3, // цена обновления товара
+		rrStep: 2, // + столько за каждое обновление
+		stock: 3, // реликвий на витрине
+	},
+	foe: {
+		hpK: 1.14, // рост HP врагов по мирам
+		atkK: 1.12, // рост атаки
+		armK: 0.2, // рост брони: × (1 + armK × мир)
+		bossHp: 0.25, // доля базового HP босса в первом мире
+		bossHpK: 1.3, // рост HP босса по мирам
+	},
+	win: {
+		healFloor: 0.25, // после победы HP не ниже этой доли max
+		healBonus: 0.2, // + столько от max
+		arenaCoin: 8, // монеты за волну арены: arenaCoin + arenaCoinWave × волна
+		arenaCoinWave: 2,
+		bossCoin: 20, // монеты за босса (× cmul)
+		bossMeat: 3, // мясо за босса: bossMeat + мир
+		fightCoin: 6, // монеты за обычный бой: (fightCoin + глубина) × cmul
+		arenaNodeCoin: 10, // монеты за узел «Арена»
+		relicChance: 0.14, // шанс реликвии после обычного боя
+		swampRelicChance: 0.4, // после логова
+	},
+};
 // бросок редкости: luck сдвигает шансы вверх, min — нижняя граница
 function rollRar(luck = 0, min = 0, rnd01 = Rand.next) {
-	const w = [52, 27, 14, 5.2, 1.5, 0.3, 0.08].map((v, i) => (i < min ? 0 : v * Math.pow(1 + luck * 0.28, i)));
+	const w = BAL.rar.w.map((v, i) => (i < min ? 0 : v * Math.pow(1 + luck * BAL.rar.luckK, i)));
 	let s = w.reduce((a, b) => a + b, 0) * rnd01();
 	for (let i = 0; i < 7; i++) if ((s -= w[i]) <= 0) return i;
 	return min;
@@ -2947,7 +3436,7 @@ const RELIC = {
 	blade: { n: "Клинок палача", p: "crd", v: (m) => 0.15 * m, d: (m) => `Урон критов +${pct(0.15 * m)}` },
 };
 const RELIC_IDS = Object.keys(RELIC);
-const relPrice = (r, w) => [8, 12, 18, 28, 45, 80, 140][r] + (w || 0) * 2;
+const relPrice = (r, w) => BAL.shop.relPrice[r] + (w || 0) * BAL.shop.relPriceW;
 // суммарные боевые бонусы отряда от реликвий
 function relBonus() {
 	const b = { ls: 0, chain: 0, psn: 0, frz: 0, abil: 0, ward: 0, crit: 0, coin: 0, avg: 0, chg: 0, phx: 0, cdr: 0, crd: 0 };
@@ -3356,8 +3845,8 @@ const WX = {
 	eclipse: { n: "Затмение", d: "Ульты у всех заряжаются в 1.5 раза быстрее", chg: 1.5 },
 };
 // характеристики врагов: мир 1 — оригинальные числа, дальше растут по экспоненте
-const WHP = 1.14,
-	WAT = 1.12;
+const WHP = BAL.foe.hpK,
+	WAT = BAL.foe.atkK;
 function foeDef(w, slot) {
 	const W0 = WORLDS[w],
 		b = slot === "boss" ? ENEM.boss : slot === "b" ? ENEM.red : slot === "m" ? ENEM.swamp : ENEM.slime;
@@ -3365,9 +3854,9 @@ function foeDef(w, slot) {
 		...b,
 		// у босса своя кривая: в первом мире с ним справляется отряд из трёх бойцов,
 		// дальше он растёт быстрее обычных врагов
-		hp: Math.round(slot === "boss" ? b.hp * 0.25 * Math.pow(1.3, w) : b.hp * Math.pow(WHP, w)),
+		hp: Math.round(slot === "boss" ? b.hp * BAL.foe.bossHp * Math.pow(BAL.foe.bossHpK, w) : b.hp * Math.pow(WHP, w)),
 		atk: Math.round(b.atk * Math.pow(WAT, w)),
-		arm: Math.round(b.arm * (1 + 0.2 * w)),
+		arm: Math.round(b.arm * (1 + BAL.foe.armK * w)),
 		slot,
 		el: W0.el,
 		set: slot === "boss" ? "king" : slot === "b" ? "red" : "slime",
@@ -4032,7 +4521,7 @@ function fight(kind) {
 		A = mkArena(seed, w, kind),
 		y0 = A.y0,
 		y1 = FLD.y1;
-	F = { kind, A, w, en: [], pl: [], timer: kind === "boss" ? 200 : 110, time: 0, fx: [], nums: [], proj: [], tele: [], dd: [], fl: [], pt: [], rg: [], lock: 0, out: null, rb: relBonus(), phx: 0, avg: 0, flux: null, slowT: 0, slowS: 1, st: { dmg: 0, taken: 0, kills: 0, crits: 0 }, t0: t, m };
+	F = { kind, A, w, en: [], pl: [], timer: kind === "boss" ? BAL.fight.bossTimer : BAL.fight.timer, time: 0, fx: [], nums: [], proj: [], tele: [], dd: [], fl: [], pt: [], rg: [], lock: 0, out: null, rb: relBonus(), phx: 0, avg: 0, flux: null, slowT: 0, slowS: 1, st: { dmg: 0, taken: 0, kills: 0, crits: 0 }, t0: t, m };
 	// строй врагов: до трёх колонок, ряды поровну, чтобы спрайты не наезжали друг на друга
 	const cols = Math.min(3, l.length),
 		per = Math.ceil(l.length / cols);
@@ -4065,7 +4554,7 @@ function fight(kind) {
 	});
 	sel = G.slots.findIndex((q) => q);
 	pop = null;
-	S = "prep";
+	Machine.go("prep");
 	// бойцы сразу стоят на поле: игрок может расставить их иначе или нажать «В бой!»
 	F.pl = G.slots.filter((u) => u);
 	autoPlace();
@@ -4080,7 +4569,7 @@ function startFight() {
 	}
 	sel = -1;
 	pop = null;
-	S = "fight";
+	Machine.go("fight");
 	Seq.clock = F.time; // задержки выстрелов и приёмов — по времени симуляции
 	F.rb = relBonus();
 	F.pl.forEach((u) => {
@@ -4173,9 +4662,27 @@ const Fx = {
 	},
 	add(o) {
 		o.t = 0;
+		// лимит эффектов: при переполнении выбрасываем самый старый «косметический» эффект,
+		// баннеры фаз, заставки и вспышки (они задают ритм боя) не трогаем
+		if (F.fx.length >= FX_CAP) {
+			const i = F.fx.findIndex((f) => f.k !== "banner" && f.k !== "cut" && f.k !== "go" && f.k !== "flash");
+			if (i >= 0) F.fx.splice(i, 1);
+		}
 		F.fx.push(o);
 	},
 };
+const FX_CAP = 240;
+// общие буферы для обхода «все бойцы» без аллокации на каждом шаге
+const ALL_STEP = [],
+	ALL_LOCK = [],
+	ALL_DEATH = [];
+function allUnits(buf) {
+	buf.length = 0;
+	for (let i = 0; i < F.pl.length; i++) buf.push(F.pl[i]);
+	for (let i = 0; i < F.en.length; i++) buf.push(F.en[i]);
+	return buf;
+}
+const ddAlive = (d) => d.t < d.d;
 function hitProps(x, y, r, pow = 1) {
 	for (const o of F.A.obs) {
 		if (o.dead || !o.hp) continue;
@@ -4190,12 +4697,11 @@ function hitProps(x, y, r, pow = 1) {
 function heal(tg, v, src) {
 	if (!tg || tg.hp <= 0) return 0;
 	v *= wxm("heal");
-	if (tg.st.curse) v *= 0.5;
+	if (tg.st.curse) v *= BAL.dmg.curseHeal;
 	v = Math.min(Math.round(v), tg.max - tg.hp);
 	if (v <= 0) return 0;
 	tg.hp += v;
-	Fx.num(tg, "+" + fmt(v), "heal");
-	burst(tg.x, tg.y - 30, 6, { c: ["#6dff7a", "#d6ffb0"], sp: 50, g: -120, life: 0.7, s: 4, rad: 24 });
+	Events.emit("unit:healed", tg, v, src);
 	return v;
 }
 // единая точка урона: броня, крит, щит, фазы босса, вампиризм, срабатывания реликвий, эффекты
@@ -4206,16 +4712,16 @@ function hurt(src, tg, raw, o = {}) {
 		return 0;
 	}
 	const el = o.el || (src && src.el) || "phys";
-	let dm = o.pure ? raw : (raw * 100) / (100 + Math.max(0, tg.arm)),
+	let dm = o.pure ? raw : (raw * BAL.dmg.armK) / (BAL.dmg.armK + Math.max(0, tg.arm)),
 		crit = false;
 	if (src && !o.dot && !o.nocrit) {
-		const cc = (src.team ? 0.05 : ((KIT[src.k] && KIT[src.k].crit) || 0.06) + F.rb.crit) + wxm("crit", 0);
+		const cc = (src.team ? BAL.dmg.critFoe : ((KIT[src.k] && KIT[src.k].crit) || BAL.dmg.critHero) + F.rb.crit) + wxm("crit", 0);
 		if (o.crit === 1 || Rand.next() < cc) {
 			crit = true;
-			dm *= 1.8 + (src.team ? 0 : F.rb.crd);
+			dm *= BAL.dmg.critMul + (src.team ? 0 : F.rb.crd);
 		}
 	}
-	if (tg.st.shock) dm *= 1.15;
+	if (tg.st.shock) dm *= BAL.dmg.shockMul;
 	if (o.abil && src && !src.team) dm *= 1 + F.rb.abil;
 	dm = Math.max(1, Math.round(dm));
 	if (tg.sh > 0) {
@@ -4241,28 +4747,11 @@ function hurt(src, tg, raw, o = {}) {
 		if (crit) F.st.crits++;
 	} else F.st.taken += tg.team ? 0 : dm;
 	const chg = wxm("chg");
-	if (src && !o.dot && !o.proc) src.en = Math.min(100, (src.en || 0) + 8 * chg * (src.team ? 1 : 1 + F.rb.chg));
-	if (!o.dot) tg.en = Math.min(100, (tg.en || 0) + 4 * chg);
-	// визуал удара
-	const c = EL[el] || EL.phys,
-		hy = tg.y - (tg.rad > 30 ? 60 : 28) - (tg.z || 0);
-	if (o.dot) Fx.num(tg, dm, "dot", c.c);
-	else {
-		Fx.num(tg, crit ? fmt(dm) + "!" : dm, crit ? "crit" : tg.team ? "dmg" : "hit");
-		burst(tg.x, hy, crit ? 14 : 5, { c: [c.c, c.c2], sp: crit ? 260 : 150, s: crit ? 6 : 4, life: 0.35, sv: 0.6 });
-		if (el === "fire") burst(tg.x, hy, 3, { c: ["#ff8a3c", "#ffe27a"], k: 1, s: 7, g: -160, sp: 40, life: 0.5 });
-		else if (el === "ice") burst(tg.x, hy, 4, { c: ["#ffffff", "#9fe8ff"], k: 4, s: 6, sp: 130, life: 0.45, g: 300 });
-		else if (el === "poison") burst(tg.x, hy, 3, { c: "rgba(155,224,78,.6)", k: 5, s: 6, e: 2, g: -40, sp: 30, life: 0.6 });
-		else if (el === "dark") burst(tg.x, hy, 4, { c: ["#b06cff", "#5a2a9a"], k: 1, s: 7, g: -60, sp: 60, life: 0.55 });
-		else if (el === "holy") burst(tg.x, hy, 4, { c: ["#fff3b0", "#ffffff"], k: 1, s: 6, g: -90, sp: 70, life: 0.5 });
-		else if (el === "bolt" || el === "prism") Fx.add({ k: "bolt", x0: tg.x + rr(-30, 30), y0: hy - 50, x1: tg.x, y1: hy, c: c.c, d: 0.12 });
-		if (crit) {
-			ring(tg.x, hy, 70, c.c2, 0.28, 6, 1, 1);
-			Fx.add({ k: "star", x: tg.x, y: hy, c: c.c2, d: 0.2 });
-			shake(0.12);
-			sfx("crit");
-		} else if (!o.quiet) sfx(o.snd || (el === "phys" || el === "nature" ? "hit" : el), 0.8);
-	}
+	if (src && !o.dot && !o.proc) src.en = Math.min(BAL.dmg.enMax, (src.en || 0) + BAL.dmg.enHit * chg * (src.team ? 1 : 1 + F.rb.chg));
+	if (!o.dot) tg.en = Math.min(BAL.dmg.enMax, (tg.en || 0) + BAL.dmg.enTaken * chg);
+	// визуал и звук удара — подписчики события (50_draw.js, 70_audio.js)
+	const hy = tg.y - (tg.rad > 30 ? 60 : 28) - (tg.z || 0);
+	Events.emit("unit:hit", tg, { dm, crit, el, hy, dot: !!o.dot, quiet: !!o.quiet, snd: o.snd }, src);
 	// срабатывания
 	if (src && !o.dot && !o.proc) {
 		if (!src.team) {
@@ -4942,218 +5431,266 @@ function bossStep(u, h) {
 	return false;
 }
 // ---------- шаг симуляции ----------
+// ---------- шаг бойца: разбит на фазы, порядок и ранние выходы — как в исходной версии ----------
+// Каждая фаза возвращает true, если шаг бойца на этом заканчивается.
 function unitStep(u, h) {
 	if (u.hp <= 0) return;
 	const hr = h / SPDX,
 		A = F.A,
 		s = u.st;
+	stepCooldowns(u, h, hr);
+	if (u.spw > 0) {
+		u.spw -= hr;
+		return;
+	}
+	stepAnim(u, hr);
+	stepStatuses(u, s, h);
+	if (u.hp <= 0) return;
+	stepHazards(u, A, h);
+	// Смертельное покрытие или лужа не должны позволить бойцу атаковать в этот же кадр.
+	if (u.hp <= 0) return;
+	stepKnock(u, A, h);
+	if (u.jump) {
+		stepJump(u, A, h);
+		return;
+	}
+	if (s.stun) return;
+	stepSwing(u, h);
+	const foes = liv(u.team ? F.pl : F.en);
+	stepHealer(u, h);
+	if (u.ulc) {
+		stepWhirl(u, A, h, foes);
+		return;
+	}
+	if (u.dash) {
+		stepDash(u, A, h);
+		return;
+	}
+	if (u.an && u.an.lock) return;
+	if (!foes.length) return;
+	const tg = pickTarget(u, foes, h);
+	u.tg = tg;
+	if (u.boss && bossStep(u, h)) return;
+	if (!u.team) {
+		if (stepHeroKit(u, h)) return;
+	} else if (!u.boss && (u.slot === "m" || u.slot === "b")) {
+		if (stepFoeSpecial(u, tg, h, foes)) return;
+	}
+	stepApproach(u, A, tg, h);
+}
+// перезарядки, неуязвимость, щит
+function stepCooldowns(u, h, hr) {
 	u.atkT = Math.max(0, u.atkT - hr);
 	u.hitT = Math.max(0, u.hitT - hr);
 	u.mv = 0;
 	if (u.inv > 0) u.inv -= h;
 	if (u.shT > 0 && (u.shT -= h) <= 0) u.sh = 0;
-	if (u.spw > 0) {
-		u.spw -= hr;
-		return;
-	}
+}
+function stepAnim(u, hr) {
 	if (u.an) {
 		u.an.t += hr;
 		if (u.an.t >= u.an.d) u.an = null;
 	}
+}
+// статусы: тики горения/яда, истечение
+function stepStatuses(u, s, h) {
 	for (const k in s) {
 		const q = s[k];
 		q.t -= h;
 		if (k === "burn" || k === "poison") {
 			q.tk += h;
-			if (q.tk >= 0.5) {
-				q.tk -= 0.5;
-				hurt(null, u, q.v * 0.5, { pure: 1, dot: 1, el: k === "burn" ? "fire" : "poison" });
+			if (q.tk >= BAL.dmg.dotTick) {
+				q.tk -= BAL.dmg.dotTick;
+				hurt(null, u, q.v * BAL.dmg.dotTick, { pure: 1, dot: 1, el: k === "burn" ? "fire" : "poison" });
 			}
 		}
 		if (q.t <= 0) delete s[k];
 	}
-	if (u.hp <= 0) return;
-	// опасные покрытия и лужи боссов
+}
+// опасные покрытия и лужи боссов
+function stepHazards(u, A, h) {
 	u.hz = (u.hz || 0) + h;
-	if (u.hz >= 0.5) {
-		u.hz = 0;
-		const P = surfAt(A, u.x, u.y);
-		if (P && P.haz && !u.z) {
-			hurt(null, u, u.max * (u.boss ? 0.004 : 0.015), { pure: 1, dot: 1, el: P.haz });
-			addSt(u, P.haz === "fire" ? "burn" : "poison", 2, u.max * 0.006);
-		}
-		if (!u.team)
-			for (const p of A.pools)
-				if (Math.hypot(u.x - p.x, (u.y - p.y) * 1.6) < p.r) {
-					hurt(p.src, u, p.src.atk * 0.3, { dot: 1, el: p.el });
-					if (p.el === "ice") addSt(u, "chill", 1.5);
-				}
+	if (u.hz < BAL.dmg.hazTick) return;
+	u.hz = 0;
+	const P = surfAt(A, u.x, u.y);
+	if (P && P.haz && !u.z) {
+		hurt(null, u, u.max * (u.boss ? BAL.dmg.hazDmgBoss : BAL.dmg.hazDmg), { pure: 1, dot: 1, el: P.haz });
+		addSt(u, P.haz === "fire" ? "burn" : "poison", 2, u.max * BAL.dmg.hazSt);
 	}
-	// Смертельное покрытие или лужа не должны позволить бойцу атаковать в этот же кадр.
-	if (u.hp <= 0) return;
-	if (u.kx || u.ky) {
-		u.x += u.kx * h;
-		u.y += u.ky * h;
-		const k = Math.exp(-h * 9);
-		u.kx *= k;
-		u.ky *= k;
-		if (Math.abs(u.kx) + Math.abs(u.ky) < 8) u.kx = u.ky = 0;
+	if (!u.team)
+		for (const p of A.pools)
+			if (Math.hypot(u.x - p.x, (u.y - p.y) * 1.6) < p.r) {
+				hurt(p.src, u, p.src.atk * BAL.dmg.poolDmg, { dot: 1, el: p.el });
+				if (p.el === "ice") addSt(u, "chill", 1.5);
+			}
+}
+// отбрасывание
+function stepKnock(u, A, h) {
+	if (!(u.kx || u.ky)) return;
+	u.x += u.kx * h;
+	u.y += u.ky * h;
+	const k = Math.exp(-h * 9);
+	u.kx *= k;
+	u.ky *= k;
+	if (Math.abs(u.kx) + Math.abs(u.ky) < 8) u.kx = u.ky = 0;
+	navPush(A, u, u.rad);
+}
+// прыжок (способности и боссы): по дуге в точку, в конце — обработчик
+function stepJump(u, A, h) {
+	const j = u.jump;
+	j.t += h;
+	const k = Math.min(1, j.t / j.d),
+		q = ez.io(k);
+	u.x = lerp(j.x0, j.x1, q);
+	u.y = lerp(j.y0, j.y1, q);
+	u.z = Math.sin(Math.PI * k) * j.h;
+	if (k >= 1) {
+		u.z = 0;
+		u.jump = null;
+		navPush(A, u, u.rad * 0.5);
+		j.fn();
+	}
+}
+// отложенный удар ближнего боя
+function stepSwing(u, h) {
+	if (!u.sw) return;
+	u.sw.t -= h;
+	if (u.sw.t <= 0) {
+		strike(u, u.sw.tg, u.sw.dmg);
+		u.sw = null;
+	}
+}
+// лекарь: раз в 2 с лечит самого раненого союзника
+function stepHealer(u, h) {
+	if (!u.heal) return;
+	u.hc -= h;
+	if (u.hc > 0) return;
+	u.hc = 2;
+	const al = liv(F.pl)
+		.filter((a) => a.hp < a.max)
+		.sort((p, q) => p.hp / p.max - q.hp / q.max);
+	if (al.length) {
+		heal(al[0], u.heal * Math.max(1, u.atk / 50), u);
+		Fx.add({ k: "beam", x0: u.x + u.face * 14, y0: u.y - 60, x1: al[0].x, y1: al[0].y - 30, c: "#8be06a", d: 0.25, w: 3 });
+		sfx("heal");
+	}
+}
+// вихрь ударов бойца
+function stepWhirl(u, A, h, foes) {
+	const c = u.ulc;
+	c.t -= h;
+	if (c.t > 0) return;
+	const tg = pick(foes);
+	if (!tg || c.n <= 0) {
+		u.ulc = null;
+		return;
+	}
+	c.n--;
+	c.t = 0.2;
+	Fx.add({ k: "ghost", u, x: u.x, y: u.y, f: u.face, d: 0.3 });
+	const sd = Rand.next() < 0.5 ? 1 : -1;
+	[u.x, u.y] = placeFree(A, tg.x + sd * (22 + tg.rad), tg.y + rr(-8, 8));
+	u.face = -sd;
+	anim(u, "atk", 0.2, false);
+	hurt(u, tg, eAtk(u) * 0.9, { abil: 1 });
+	Fx.add({ k: "slash", x: tg.x, y: tg.y - 30, f: -sd, r: 56, c: "#e9d0ff", d: 0.16, w: 8, rot: rr(-0.8, 0.8) });
+}
+// рывок шипача: летит по прямой, сбивает всех на пути, о камень — оглушается сам
+function stepDash(u, A, h) {
+	const d = u.dash;
+	d.t -= h;
+	u.x += d.dx * 560 * h;
+	u.y += d.dy * 560 * h;
+	u.mv = 1;
+	if (Rand.next() < 0.6) Parts.add({ x: u.x, y: u.y - 4, vx: -d.dx * 40, vy: -20, life: 0.4, c: "rgba(220,210,190,.6)", s: 6, k: 5, e: 2, l: 0 });
+	for (const p of liv(F.pl))
+		if (!d.hit.has(p) && dist(p, u) < 34 + p.rad) {
+			d.hit.add(p);
+			hurt(u, p, eAtk(u) * 1.4, { stc: 0.4 });
+			knock(p, u.x - d.dx * 20, u.y - d.dy * 20, 80);
+		}
+	let stop = d.t <= 0 || u.x <= FLD.x0 + 2 || u.x >= FLD.x1 - 2 || u.y <= A.y0 + 1 || u.y >= FLD.y1 - 1;
+	for (const o of A.obs)
+		if (!o.dead && Math.abs(o.x - u.x) < o.rx + 14 && Math.abs(o.y - u.y) < o.ry + 10) {
+			if (o.hp) breakProp(A, o);
+			else {
+				stop = true;
+				addSt(u, "stun", 1.2);
+				Fx.num(u, "бум!", "txt", "#ffe27a");
+				burst(u.x, u.y - 20, 8, { c: ["#ffe27a", "#ffffff"], sp: 160, s: 4, life: 0.4 });
+				shake(0.15);
+				sfx("hit");
+			}
+		}
+	if (stop) {
+		u.dash = null;
 		navPush(A, u, u.rad);
 	}
-	if (u.jump) {
-		const j = u.jump;
-		j.t += h;
-		const k = Math.min(1, j.t / j.d),
-			q = ez.io(k);
-		u.x = lerp(j.x0, j.x1, q);
-		u.y = lerp(j.y0, j.y1, q);
-		u.z = Math.sin(Math.PI * k) * j.h;
-		if (k >= 1) {
-			u.z = 0;
-			u.jump = null;
-			navPush(A, u, u.rad * 0.5);
-			j.fn();
-		}
-		return;
+}
+// цель: насмешка держит цель, иначе ближайший враг
+function pickTarget(u, foes, h) {
+	if (u.tau && (u.tau.t -= h) > 0 && u.tau.u.hp > 0) return u.tau.u;
+	return nearest(u, foes);
+}
+// набор бойца: энергия, ульта, способность. true — шаг закончен
+function stepHeroKit(u, h) {
+	const K = KIT[u.k];
+	if (!K) return false;
+	u.en = Math.min(BAL.dmg.enMax, u.en + BAL.dmg.enTick * h * wxm("chg") * (1 + F.rb.chg));
+	if (u.en >= BAL.dmg.enMax && (CFG.autoUlt !== false || u.ultQ) && CAST[u.k].ult(u)) {
+		u.en = 0;
+		u.ultQ = 0;
+		return true;
 	}
-	if (s.stun) return;
-	if (u.sw) {
-		u.sw.t -= h;
-		if (u.sw.t <= 0) {
-			strike(u, u.sw.tg, u.sw.dmg);
-			u.sw = null;
+	u.acd -= h;
+	if (u.acd <= 0) {
+		if (CAST[u.k].ab(u)) {
+			u.acd = K.ab.cd * (1 - F.rb.cdr);
+			return true;
 		}
+		u.acd = 0.4;
 	}
-	const foes = liv(u.team ? F.pl : F.en);
-	if (u.heal) {
-		u.hc -= h;
-		if (u.hc <= 0) {
-			u.hc = 2;
-			const al = liv(F.pl)
-				.filter((a) => a.hp < a.max)
-				.sort((p, q) => p.hp / p.max - q.hp / q.max);
-			if (al.length) {
-				heal(al[0], u.heal * Math.max(1, u.atk / 50), u);
-				Fx.add({ k: "beam", x0: u.x + u.face * 14, y0: u.y - 60, x1: al[0].x, y1: al[0].y - 30, c: "#8be06a", d: 0.25, w: 3 });
-				sfx("heal");
-			}
-		}
+	return false;
+}
+// особые приёмы врагов: плевок болотника, рывок шипача. true — шаг закончен
+function stepFoeSpecial(u, tg, h, foes) {
+	u.acd -= h;
+	const d = dist(u, tg);
+	if (u.acd > 0) return false;
+	if (u.slot === "m" && d < 520) {
+		u.acd = rr(4.5, 6.5);
+		anim(u, "cast", 0.4);
+		shoot(u, pick(foes), eAtk(u) * 0.8, { sp: 380, stc: 0.5, big: 1 });
+		sfx("spit");
+		return true;
 	}
-	if (u.ulc) {
-		// вихрь ударов бойца
-		const c = u.ulc;
-		c.t -= h;
-		if (c.t <= 0) {
-			const tg = pick(foes);
-			if (!tg || c.n <= 0) u.ulc = null;
-			else {
-				c.n--;
-				c.t = 0.2;
-				Fx.add({ k: "ghost", u, x: u.x, y: u.y, f: u.face, d: 0.3 });
-				const sd = Rand.next() < 0.5 ? 1 : -1;
-				[u.x, u.y] = placeFree(A, tg.x + sd * (22 + tg.rad), tg.y + rr(-8, 8));
-				u.face = -sd;
-				anim(u, "atk", 0.2, false);
-				hurt(u, tg, eAtk(u) * 0.9, { abil: 1 });
-				Fx.add({ k: "slash", x: tg.x, y: tg.y - 30, f: -sd, r: 56, c: "#e9d0ff", d: 0.16, w: 8, rot: rr(-0.8, 0.8) });
-			}
-		}
-		return;
-	}
-	if (u.dash) {
-		// рывок шипача: летит по прямой, сбивает всех на пути, о камень — оглушается сам
-		const d = u.dash;
-		d.t -= h;
-		u.x += d.dx * 560 * h;
-		u.y += d.dy * 560 * h;
-		u.mv = 1;
-		if (Rand.next() < 0.6) Parts.add({ x: u.x, y: u.y - 4, vx: -d.dx * 40, vy: -20, life: 0.4, c: "rgba(220,210,190,.6)", s: 6, k: 5, e: 2, l: 0 });
-		for (const p of liv(F.pl))
-			if (!d.hit.has(p) && dist(p, u) < 34 + p.rad) {
-				d.hit.add(p);
-				hurt(u, p, eAtk(u) * 1.4, { stc: 0.4 });
-				knock(p, u.x - d.dx * 20, u.y - d.dy * 20, 80);
-			}
-		let stop = d.t <= 0 || u.x <= FLD.x0 + 2 || u.x >= FLD.x1 - 2 || u.y <= A.y0 + 1 || u.y >= FLD.y1 - 1;
-		for (const o of A.obs)
-			if (!o.dead && Math.abs(o.x - u.x) < o.rx + 14 && Math.abs(o.y - u.y) < o.ry + 10) {
-				if (o.hp) breakProp(A, o);
-				else {
-					stop = true;
-					addSt(u, "stun", 1.2);
-					Fx.num(u, "бум!", "txt", "#ffe27a");
-					burst(u.x, u.y - 20, 8, { c: ["#ffe27a", "#ffffff"], sp: 160, s: 4, life: 0.4 });
-					shake(0.15);
-					sfx("hit");
+	if (u.slot === "b" && d > 110 && d < 460) {
+		u.acd = rr(6.5, 9);
+		const a = Math.atan2(tg.y - u.y, tg.x - u.x);
+		anim(u, "cast", 0.7);
+		tele({
+			shape: "line",
+			x: u.x,
+			y: u.y,
+			a,
+			len: Math.min(430, d + 90),
+			d: 0.7,
+			c: "#ff5a4a",
+			wd: 34,
+			fn() {
+				if (u.hp > 0 && !u.st.stun) {
+					u.dash = { dx: Math.cos(a), dy: Math.sin(a), t: Math.min(430, d + 90) / 560, hit: new Set() };
+					sfx("dash");
 				}
-			}
-		if (stop) {
-			u.dash = null;
-			navPush(A, u, u.rad);
-		}
-		return;
+			},
+		});
+		return true;
 	}
-	if (u.an && u.an.lock) return;
-	if (!foes.length) return;
-	let tg = null;
-	if (u.tau && (u.tau.t -= h) > 0 && u.tau.u.hp > 0) tg = u.tau.u;
-	else tg = nearest(u, foes);
-	u.tg = tg;
-	if (u.boss && bossStep(u, h)) return;
-	if (!u.team) {
-		const K = KIT[u.k];
-		if (K) {
-			u.en = Math.min(100, u.en + 2.2 * h * wxm("chg") * (1 + F.rb.chg));
-			if (u.en >= 100 && (CFG.autoUlt !== false || u.ultQ) && CAST[u.k].ult(u)) {
-				u.en = 0;
-				u.ultQ = 0;
-				return;
-			}
-			u.acd -= h;
-			if (u.acd <= 0) {
-				if (CAST[u.k].ab(u)) {
-					u.acd = K.ab.cd * (1 - F.rb.cdr);
-					return;
-				}
-				u.acd = 0.4;
-			}
-		}
-	} else if (!u.boss && (u.slot === "m" || u.slot === "b")) {
-		u.acd -= h;
-		const d = dist(u, tg);
-		if (u.acd <= 0) {
-			if (u.slot === "m" && d < 520) {
-				u.acd = rr(4.5, 6.5);
-				anim(u, "cast", 0.4);
-				shoot(u, pick(foes), eAtk(u) * 0.8, { sp: 380, stc: 0.5, big: 1 });
-				sfx("spit");
-				return;
-			}
-			if (u.slot === "b" && d > 110 && d < 460) {
-				u.acd = rr(6.5, 9);
-				const a = Math.atan2(tg.y - u.y, tg.x - u.x);
-				anim(u, "cast", 0.7);
-				tele({
-					shape: "line",
-					x: u.x,
-					y: u.y,
-					a,
-					len: Math.min(430, d + 90),
-					d: 0.7,
-					c: "#ff5a4a",
-					wd: 34,
-					fn() {
-						if (u.hp > 0 && !u.st.stun) {
-							u.dash = { dx: Math.cos(a), dy: Math.sin(a), t: Math.min(430, d + 90) / 560, hit: new Set() };
-							sfx("dash");
-						}
-					},
-				});
-				return;
-			}
-			u.acd = 0.5;
-		}
-	}
+	u.acd = 0.5;
+	return false;
+}
+// сближение с целью или обычная атака
+function stepApproach(u, A, tg, h) {
 	const d = dist(u, tg),
 		reach = eRng(u) * 0.6 + (tg.rad > 30 ? tg.rad - 14 : 0) + (u.rad > 30 ? u.rad - 14 : 0);
 	if (Math.abs(tg.x - u.x) > 6) u.face = tg.x < u.x ? -1 : 1;
@@ -5173,20 +5710,19 @@ function unitStep(u, h) {
 		u.x += u.vx * v * h;
 		u.y += u.vy * v * h;
 		navPush(A, u, u.rad);
-	} else {
-		u.z = u.set ? Math.max(0, (u.z || 0) - h * 90) : 0;
-		u.cd -= h;
-		if (u.cd <= 0) {
-			const as = eAspd(u),
-				dur = Math.min(0.38, 0.72 / as);
-			u.cd = 1 / as;
-			u.atkT = u.atkD = dur;
-			u.ax = (tg.x - u.x) / (d || 1);
-			u.ay = (tg.y - u.y) / (d || 1);
-			if (u.rng >= 140) Seq.at(dur * 0.4, () => S === "fight" && u.hp > 0 && tg.hp > 0 && (shoot(u, tg, eAtk(u), { el: KIT[u.k] ? KIT[u.k].el : u.el }), sfx("zap", 0.7)));
-			else u.sw = { tg, t: dur * 0.42 * SPDX, dmg: eAtk(u) };
-		}
+		return;
 	}
+	u.z = u.set ? Math.max(0, (u.z || 0) - h * 90) : 0;
+	u.cd -= h;
+	if (u.cd > 0) return;
+	const as = eAspd(u),
+		dur = Math.min(0.38, 0.72 / as);
+	u.cd = 1 / as;
+	u.atkT = u.atkD = dur;
+	u.ax = (tg.x - u.x) / (d || 1);
+	u.ay = (tg.y - u.y) / (d || 1);
+	if (u.rng >= 140) Seq.at(dur * 0.4, () => S === "fight" && u.hp > 0 && tg.hp > 0 && (shoot(u, tg, eAtk(u), { el: KIT[u.k] ? KIT[u.k].el : u.el }), sfx("zap", 0.7)));
+	else u.sw = { tg, t: dur * 0.42 * SPDX, dmg: eAtk(u) };
 }
 // удар ближнего боя: у каждого бойца свой росчерк
 function strike(u, tg, dmg) {
@@ -5388,7 +5924,7 @@ function catStep(sd) {
 	}
 }
 function deaths() {
-	for (const u of [...F.pl, ...F.en]) {
+	for (const u of allUnits(ALL_DEATH)) {
 		if (u.hp > 0 || u.dead) continue;
 		if (!u.team && F.rb.phx && !F.phx) {
 			// перо феникса
@@ -5396,19 +5932,15 @@ function deaths() {
 			u.hp = Math.max(1, Math.round(u.max * F.rb.phx));
 			u.inv = 1.5;
 			u.st = {};
-			Fx.add({ k: "pillar", x: u.x, y: u.y, c: "#ff9a3c", w: 70, d: 0.7 });
-			burst(u.x, u.y - 30, 24, { c: ["#ff9a3c", "#ffe27a", "#ff4a2a"], sp: 220, s: 6, g: -200, life: 0.9 });
-			Fx.txt(u.x, u.y - 100, "Феникс!", "#ffb03c", 22);
-			sfx("holy");
+			Events.emit("unit:phoenix", u);
 			continue;
 		}
 		u.dead = 1;
 		u.hp = 0;
 		if (u.skull && !u.team) {
 			u.skull = false;
-			G.coin += 8;
-			Fx.txt(u.x, u.y - 96, "+8", "#ffd600", 22);
-			sfx("coin");
+			G.coin += BAL.dmg.skullCoin;
+			Events.emit("coin:gain", BAL.dmg.skullCoin, u);
 		}
 		if (!u.team && F.rb.avg) {
 			F.avg += F.rb.avg;
@@ -5416,14 +5948,11 @@ function deaths() {
 		}
 		if (u.team) {
 			F.st.kills++;
-			if (wxm("soul", 0) && u.lastHit && u.lastHit.hp > 0) heal(u.lastHit, u.lastHit.max * 0.05);
+			if (wxm("soul", 0) && u.lastHit && u.lastHit.hp > 0) heal(u.lastHit, u.lastHit.max * BAL.dmg.soulHeal);
 		}
 		const c = u.team ? EL[u.el] || EL.phys : { c: "#ffe9a8", c2: "#ffffff" };
 		F.dd.push({ u, t: 0, d: u.boss ? 2.6 : 0.9 });
-		burst(u.x, u.y - 24, u.boss ? 50 : 16, { c: [c.c, c.c2, "#ffffff"], sp: u.boss ? 380 : 220, s: 6, sv: 0.8, life: 0.8, up: 60, fl: u.y + 6, bn: 0.4 });
-		ring(u.x, u.y, u.boss ? 300 : 70, c.c, 0.45, u.boss ? 10 : 4);
-		if (!u.team) for (let i = 0; i < 5; i++) Parts.add({ x: u.x + rr(-10, 10), y: u.y - 30, vx: rr(-10, 10), vy: rr(-80, -40), life: 1.2, c: "#cfe8ff", s: 7, k: 1, wob: 30, wf: 4, ph: rr(0, 6) });
-		sfx(u.boss ? "bossdie" : "die");
+		Events.emit("unit:died", u, c);
 		if (u.boss) {
 			shake(0.9);
 			slowmo(0.2, 0.9);
@@ -5443,37 +5972,21 @@ function deaths() {
 		} else if (u.team && !liv(F.en).length) slowmo(0.3, 0.45); // добивающий удар
 		else if (!u.team) shake(0.2);
 	}
-	F.pl = F.pl.filter((u) => !u.dead);
-	F.en = F.en.filter((u) => !u.dead);
+	compact(F.pl, notDead);
+	compact(F.en, notDead);
 }
+const notDead = (u) => !u.dead;
+// ---------- шаг симуляции боя: таймеры → исход → блокировка → события → бойцы → снаряды → смерти → конец ----------
 function simStep(h) {
 	const A = F.A,
 		hr = h / SPDX;
-	for (const d of F.dd) d.t += hr;
-	F.dd = F.dd.filter((d) => d.t < d.d);
-	for (const o of A.obs) if (o.hitT > 0) o.hitT -= hr;
-	A.pools = A.pools.filter((p) => (p.t += h) < p.life);
+	stepFightTimers(A, h, hr);
 	if (F.out) {
-		F.out.t += hr;
-		if (F.out.t >= F.out.d) {
-			if (F.out.win) win();
-			else lose();
-		}
+		stepOutcome(hr);
 		return;
 	}
 	if (F.lock > 0) {
-		F.lock -= hr;
-		for (const u of [...F.pl, ...F.en]) {
-			u.hitT = Math.max(0, u.hitT - hr);
-			if (u.an && (u.an.t += hr) >= u.an.d) u.an = null;
-			if (u.kx || u.ky) {
-				u.x += u.kx * h;
-				u.y += u.ky * h;
-				u.kx *= 0.9;
-				u.ky *= 0.9;
-				navPush(A, u, u.rad);
-			}
-		}
+		stepLocked(A, h, hr);
 		return;
 	}
 	F.timer -= h;
@@ -5483,7 +5996,56 @@ function simStep(h) {
 	if (F.lock > 0) return;
 	wxStep(h);
 	if (F.lock > 0) return;
-	const telegraphs = F.tele, telegraphCount = telegraphs.length;
+	stepTelegraphs(h);
+	// Переход фазы останавливает текущий шаг, а не только следующий.
+	if (F.lock > 0) return;
+	for (const u of allUnits(ALL_STEP)) {
+		unitStep(u, h);
+		if (F.lock > 0) return;
+	}
+	projStep(h);
+	if (F.lock > 0) return;
+	// бойцы не толкают друг друга (без расталкивания, чтобы не заталкивались к краю и могли атаковать)
+	const all = liv(F.pl).concat(liv(F.en));
+	for (const u of all) if (!u.jump) navPush(A, u, u.rad);
+	deaths();
+	checkFightEnd();
+}
+// числа урона, подсветка препятствий, лужи
+function stepFightTimers(A, h, hr) {
+	for (const d of F.dd) d.t += hr;
+	compact(F.dd, ddAlive);
+	for (const o of A.obs) if (o.hitT > 0) o.hitT -= hr;
+	for (const p of A.pools) p.t += h;
+	compact(A.pools, (p) => p.t < p.life);
+}
+// исход уже решён: ждём паузу и переходим к победе/поражению
+function stepOutcome(hr) {
+	F.out.t += hr;
+	if (F.out.t >= F.out.d) {
+		if (F.out.win) win();
+		else lose();
+	}
+}
+// блокировка (смена фазы босса, заставка): только анимации и отбрасывание
+function stepLocked(A, h, hr) {
+	F.lock -= hr;
+	for (const u of allUnits(ALL_LOCK)) {
+		u.hitT = Math.max(0, u.hitT - hr);
+		if (u.an && (u.an.t += hr) >= u.an.d) u.an = null;
+		if (u.kx || u.ky) {
+			u.x += u.kx * h;
+			u.y += u.ky * h;
+			u.kx *= 0.9;
+			u.ky *= 0.9;
+			navPush(A, u, u.rad);
+		}
+	}
+}
+// телеграфы способностей: по истечении срабатывает обработчик
+function stepTelegraphs(h) {
+	const telegraphs = F.tele,
+		telegraphCount = telegraphs.length;
 	const pendingTelegraphs = telegraphs.filter((q) => {
 		if (F.tele !== telegraphs) return false;
 		q.t += h;
@@ -5495,21 +6057,12 @@ function simStep(h) {
 	});
 	// Смена фазы может очистить очередь, а обработчик — добавить новое событие.
 	if (F.tele === telegraphs) F.tele = pendingTelegraphs.concat(telegraphs.slice(telegraphCount));
-	// Переход фазы останавливает текущий шаг, а не только следующий.
-	if (F.lock > 0) return;
-	for (const u of [...F.pl, ...F.en]) {
-		unitStep(u, h);
-		if (F.lock > 0) return;
-	}
-	projStep(h);
-	if (F.lock > 0) return;
-	// бойцы не толкают друг друга (без расталкивания, чтобы не заталкивались к краю и могли атаковать)
-	const all = liv(F.pl).concat(liv(F.en));
-	for (const u of all) if (!u.jump) navPush(A, u, u.rad);
-	deaths();
+}
+// условия конца боя: враги кончились / отряд пал / время вышло
+function checkFightEnd() {
 	if (!F.en.length) {
 		if (!(F.cat && F.cat.st === "dance" && F.cat.t < 1.6)) {
-			F.out = { win: true, t: 0, d: F.kind === "boss" ? 3.1 : 1.5 };
+			F.out = { win: true, t: 0, d: F.kind === "boss" ? BAL.fight.outWinBoss : BAL.fight.outWin };
 			F.proj = [];
 			F.tele = [];
 			F.pl.forEach((u) => anim(u, "win", 9, false));
@@ -5518,12 +6071,18 @@ function simStep(h) {
 	} else if (!F.pl.length || F.timer <= 0) {
 		// время вышло: если отряд измотал врагов сильнее, чем они его, бой засчитывается победой
 		const frac = (list) => list.reduce((a, u) => a + Math.max(0, u.hp), 0) / Math.max(1, list.reduce((a, u) => a + u.max, 0));
-		const byTime = F.timer <= 0 && F.pl.length > 0 && frac(F.pl) > frac(F.en) + 0.05;
-		F.out = { win: byTime, t: 0, d: 1.3, time: F.timer <= 0 };
+		const byTime = F.timer <= 0 && F.pl.length > 0 && frac(F.pl) > frac(F.en) + BAL.fight.timeoutEdge;
+		F.out = { win: byTime, t: 0, d: BAL.fight.outLose, time: F.timer <= 0 };
 		F.proj = [];
 		(byTime ? F.pl : F.en).forEach((u) => anim(u, "win", 9, false));
 		if (byTime) sfx("win");
 	}
+}
+// экраны без симуляции: очередь Seq тикает, множитель времени сброшен (хук update машины экранов)
+function idleUpd(dt) {
+	Seq.clock = null;
+	Seq.run();
+	TSC = 1;
 }
 function upd(dt) {
 	if (S !== "fight" || !F) Seq.clock = null;
@@ -5536,10 +6095,14 @@ function upd(dt) {
 		F.slowT -= dt;
 		TSC = F.slowS;
 	} else TSC = 1;
+	// запоминаем позиции до шага — отрисовка экстраполирует движение между шагами
+	lerpRemember(F.pl);
+	lerpRemember(F.en);
+	if (F.proj) lerpRemember(F.proj);
 	let rem = dt * SPDX * TSC,
 		n = 0;
-	while (rem > 1e-5 && n++ < 16 && S === "fight") {
-		const h = Math.min(rem, 0.025);
+	while (rem > 1e-5 && n++ < BAL.fight.maxSub && S === "fight") {
+		const h = Math.min(rem, BAL.fight.subStep);
 		simStep(h);
 		rem -= h;
 	}
@@ -6143,6 +6706,50 @@ function deadDraw(d, wi) {
 }
 // ---------- сцена боя ----------
 const ZONE = { x0: 96, x1: 506 };
+// ---------- экстраполяция позиций между шагами симуляции ----------
+// Loop.alpha — доля шага 1/60, не вошедшая в симуляцию в этом кадре (0 на ровных 60 Гц).
+// Бойцы и снаряды на время отрисовки сдвигаются на alpha последнего смещения, затем
+// позиции возвращаются: логика видит только «настоящие» координаты.
+const LERP_PREV = new WeakMap(),
+	LERP_UNDO = [];
+function lerpRemember(list) {
+	for (let i = 0; i < list.length; i++) {
+		const u = list[i];
+		let r = LERP_PREV.get(u);
+		if (!r) LERP_PREV.set(u, (r = { x: 0, y: 0 }));
+		r.x = u.x;
+		r.y = u.y;
+	}
+}
+function lerpApply(list, k) {
+	for (let i = 0; i < list.length; i++) {
+		const u = list[i],
+			r = LERP_PREV.get(u);
+		if (!r) continue;
+		const dx = u.x - r.x,
+			dy = u.y - r.y;
+		// телепорт/рывок (больше 40 px за шаг) не экстраполируем — иначе на кадр промелькнёт «перелёт»
+		if (dx * dx + dy * dy > 1600 || (dx === 0 && dy === 0)) continue;
+		LERP_UNDO.push(u, u.x, u.y);
+		u.x += dx * k;
+		u.y += dy * k;
+	}
+}
+function fightLerpIn() {
+	LERP_UNDO.length = 0;
+	if (!F || S !== "fight" || paused || !(Loop.alpha > 0.01) || F.lock > 0 || F.out) return;
+	lerpApply(F.pl, Loop.alpha);
+	lerpApply(F.en, Loop.alpha);
+	if (F.proj) lerpApply(F.proj, Loop.alpha);
+}
+function fightLerpOut() {
+	for (let i = LERP_UNDO.length - 3; i >= 0; i -= 3) {
+		const u = LERP_UNDO[i];
+		u.x = LERP_UNDO[i + 1];
+		u.y = LERP_UNDO[i + 2];
+	}
+	LERP_UNDO.length = 0;
+}
 function dFight() {
 	const A = F.A,
 		fight = S === "fight",
@@ -6642,15 +7249,17 @@ function dPop() {
 	}
 }
 // обновление визуальной части (вне симуляции): частицы, таймеры эффектов, погода
+const fxAlive = (f) => f.t < f.d,
+	numAlive = (n) => n.t < (n.k === "crit" || n.k === "txt" ? 1.1 : 0.85);
 function visTick(dt) {
 	Parts.upd(dt * TSC);
 	if (F && (S === "fight" || S === "prep")) {
 		const sd = dt * TSC;
 		wxEmit(F.A, dt);
 		for (const f of F.fx) f.t += f.k === "banner" || f.k === "cut" || f.k === "go" || f.k === "flash" ? dt : sd;
-		F.fx = F.fx.filter((f) => f.t < f.d);
+		compact(F.fx, fxAlive);
 		for (const n of F.nums) n.t += dt;
-		F.nums = F.nums.filter((n) => n.t < (n.k === "crit" || n.k === "txt" ? 1.1 : 0.85));
+		compact(F.nums, numAlive);
 		const us2 = S === "fight" ? F.pl.concat(F.en) : F.en;
 		let fo = null;
 		for (const u of us2) {
@@ -6677,6 +7286,49 @@ function visTick(dt) {
 	}
 }
 
+// ---------- частицы и числа по событиям боя ----------
+// Логика (hurt/heal/deaths) только сообщает о событии; порядок подписчиков: сначала частицы
+// (этот файл), затем звук (70_audio.js) — ровно тот порядок, что был при прямых вызовах.
+Events.on("unit:healed", (tg, v) => {
+	Fx.num(tg, "+" + fmt(v), "heal");
+	burst(tg.x, tg.y - 30, 6, { c: ["#6dff7a", "#d6ffb0"], sp: 50, g: -120, life: 0.7, s: 4, rad: 24 });
+});
+Events.on("unit:hit", (tg, e) => {
+	const c = EL[e.el] || EL.phys,
+		hy = e.hy,
+		el = e.el;
+	if (e.dot) {
+		Fx.num(tg, e.dm, "dot", c.c);
+		return;
+	}
+	Fx.num(tg, e.crit ? fmt(e.dm) + "!" : e.dm, e.crit ? "crit" : tg.team ? "dmg" : "hit");
+	burst(tg.x, hy, e.crit ? 14 : 5, { c: [c.c, c.c2], sp: e.crit ? 260 : 150, s: e.crit ? 6 : 4, life: 0.35, sv: 0.6 });
+	if (el === "fire") burst(tg.x, hy, 3, { c: ["#ff8a3c", "#ffe27a"], k: 1, s: 7, g: -160, sp: 40, life: 0.5 });
+	else if (el === "ice") burst(tg.x, hy, 4, { c: ["#ffffff", "#9fe8ff"], k: 4, s: 6, sp: 130, life: 0.45, g: 300 });
+	else if (el === "poison") burst(tg.x, hy, 3, { c: "rgba(155,224,78,.6)", k: 5, s: 6, e: 2, g: -40, sp: 30, life: 0.6 });
+	else if (el === "dark") burst(tg.x, hy, 4, { c: ["#b06cff", "#5a2a9a"], k: 1, s: 7, g: -60, sp: 60, life: 0.55 });
+	else if (el === "holy") burst(tg.x, hy, 4, { c: ["#fff3b0", "#ffffff"], k: 1, s: 6, g: -90, sp: 70, life: 0.5 });
+	else if (el === "bolt" || el === "prism") Fx.add({ k: "bolt", x0: tg.x + rr(-30, 30), y0: hy - 50, x1: tg.x, y1: hy, c: c.c, d: 0.12 });
+	if (e.crit) {
+		ring(tg.x, hy, 70, c.c2, 0.28, 6, 1, 1);
+		Fx.add({ k: "star", x: tg.x, y: hy, c: c.c2, d: 0.2 });
+		shake(0.12);
+	}
+});
+Events.on("unit:phoenix", (u) => {
+	Fx.add({ k: "pillar", x: u.x, y: u.y, c: "#ff9a3c", w: 70, d: 0.7 });
+	burst(u.x, u.y - 30, 24, { c: ["#ff9a3c", "#ffe27a", "#ff4a2a"], sp: 220, s: 6, g: -200, life: 0.9 });
+	Fx.txt(u.x, u.y - 100, "Феникс!", "#ffb03c", 22);
+});
+Events.on("coin:gain", (n, u) => {
+	if (u) Fx.txt(u.x, u.y - 96, "+" + n, "#ffd600", 22);
+});
+Events.on("unit:died", (u, c) => {
+	burst(u.x, u.y - 24, u.boss ? 50 : 16, { c: [c.c, c.c2, "#ffffff"], sp: u.boss ? 380 : 220, s: 6, sv: 0.8, life: 0.8, up: 60, fl: u.y + 6, bn: 0.4 });
+	ring(u.x, u.y, u.boss ? 300 : 70, c.c, 0.45, u.boss ? 10 : 4);
+	if (!u.team) for (let i = 0; i < 5; i++) Parts.add({ x: u.x + rr(-10, 10), y: u.y - 30, vx: rr(-10, 10), vy: rr(-80, -40), life: 1.2, c: "#cfe8ff", s: 7, k: 1, wob: 30, wf: 4, ph: rr(0, 6) });
+});
+
 // ===== 60_game.js =====
 // ===== ХОД ИГРЫ: миры, карта, события и награды, магазин, арена-режим, сохранения =====
 let EV = null, // текущее событие (награда, находка, выбор реликвии)
@@ -6689,12 +7341,27 @@ const cmul = () => 1 + 0.5 * (G.w || 0); // доход растёт с номе�
 const luck = () => (G.w || 0) * 0.7;
 
 // ---------- карта мира ----------
+// ---------- карта: слои узлов → рёбра → раздвижка → типы узлов → смежность ----------
+// Порядок вызовов Rand.next() сохранён в точности (эталон 500 карт).
 function genMap() {
 	const R = Rand.next,
 		L = 6 + ((R() * 3) | 0),
 		sx = 84 + R() * 30,
 		ex = 1118,
 		gp = (ex - sx) / (L + 1);
+	const ly = mapLayers(R, L, sx, ex, gp);
+	mapEdges(R, ly);
+	mapSpread();
+	E.forEach((e) => (e[2] = 0));
+	mapKinds(R);
+	ADJ = N.map(() => []);
+	E.forEach(([a, b]) => {
+		ADJ[a].push(b);
+		ADJ[b].push(a);
+	});
+}
+// узлы по слоям: старт, L промежуточных слоёв по 1–4 узла, босс
+function mapLayers(R, L, sx, ex, gp) {
 	N = [{ x: sx, y: 200 + R() * 110, ly: 0 }];
 	E = [];
 	const ly = [[0]];
@@ -6710,6 +7377,10 @@ function genMap() {
 	}
 	N.push({ x: ex, y: 200 + R() * 100, k: "boss", ly: L + 1 });
 	ly.push([N.length - 1]);
+	return ly;
+}
+// рёбра: каждый узел связан с ближайшим по высоте соседом, плюс случайная развилка
+function mapEdges(R, ly) {
 	for (let l = 0; l < ly.length - 1; l++) {
 		const A = ly[l],
 			Bl = ly[l + 1];
@@ -6729,7 +7400,9 @@ function genMap() {
 			if (b !== undefined && !E.some((e) => e[0] === a && e[1] === b)) E.push([a, b]);
 		}
 	}
-	// значки не налезают друг на друга: раздвигаем по вертикали
+}
+// значки не налезают друг на друга: раздвигаем по вертикали
+function mapSpread() {
 	for (let it = 0; it < 40; it++)
 		for (let i = 1; i < N.length; i++)
 			for (let j = i + 1; j < N.length; j++) {
@@ -6745,7 +7418,9 @@ function genMap() {
 					b.y = clamp(b.y + s * p, 126, 386);
 				}
 			}
-	E.forEach((e) => (e[2] = 0));
+}
+// типы узлов: события и элитные бои раскладываются по свободным узлам
+function mapKinds(R) {
 	const free = N.map((_, i) => i)
 			.filter((i) => i > 0 && N[i].k !== "boss")
 			.sort(() => R() - 0.5),
@@ -6762,11 +7437,6 @@ function genMap() {
 		const c = N.filter((n) => n.ly > 0 && n.ly <= 2 && !n.k);
 		(c[0] || N.find((n) => n.ly === 1)).k = "tribe";
 	}
-	ADJ = N.map(() => []);
-	E.forEach(([a, b]) => {
-		ADJ[a].push(b);
-		ADJ[b].push(a);
-	});
 }
 // палитры карты для каждого мира: земля, дорога, доля леса, перекраска деревьев и воды
 const MAPT = {
@@ -7055,13 +7725,13 @@ function toMenu() {
 	EV = null;
 	MV = null;
 	Seq.clear();
-	S = "menu";
+	Machine.go("menu");
 }
 
 // ---------- события ----------
 function ev(o) {
 	EV = Object.assign({ t0: t, cards: [], sel: -1, open: o.chest === undefined ? 1 : 0, rv: [] }, o);
-	S = "msg";
+	Machine.go("msg");
 	pop = null;
 	TIPN = null;
 }
@@ -7098,7 +7768,7 @@ function evClose() {
 	EV = null;
 	if (e.next) e.next();
 	else {
-		S = "map";
+		Machine.go("map");
 		autosave();
 	}
 }
@@ -7192,6 +7862,7 @@ function enter(kind) {
 	snap = ser();
 	autosave();
 }
+// ---------- победа: общая часть, затем ветка арены / босса / обычного боя ----------
 function win() {
 	const kind = F.kind,
 		rb = relBonus(),
@@ -7204,7 +7875,7 @@ function win() {
 	G.slots.forEach((u) => {
 		if (u) {
 			u.placed = false;
-			u.hp = Math.min(u.max, Math.max(u.hp, Math.ceil(u.max * 0.25)) + Math.round(u.max * 0.2));
+			u.hp = Math.min(u.max, Math.max(u.hp, Math.ceil(u.max * BAL.win.healFloor)) + Math.round(u.max * BAL.win.healBonus));
 			resetU(u);
 		}
 	});
@@ -7212,87 +7883,94 @@ function win() {
 	BGA = F.A;
 	F = null;
 	pop = null;
-	if (G.arena) {
-		const c = 8 + 2 * G.wave + rb.coin,
-			m = 1 + (G.wave % 3 === 0 ? 1 : 0),
-			cards = [
-				{ t: "res", ic: "coin", n: c },
-				{ t: "res", ic: "meat", n: m },
-			];
-		G.coin += c;
-		G.meat += m;
-		if (G.wave > (CFG.arenaBest || 0)) {
-			CFG.arenaBest = G.wave;
-			saveCfg();
-		}
-		const after = () => {
-			G.shop = true;
-			G.stock = null;
-			S = "shop";
-			SS.sel = -1;
-		};
-		ev({
-			bg: 1,
-			title: "Волна " + G.wave + " пройдена",
-			sub: kind === "boss" ? "Босс повержен!" : "Арена ликует",
-			stats,
-			cards,
-			next:
-				G.wave % 2 === 0
-					? () => {
-							const f = G.slots.indexOf(null);
-							if (G.wave % 4 === 0 && f >= 0) {
-								const u = recruit(rnd(HEROES), rollRar(G.wave * 0.25));
-								G.slots[f] = u;
-								ev({ title: "Новобранец", sub: "Толпа выдвинула своего бойца", cards: [{ t: "hero", u, r: u.r }], next: after });
-							} else ev({ title: "Трофей арены", sub: "Выбери одну реликвию", pick: 1, chest: 1, cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(G.wave * 0.3) })), next: after });
-						}
-					: after,
-		});
-		return;
+	Events.emit("fight:won", kind, st);
+	if (G.arena) winArena(kind, rb, stats);
+	else if (kind === "boss") winBoss(rb, stats);
+	else winFight(kind, rb, stats);
+}
+// арена: монеты и мясо за волну, каждую вторую волну — трофей или новобранец, затем лавка
+function winArena(kind, rb, stats) {
+	const c = BAL.win.arenaCoin + BAL.win.arenaCoinWave * G.wave + rb.coin,
+		m = 1 + (G.wave % 3 === 0 ? 1 : 0),
+		cards = [
+			{ t: "res", ic: "coin", n: c },
+			{ t: "res", ic: "meat", n: m },
+		];
+	G.coin += c;
+	G.meat += m;
+	if (G.wave > (CFG.arenaBest || 0)) {
+		CFG.arenaBest = G.wave;
+		saveCfg();
 	}
-	if (kind === "boss") {
-		const c = Math.round(20 * cmul()) + rb.coin,
-			m = 3 + (G.w || 0);
-		G.coin += c;
-		G.meat += m;
-		G.slots.forEach((u) => u && (u.hp = u.max));
-		if ((G.w || 0) + 1 > (CFG.best || 0)) {
-			CFG.best = (G.w || 0) + 1;
-			saveCfg();
-		}
-		ev({
-			bg: 1,
-			title: WORLDS[G.w].boss.n + " повержен!",
-			sub: "Трофеи босса",
-			stats,
-			cards: [
-				{ t: "res", ic: "coin", n: c },
-				{ t: "res", ic: "meat", n: m },
-			],
-			next: () =>
-				ev({
-					title: "Сокровищница босса",
-					sub: "Выбери одну реликвию",
-					pick: 1,
-					chest: 2,
-					cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(luck() + 1, 2) })),
-					next: () => {
-						if (G.w + 1 >= worldCount()) {
-							delSave();
-							S = "win";
-							sfx("fanfare");
-						} else {
-							S = "world";
-							WT0 = t;
-							autosave();
-						}
-					},
-				}),
-		});
-		return;
+	const after = () => {
+		G.shop = true;
+		G.stock = null;
+		Machine.go("shop");
+		SS.sel = -1;
+	};
+	ev({
+		bg: 1,
+		title: "Волна " + G.wave + " пройдена",
+		sub: kind === "boss" ? "Босс повержен!" : "Арена ликует",
+		stats,
+		cards,
+		next:
+			G.wave % 2 === 0
+				? () => {
+						const f = G.slots.indexOf(null);
+						if (G.wave % 4 === 0 && f >= 0) {
+							const u = recruit(rnd(HEROES), rollRar(G.wave * 0.25));
+							G.slots[f] = u;
+							ev({ title: "Новобранец", sub: "Толпа выдвинула своего бойца", cards: [{ t: "hero", u, r: u.r }], next: after });
+						} else ev({ title: "Трофей арены", sub: "Выбери одну реликвию", pick: 1, chest: 1, cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(G.wave * 0.3) })), next: after });
+					}
+				: after,
+	});
+}
+// босс: трофеи, полное лечение, сокровищница, затем следующий мир или финал
+function winBoss(rb, stats) {
+	const c = Math.round(BAL.win.bossCoin * cmul()) + rb.coin,
+		m = BAL.win.bossMeat + (G.w || 0);
+	G.coin += c;
+	G.meat += m;
+	G.slots.forEach((u) => u && (u.hp = u.max));
+	if ((G.w || 0) + 1 > (CFG.best || 0)) {
+		CFG.best = (G.w || 0) + 1;
+		saveCfg();
 	}
-	const c = Math.round((kind === "arena" ? 10 : 6 + G.depth) * cmul()) + rb.coin,
+	ev({
+		bg: 1,
+		title: WORLDS[G.w].boss.n + " повержен!",
+		sub: "Трофеи босса",
+		stats,
+		cards: [
+			{ t: "res", ic: "coin", n: c },
+			{ t: "res", ic: "meat", n: m },
+		],
+		next: () =>
+			ev({
+				title: "Сокровищница босса",
+				sub: "Выбери одну реликвию",
+				pick: 1,
+				chest: 2,
+				cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(luck() + 1, 2) })),
+				next: () => {
+					if (G.w + 1 >= worldCount()) {
+						delSave();
+						Machine.go("win");
+						sfx("fanfare");
+					} else {
+						Machine.go("world");
+						WT0 = t;
+						autosave();
+					}
+				},
+			}),
+	});
+}
+// обычный бой / узел арены / логово: награда, шанс реликвии, открывается лавка
+function winFight(kind, rb, stats) {
+	const c = Math.round((kind === "arena" ? BAL.win.arenaNodeCoin : BAL.win.fightCoin + G.depth) * cmul()) + rb.coin,
 		m = (kind === "arena" ? 2 : 1) + ((G.w || 0) >> 1),
 		cards = [
 			{ t: "res", ic: "coin", n: c },
@@ -7300,7 +7978,7 @@ function win() {
 		];
 	G.coin += c;
 	G.meat += m;
-	if (kind === "arena" || Rand.next() < (kind === "swamp" ? 0.4 : 0.14)) {
+	if (kind === "arena" || Rand.next() < (kind === "swamp" ? BAL.win.swampRelicChance : BAL.win.relicChance)) {
 		const q = rollRelic(luck() + (kind === "arena" ? 0.8 : 0), kind === "arena" ? 1 : 0);
 		grantRelic(q);
 		cards.push({ t: "relic", id: q.id, r: q.r });
@@ -7320,7 +7998,7 @@ function nextWorld() {
 	G.slots.forEach((u) => u && (u.hp = u.max));
 	genMap();
 	bakeMap(1 + ((Rand.next() * 2147483000) | 0));
-	S = "map";
+	Machine.go("map");
 	Parts.clear();
 	autosave();
 }
@@ -7331,14 +8009,14 @@ function lose() {
 	}
 	if (!G.arena) delSave();
 	if (F) BGA = F.A;
-	S = "lose";
+	Machine.go("lose");
 	pop = null;
 	sfx("lose");
 }
 
 // ---------- магазин ----------
 function shopStock() {
-	if (!G.stock) G.stock = { rel: rollRelics(3, luck() + (G.arena ? G.wave * 0.2 : 0)), rr: 0 };
+	if (!G.stock) G.stock = { rel: rollRelics(BAL.shop.stock, luck() + (G.arena ? G.wave * 0.2 : 0)), rr: 0 };
 	return G.stock;
 }
 function openShop() {
@@ -7352,10 +8030,10 @@ function openShop() {
 	G.sm = "";
 	G.rm = G.sk = false;
 	pop = null;
-	S = "shop";
+	Machine.go("shop");
 	sfx("chest");
 }
-const rrPrice = () => 3 + 2 * G.stock.rr;
+const rrPrice = () => BAL.shop.rrBase + BAL.shop.rrStep * G.stock.rr;
 function buyRelic(i) {
 	const q = G.stock.rel[i],
 		p = relPrice(q.r, G.w);
@@ -7382,7 +8060,7 @@ function reroll() {
 	G.coin -= p;
 	G.stock.rr++;
 	const keep = G.stock.rel.filter((q) => q.sold),
-		fresh = rollRelics(3 - keep.length, luck() + (G.arena ? G.wave * 0.2 : 0));
+		fresh = rollRelics(BAL.shop.stock - keep.length, luck() + (G.arena ? G.wave * 0.2 : 0));
 	fresh.forEach((q) => (q.nw = t));
 	G.stock.rel = [...keep, ...fresh];
 	G.sm = "Товар обновлён";
@@ -7592,7 +8270,7 @@ function applySave(d, v) {
 	MV = null;
 	Seq.clear();
 	Parts.clear();
-	S = "map";
+	Machine.go("map");
 	if (G.pend) {
 		fight(G.pend);
 		snap = JSON.stringify(d);
@@ -7671,6 +8349,158 @@ function loadGame() {
 	return false;
 }
 
+// ---------- перенос сохранения файлом ----------
+// Запасной путь, когда хранилище браузера недоступно или игру открывают на другом устройстве:
+// текст сохранения (конверт v3) можно скачать файлом / скопировать и затем вставить обратно.
+const SAVE_WHY = {
+	"пусто": "текст пустой",
+	json: "это не JSON сохранения",
+	"не объект": "это не сохранение игры",
+	checksum: "контрольная сумма не совпала — файл повреждён или изменён",
+	inner: "содержимое сохранения повреждено",
+	migrate: "не удалось поднять старый формат",
+	version: "неизвестная версия сохранения",
+	"поля": "в сохранении не хватает данных отряда или карты",
+};
+function exportSaveText() {
+	try {
+		const raw = window.__mxStorage.getItem(SAVEK);
+		return raw && unpackSave(raw).ok ? raw : null;
+	} catch (e) {
+		return null;
+	}
+}
+// проверка и атомарная запись: прошлое валидное сохранение уходит в резерв, новое пишется в формате v3
+function importSaveText(text) {
+	const raw = String(text == null ? "" : text).trim();
+	const u = unpackSave(raw);
+	if (!u.ok) return { ok: false, why: SAVE_WHY[u.why] || u.why };
+	const v = validateSave(u.data);
+	if (!v) return { ok: false, why: SAVE_WHY["поля"] };
+	try {
+		const prev = window.__mxStorage.getItem(SAVEK);
+		if (prev && prev !== raw && unpackSave(prev).ok) window.__mxStorage.setItem(SAVEK_B, prev);
+		window.__mxStorage.setItem(SAVEK, packSave(u.data));
+	} catch (e) {
+		logErr("save", e);
+		return { ok: false, why: "хранилище недоступно: " + (e && e.message ? e.message : e) };
+	}
+	SAVED = true;
+	SAVE_WARN = "";
+	return { ok: true, ver: u.ver };
+}
+// окно экспорта/импорта — на DOM (как аварийное окно, см. DECISIONS D7): нужны настоящие
+// текстовое поле, кнопка скачивания и выбор файла, которых у холста нет
+function saveDialog(mode) {
+	try {
+		const old = document.getElementById("mx-save");
+		if (old) old.remove();
+	} catch (_) {}
+	const wrap = document.createElement("div");
+	wrap.id = "mx-save";
+	wrap.style.cssText =
+		"position:fixed;inset:0;z-index:99998;background:rgba(6,4,10,.8);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif;color:#eee;padding:16px";
+	const box = document.createElement("div");
+	box.style.cssText = "max-width:560px;width:100%;background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:18px 20px";
+	const bt = (id, label, bg) => '<button id="' + id + '" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:' + bg + ';color:#fff;font-weight:700;cursor:pointer">' + label + "</button>";
+	const exp = mode === "export";
+	box.innerHTML =
+		'<div style="font-weight:800;font-size:17px;margin-bottom:6px">' + (exp ? "Экспорт сохранения" : "Импорт сохранения") + "</div>" +
+		'<div style="color:#b9b3c8;margin-bottom:10px">' +
+		(exp ? "Скачайте файл или скопируйте текст — его можно загрузить через «Импорт» на другом устройстве или в другом браузере." : "Выберите файл сохранения или вставьте его текст. Текущее сохранение уйдёт в резерв.") +
+		"</div>" +
+		(exp ? "" : '<input id="mx-save-file" type="file" accept=".json,.txt,application/json,text/plain" style="display:block;margin-bottom:10px;color:#eee">') +
+		'<textarea id="mx-save-text" ' + (exp ? "readonly " : "") + 'spellcheck="false" style="width:100%;height:120px;box-sizing:border-box;background:#120e19;color:#d9d2e8;border:1px solid #3a2f4d;border-radius:8px;padding:8px;font:12px/1.4 ui-monospace,monospace;resize:vertical"></textarea>' +
+		'<div id="mx-save-msg" style="min-height:20px;margin:8px 0;color:#ffb3b3"></div>' +
+		'<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+		(exp ? bt("mx-save-dl", "Скачать файл", "#2e7d32") + bt("mx-save-copy", "Копировать", "#455a64") : bt("mx-save-load", "Загрузить", "#2e7d32")) +
+		bt("mx-save-close", "Закрыть", "#8e24aa") +
+		"</div>";
+	wrap.appendChild(box);
+	try {
+		document.body.appendChild(wrap);
+	} catch (_) {
+		return null;
+	}
+	const $ = (id) => box.querySelector("#" + id);
+	const say = (m, ok) => {
+		try {
+			$("mx-save-msg").textContent = m;
+			$("mx-save-msg").style.color = ok ? "#9be7a4" : "#ffb3b3";
+		} catch (_) {}
+	};
+	const close = () => {
+		try {
+			wrap.remove();
+		} catch (_) {}
+	};
+	try {
+		$("mx-save-close").onclick = close;
+		if (exp) {
+			const text = exportSaveText();
+			$("mx-save-text").value = text || "";
+			if (!text) say("Сохранения пока нет — нечего экспортировать.");
+			$("mx-save-dl").onclick = () => {
+				if (!text) return;
+				try {
+					const a = document.createElement("a");
+					a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+					a.download = "probuzhdenie-monstrov-save-" + new Date().toISOString().slice(0, 10) + ".json";
+					document.body.appendChild(a);
+					a.click();
+					setTimeout(() => {
+						URL.revokeObjectURL(a.href);
+						a.remove();
+					}, 2000);
+					say("Файл скачан.", true);
+				} catch (e) {
+					say("Браузер не дал скачать файл — скопируйте текст вручную.");
+				}
+			};
+			$("mx-save-copy").onclick = () => {
+				if (!text) return;
+				const ta = $("mx-save-text");
+				try {
+					ta.focus();
+					ta.select();
+				} catch (_) {}
+				const done = () => say("Скопировано.", true);
+				try {
+					if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => say("Выделите текст и скопируйте вручную."));
+					else if (document.execCommand && document.execCommand("copy")) done();
+					else say("Выделите текст и скопируйте вручную.");
+				} catch (e) {
+					say("Выделите текст и скопируйте вручную.");
+				}
+			};
+		} else {
+			const fileEl = $("mx-save-file");
+			if (fileEl)
+				fileEl.onchange = () => {
+					const f = fileEl.files && fileEl.files[0];
+					if (!f) return;
+					if (f.size > 2000000) return say("Файл слишком большой для сохранения игры.");
+					const rd = new FileReader();
+					rd.onload = () => {
+						$("mx-save-text").value = String(rd.result || "");
+						say("Файл прочитан — нажмите «Загрузить».", true);
+					};
+					rd.onerror = () => say("Не удалось прочитать файл.");
+					rd.readAsText(f);
+				};
+			$("mx-save-load").onclick = () => {
+				const r = importSaveText($("mx-save-text").value);
+				if (!r.ok) return say("Не загружено: " + r.why);
+				say("Сохранение загружено" + (r.ver !== SAVE_VER ? " (старый формат v" + r.ver + " поднят до v" + SAVE_VER + ")" : "") + ". Нажмите «Продолжить» в меню.", true);
+				try {
+					toast("Сохранение загружено");
+				} catch (_) {}
+			};
+		}
+	} catch (_) {}
+	return wrap;
+}
+
 function autosave() {
 	if (G && !G.arena && (S === "map" || S === "prep" || S === "world")) saveGame();
 }
@@ -7696,7 +8526,6 @@ let BGA = null, // последняя арена — фон для экрана 
 	SRET = "menu",
 	MERCH = { t: -9, s: "" };
 const MAPA = { em: {}, wx: "clear", w: null };
-const SCENE = { menu: "menu", settings: "menu", pick: "menu", codex: "menu", map: "map", msg: "map", world: "map", prep: "fight", fight: "fight", shop: "shop", win: "end", lose: "end" };
 function stageBG(wi, dark = 0) {
 	const im = IMG[WORLDS[wi].stage] || IMG.stage_taiga;
 	ctx.drawImage(im, 0, 0, W, H);
@@ -7928,7 +8757,7 @@ function cardFace(c, i, x, y, w, h) {
 function dMsg() {
 	const e = EV;
 	if (!e) {
-		S = "map";
+		Machine.go("map", "событие потеряно");
 		return dMap();
 	}
 	if (e.bg && BGA) {
@@ -7938,7 +8767,7 @@ function dMsg() {
 		stageBG(G.w);
 		resBar();
 	} else dMap();
-	hits = [];
+	Input.layer(); // карта под окном события не получает касаний
 	const a = Math.min(1, (t - e.t0) * 5),
 		n = e.cards.length,
 		cw = 164,
@@ -8275,7 +9104,7 @@ function dShop() {
 			G.rm = G.sk = false;
 			if (G.arena) arenaNext();
 			else {
-				S = "map";
+				Machine.go("map");
 				autosave();
 			}
 		},
@@ -8406,18 +9235,18 @@ function dMenu() {
 					.sort(() => Rand.next() - 0.5)
 					.slice(0, 3);
 				PK = -1;
-				S = "pick";
+				Machine.go("pick");
 			},
 			"#8e24aa",
 		],
 		["Боевая арена", arenaStart, "#8e24aa"],
-		["Коллекция", () => { CODEX_TEST = null; pop = null; S = "codex"; }, "#8e24aa"],
+		["Коллекция", () => { CODEX_TEST = null; pop = null; Machine.go("codex"); }, "#8e24aa"],
 		[
 			"Настройки",
 			() => {
 				delAsk = false;
 				SRET = "menu";
-				S = "settings";
+				Machine.go("settings");
 			},
 			"#8e24aa",
 		],
@@ -8507,9 +9336,10 @@ function dCodex() {
 	menuBG(false);
 	ctx.fillStyle = "rgba(10,8,18,.6)";
 	ctx.fillRect(0, 0, W, H);
-	title("Коллекция бойцов", 40);
-	txo("Все герои отряда · редкость влияет на здоровье и атаку · нажми на карточку для подробностей", 609, 62, 13, "#e8e2f4", "center", INK, false);
-	const cw = 164, chh = 204, gx = 12, gy = 70;
+	// баннер заголовка занимает 74 px по высоте, поэтому подсказка живёт внизу, рядом с «Назад»
+	title("Коллекция бойцов", 36);
+	txo("Все герои отряда · редкость влияет на здоровье и атаку · нажми на карточку для подробностей", 609, 506, 13, "#e8e2f4", "center", INK, false);
+	const cw = 164, chh = 200, gx = 12, gy = 74;
 	HEROES.forEach((h, i) => {
 		const col = i % 7, row = (i / 7) | 0;
 		const x = gx + col * (cw + 8), y = gy + row * (chh + 6);
@@ -8534,7 +9364,7 @@ function dCodex() {
 			gly(q[0], sx + 6, sy, 12, j === 0 ? "#ff6a6a" : "#ffd27a", "#17121f");
 			tx("" + q[1], sx + 18, sy + 1, 12, "#fff");
 		});
-		txo(K.ab.n, x + 10, y + 154, 11, EL[K.el].c, "left");
+		txo(K.ab.n, x + 14, y + 154, 11, EL[K.el].c, "left"); // x + 14: левее — под рамкой, первая буква пропадает
 		rframe(rar, x, y, cw, chh);
 		rfx(rar, x, y, cw, chh, i * 0.7);
 		area(x, y, cw, chh, () => { pop = { u: mkHero(h, rar), mine: true }; sfx("pick"); });
@@ -8604,7 +9434,7 @@ function dPick() {
 function startRun() {
 	if (PK < 0) return;
 	G.slots[0] = recruit(G.choices[PK], 0);
-	S = "map";
+	Machine.go("map");
 	sfx("start");
 	autosave();
 }
@@ -8747,8 +9577,11 @@ function dSet() {
 	btn(233, 414, 268, 44, window.__mxStorage.getItem("mx_dev") === "1" ? "Разработчик: включён" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
 	btn(529, 414, 160, 44, "Назад", () => {
 		delAsk = false;
-		S = SRET;
+		Machine.go(SRET, "назад из настроек");
 	});
+	// перенос сохранения файлом/текстом — запасной путь, когда хранилище браузера недоступно
+	btn(705, 414, 140, 44, "Экспорт", () => saveDialog("export"), "#8e24aa", { sz: 15 });
+	btn(851, 414, 140, 44, "Импорт", () => saveDialog("import"), "#8e24aa", { sz: 15 });
 }
 // ---------- мир пройден ----------
 function dWorld() {
@@ -8836,7 +9669,7 @@ function dEnd() {
 				.sort(() => Rand.next() - 0.5)
 				.slice(0, 3);
 			PK = -1;
-			S = "pick";
+			Machine.go("pick");
 		}
 	}, "#2e7d32", { sz: 20 });
 	btn(619, 468, 210, 50, "В меню", toMenu, "#8e24aa", { sz: 20 });
@@ -8856,7 +9689,7 @@ function pauseMenu() {
 					paused = false;
 					delAsk = false;
 					SRET = S;
-					S = "settings";
+					Machine.go("settings");
 				},
 				"#8e24aa",
 			],
@@ -8884,37 +9717,18 @@ function draw() {
 	ctx.globalCompositeOperation = "source-over";
 	ctx.fillStyle = "#0c0a12";
 	ctx.fillRect(0, 0, W, H);
-	hits = [];
+	Input.begin();
 	if (!READY) {
 		txo("Пробуждение монстров", 609, 230, 34, "#ffd23c", "center");
 		pbar(409, 280, 400, 12, LOADP, "#ffd23c");
 		tx("Загрузка…", 609, 316, 14, "#b9b3c8", "center");
 		return;
 	}
-	if (S !== lastS) {
-		if (SCENE[S] !== SCENE[lastS]) {
-			Parts.clear();
-			TRT = 0.42;
-			CAM.z = 1;
-		}
-		if (S === "win" || S === "lose") ENDT = t;
-		if (S !== "prep" && S !== "fight" && S !== "shop" && S !== "map") pop = null;
-		if (lastS === "fight" || lastS === "prep") pop = null;
-		TIPN = TIPR = null;
-		lastS = S;
-	}
+	// смена экрана: exit предыдущего, enter нового (см. Machine.sync и таблицу экранов ниже)
+	Machine.sync();
 	ctx.save();
 	if (SK > 0) ctx.translate(Math.round((Rand.next() - 0.5) * SK * 20) * 2, Math.round((Rand.next() - 0.5) * SK * 20) * 2);
-	if (S === "menu") dMenu();
-	else if (S === "pick") dPick();
-	else if (S === "map") dMap();
-	else if (S === "prep" || S === "fight") dFight();
-	else if (S === "msg") dMsg();
-	else if (S === "shop") dShop();
-	else if (S === "settings") dSet();
-	else if (S === "world") dWorld();
-	else if (S === "codex") dCodex();
-	else dEnd();
+	Machine.drawScreen();
 	if (S === "map" || S === "prep" || S === "fight" || S === "shop" || S === "codex") dPop();
 	if (S !== "menu" && S !== "win" && S !== "lose" && S !== "settings") ibtn("pause", 1142, 6, () => (paused = true));
 	if (S !== "settings") ibtn("note", S === "menu" || S === "win" || S === "lose" ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
@@ -8936,7 +9750,33 @@ function draw() {
 	if (CFG.fps) fpsDraw();
 }
 
-
+// ---------- таблица экранов ----------
+// Экран = запись в машине: scene (общая сцена — при её смене очищаются частицы и идёт
+// затемнение), draw, при необходимости update/enter/exit. Бой и расстановка делят отрисовку
+// dFight с интерполяцией движения между шагами симуляции.
+function dFightScreen() {
+	fightLerpIn();
+	try {
+		dFight();
+	} finally {
+		fightLerpOut();
+	}
+}
+function enterEnd() {
+	ENDT = t;
+}
+Machine.reg("menu", { scene: "menu", draw: dMenu });
+Machine.reg("pick", { scene: "menu", draw: dPick });
+Machine.reg("settings", { scene: "menu", draw: dSet });
+Machine.reg("codex", { scene: "menu", draw: dCodex });
+Machine.reg("map", { scene: "map", draw: dMap });
+Machine.reg("msg", { scene: "map", draw: dMsg });
+Machine.reg("world", { scene: "map", draw: dWorld });
+Machine.reg("prep", { scene: "fight", draw: dFightScreen });
+Machine.reg("fight", { scene: "fight", draw: dFightScreen, update: upd });
+Machine.reg("shop", { scene: "shop", draw: dShop });
+Machine.reg("win", { scene: "end", draw: dEnd, enter: enterEnd });
+Machine.reg("lose", { scene: "end", draw: dEnd, enter: enterEnd });
 // ===== 70_audio.js =====
 // ===== ЗВУК: новые эффекты (синтез в браузере), настроение музыки по мирам =====
 // Каждый звук — функция (t, s) -> отсчёт; sw — синус с накоплением фазы, rd — шум. Буферы строятся один раз при запуске.
@@ -9030,6 +9870,17 @@ const Tune = {
 	},
 };
 
+// ---------- звук по событиям боя ----------
+// Подписки стоят после частиц (50_draw.js): порядок обращений к Rand тот же, что при прямых вызовах.
+Events.on("unit:hit", (tg, e) => {
+	if (e.dot) return;
+	if (e.crit) sfx("crit");
+	else if (!e.quiet) sfx(e.snd || (e.el === "phys" || e.el === "nature" ? "hit" : e.el), 0.8);
+});
+Events.on("unit:phoenix", () => sfx("holy"));
+Events.on("coin:gain", () => sfx("coin"));
+Events.on("unit:died", (u) => sfx(u.boss ? "bossdie" : "die"));
+
 // ===== 90_boot.js =====
 // ===== ЗАПУСК: масштаб экрана, цикл кадра, ввод =====
 let pz = false,
@@ -9070,17 +9921,6 @@ function unlock() {
 	} catch (_) {}
 	fit();
 }
-function lp(e) {
-	const w = innerWidth,
-		h = innerHeight,
-		po = h > w,
-		bw = po ? h : w,
-		bh = po ? w : h,
-		lx = po ? e.clientY : e.clientX,
-		ly = po ? w - e.clientX : e.clientY,
-		s = Math.min(bw / W, bh / H);
-	return [(lx - (bw - W * s) / 2) / s, (ly - (bh - H * s) / 2) / s];
-}
 function loop(ts) {
 	FRAME_N++;
 	FC++;
@@ -9101,13 +9941,19 @@ function loop(ts) {
 		if (paused !== pz) {
 			pz = paused;
 			Music.pause(paused);
+			// после паузы накопленное время не должно превратиться в рывок симуляции
+			Loop.reset();
 		}
 		Music.level(S === "fight" ? 1 : 0);
 		Tune.upd();
 		if (!paused) {
 			// сбой в симуляции не должен дотянуться до отрисовки и цикла
 			try {
-				upd(dt);
+				// симуляция — фиксированным шагом 1/60 с (накопитель, не более Loop.MAX шагов за кадр)
+				const steps = Loop.feed(raw / 1000),
+					t0 = performance.now();
+				for (let i = 0; i < steps; i++) Machine.update(Loop.STEP);
+				dbgMark("upd", performance.now() - t0);
 				flowTick();
 				visTick(dt);
 				// атмосфера вне боя
@@ -9124,50 +9970,29 @@ function loop(ts) {
 		}
 	}
 	try {
+		const t1 = performance.now();
 		draw();
+		dbgMark("draw", performance.now() - t1);
+		dbgDraw();
 		errFrameOk();
 	} catch (e) {
 		logErr("draw", e);
 	}
 	requestAnimationFrame(loop);
 }
-cv.addEventListener("pointerdown", (e) => {
-	if (!READY) return;
-	const [px, py] = lp(e);
-	for (let i = hits.length - 1; i >= 0; i--) {
-		const h = hits[i];
-		if (px >= h.x && px <= h.x + h.w && py >= h.y && py <= h.y + h.h) {
-			Music.sfx("click");
-			h.f(px, py);
-			break;
-		}
+// касания, клавиатура и отмена указателей — в Input (13_input.js)
+Input.install(cv);
+addEventListener("resize", fit);
+addEventListener("orientationchange", () => Timers.after(150, fit, "boot"));
+document.addEventListener("visibilitychange", () => {
+	Music.pause(document.hidden || paused);
+	// свёрнутая вкладка: время не копится, бой встаёт на паузу — без скачка после возврата
+	if (document.hidden) {
+		Loop.reset();
+		Input.reset();
+		if (S === "fight" || S === "prep") paused = true;
 	}
 });
-addEventListener("keydown", (e) => {
-	if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
-	if (!READY || e.repeat) return;
-	const k = e.key;
-	if (k === "Escape" && S === "codex" && CODEX_TEST) { CODEX_TEST = null; pop = null; e.preventDefault(); return; }
-	if (k === "Escape" || k === "p" || k === "P" || k === "з" || k === "З") {
-		if (S !== "menu" && S !== "settings" && S !== "win" && S !== "lose") paused = !paused;
-	} else if (paused) return;
-	else if (k === " " || k === "Enter") {
-		if (S === "prep" && G.slots.some((u) => u && u.placed)) startFight();
-		else if (S === "prep") autoPlace();
-		else if (S === "msg" && EV) {
-			const e2 = EV;
-			if (!e2.open) {
-				e2.open = 1;
-				e2.to = t;
-				sfx("chest");
-			} else if (!e2.pick) evClose();
-		}
-		e.preventDefault();
-	} else if (S === "fight" && (k === "1" || k === "2" || k === "3")) SPDX = +k;
-});
-addEventListener("resize", fit);
-addEventListener("orientationchange", () => setTimeout(fit, 150));
-document.addEventListener("visibilitychange", () => Music.pause(document.hidden || paused));
 ["pointerdown", "touchstart", "keydown"].forEach((ev2) => addEventListener(ev2, unlock, { passive: true }));
 errInstallGlobals();
 if (CFG.q === undefined) CFG.q = "auto";
@@ -9178,16 +10003,137 @@ Music.cfg(CFG.music, CFG.vol);
 Music.start();
 sfxBank();
 Music.sfxv = CFG.sfx === undefined ? 1 : CFG.sfx;
-setInterval(() => Music.wake(), 1000);
+Timers.every(1000, () => Music.wake(), "audio");
 // Сид случайности: в браузере партии не должны повторяться, поэтому берём время.
 // Тесты выставляют сид сами: Rand.seed(N) сразу после загрузки (см. tests/harness).
 Rand.seed((Date.now() ^ ((performance.now() * 1000) | 0)) >>> 0);
 requestAnimationFrame(loop);
 loadAll().then(() => {
 	newGame();
-	S = "menu";
+	Machine.go("menu");
 });</script>
-<script>(()=>{
+<script>// ===== Ядро ИИ-редактора: чистые функции без DOM (тестируются в Node, см. tests/unit/editor.test.mjs) =====
+// Патчи «старое → новое», проверка синтаксиса, человеческие тексты ошибок API,
+// маскирование ключа, хеш версии и правило удаления старых версий.
+// Загрузчик (loader.js) и это ядро не редактируются ИИ: они лежат вне #game-src.
+"use strict";
+const MXCore = (() => {
+	const unfence = (s) => s.replace(/^```[^\n]*\n/, "").replace(/\n```\s*$/, "");
+	// ответ модели → список замен {f: старое, r: новое}
+	function parsePatches(t) {
+		const P = [],
+			re = /@@@FIND\r?\n([\s\S]*?)\r?\n@@@REPLACE\r?\n([\s\S]*?)\r?\n?@@@END/g;
+		let m;
+		while ((m = re.exec(String(t || "")))) P.push({ f: unfence(m[1]), r: unfence(m[2]) });
+		return P;
+	}
+	// атомарное применение: либо все замены легли (каждое «старое» найдено ровно один раз),
+	// либо код не меняется вовсе и возвращается список понятных причин
+	function applyPatches(code, P) {
+		const bad = [];
+		let out = code;
+		P.forEach((p, i) => {
+			const n = p.f ? out.split(p.f).length - 1 : 0;
+			if (!p.f) bad.push("патч " + (i + 1) + ": пустой фрагмент для поиска");
+			else if (n === 0) bad.push("патч " + (i + 1) + ": фрагмент не найден в коде (модель скопировала его неточно)");
+			else if (n > 1) bad.push("патч " + (i + 1) + ": фрагмент встречается " + n + " раза, нужен ровно один — модель должна взять больше строк");
+			else out = out.replace(p.f, () => p.r);
+		});
+		return bad.length ? { out: code, bad } : { out, bad };
+	}
+	function checkSyntax(code) {
+		try {
+			new Function(code);
+			return { ok: true, error: "" };
+		} catch (e) {
+			return { ok: false, error: String((e && e.message) || e) };
+		}
+	}
+	// ключи и токены не должны попадать в журнал, тосты и отчёты
+	function maskSecrets(s, key) {
+		let t = String(s == null ? "" : s);
+		if (key && key.length >= 6) t = t.split(key).join(key.slice(0, 3) + "…" + key.slice(-2));
+		return t
+			.replace(/sk-[A-Za-z0-9_-]{6,}/g, "sk-***")
+			.replace(/Bearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, "Bearer ***")
+			.replace(/(["']?(?:api[_-]?key|key|token|secret|authorization)["']?\s*[:=]\s*)["'][^"']*["']/gi, '$1"***"');
+	}
+	// человеческий текст ошибки API: статус ответа, тело, либо исключение fetch
+	function apiError(info) {
+		info = info || {};
+		const st = info.status | 0,
+			body = String(info.body || "").slice(0, 160),
+			err = info.error,
+			name = err && err.name,
+			msg = String((err && err.message) || "");
+		if (name === "AbortError" || info.timeout) return "Модель не ответила за отведённое время (4 минуты). Попробуйте ещё раз или снизьте усилие модели.";
+		if (info.tooLarge) return "Ответ модели слишком большой (" + Math.round((info.size || 0) / 1024) + " КБ) — сузьте запрос.";
+		if (info.truncated) return "Ответ модели оборван лимитом токенов — увеличьте лимит ответа в панели или упростите запрос.";
+		if (info.badJson) return "Сервер вернул непонятный ответ (не JSON). Проверьте Base URL: нужен адрес API, а не сайта.";
+		if (info.empty) return "Пустой ответ модели — лимит ответа исчерпан размышлениями. Увеличьте лимит в панели.";
+		if (err && (name === "TypeError" || /fetch|network|Failed to fetch|NetworkError|Load failed/i.test(msg)))
+			return "Нет сети или сервер API недоступен (" + (msg || "ошибка сети").slice(0, 80) + "). Проверьте подключение и Base URL.";
+		if (st === 401 || st === 403) return "Сервер не принял API-ключ (" + st + "). Проверьте ключ в разделе API.";
+		if (st === 402) return "На счёте API закончились средства (402).";
+		if (st === 404) return "Адрес API не найден (404). Проверьте Base URL и название модели.";
+		if (st === 408 || st === 504) return "Сервер не успел ответить (" + st + "). Попробуйте ещё раз.";
+		if (st === 413) return "Запрос слишком большой для сервера (413) — сузьте запрос.";
+		if (st === 429) return "Превышен лимит запросов или квота API (429). Подождите минуту и повторите.";
+		if (st >= 500) return "Сервер модели временно недоступен (" + st + "). Попробуйте позже.";
+		if (st === 400) return "Сервер отклонил запрос (400): " + (body || "проверьте модель и параметры");
+		if (st) return "Ошибка API " + st + (body ? ": " + body : "");
+		return "Ошибка запроса к API: " + (msg || "неизвестная").slice(0, 120);
+	}
+	// признак оборванного ответа в обоих форматах (Responses и chat completions)
+	function isTruncated(j) {
+		if (!j || typeof j !== "object") return false;
+		if (j.status === "incomplete" && j.incomplete_details && j.incomplete_details.reason === "max_output_tokens") return true;
+		const ch = j.choices && j.choices[0];
+		return !!(ch && (ch.finish_reason === "length" || ch.finish_reason === "max_tokens"));
+	}
+	// короткий хеш кода версии (FNV-1a 32 бит) — виден в истории и в отчётах
+	function hash(s) {
+		let h = 0x811c9dc5;
+		for (let i = 0; i < s.length; i++) {
+			h ^= s.charCodeAt(i);
+			h = Math.imul(h, 0x01000193);
+		}
+		return (h >>> 0).toString(16).padStart(8, "0");
+	}
+	// какие версии удалить: оставляем limit новейших, «good» и «active» не удаляются никогда
+	function pruneList(versions, good, act, limit) {
+		const lim = limit || 15;
+		const sorted = versions.slice().sort((a, b) => b.id - a.id);
+		return sorted
+			.slice(lim)
+			.filter((v) => String(v.id) !== String(good) && String(v.id) !== String(act))
+			.map((v) => v.id);
+	}
+	// текст наблюдателя для пробного запуска в песочнице: сообщает родителю, ожила ли игра
+	// (READY, растёт FRAME_N, журнал ERRS пуст, экран — меню) или что именно упало
+	function trialScript(ms) {
+		return (
+			"(function(){var T0=Date.now(),errs=[],post=function(m){try{parent.postMessage(Object.assign({mx:'trial'},m),'*')}catch(e){}};" +
+			"addEventListener('error',function(e){errs.push(String(e.message||e).slice(0,160))});" +
+			"addEventListener('unhandledrejection',function(e){errs.push('promise: '+String(e.reason&&e.reason.message||e.reason).slice(0,160))});" +
+			"var f0=-1,ready=false;function look(){var st={};try{st.ready=READY;st.frame=FRAME_N;st.screen=S;st.errs=ERRS.length;st.first=ERRS.length?ERRS[0].kind+': '+ERRS[0].msg:''}catch(e){st.fail='нет глобалов игры: '+String(e&&e.message||e).slice(0,120)}return st}" +
+			"var iv=setInterval(function(){var st=look(),el=Date.now()-T0;if(errs.length){clearInterval(iv);return post({ok:false,why:'исключение: '+errs[0],state:st})}" +
+			"if(st.fail){if(el>8000){clearInterval(iv);return post({ok:false,why:st.fail,state:st})}return}" +
+			"if(st.errs){clearInterval(iv);return post({ok:false,why:'ошибка в кадре: '+st.first,state:st})}" +
+			"if(st.ready&&!ready){ready=true;f0=st.frame;T0=Date.now();return}" +
+			"if(ready&&el>=" +
+			(ms | 0) +
+			"){clearInterval(iv);if(st.frame<=f0+5)return post({ok:false,why:'цикл кадра не идёт',state:st});if(st.screen!=='menu')return post({ok:false,why:'после загрузки не меню, а '+st.screen,state:st});return post({ok:true,state:st})}" +
+			"if(!ready&&el>" +
+			((ms | 0) * 3 + 6000) +
+			"){clearInterval(iv);return post({ok:false,why:'игра не загрузилась за '+Math.round(el/1000)+' с',state:st})}},250)})();"
+		);
+	}
+	return { parsePatches, applyPatches, checkSyntax, maskSecrets, apiError, isTruncated, hash, pruneList, trialScript, unfence };
+})();
+if (typeof window !== "undefined") window.MXCore = MXCore;
+
+(()=>{
 "use strict";
 const $=s=>document.querySelector(s);
 // В защищённом просмотре доступ к хранилищу может быть запрещён браузером.
@@ -9211,7 +10157,8 @@ const getVer=id=>dbDo('readonly',s=>s.get(id));
 const putVer=v=>dbDo('readwrite',s=>s.put(v));
 const delVer=id=>dbDo('readwrite',s=>s.delete(id));
 const allVers=async()=>((await dbDo('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.id-a.id);
-async function prune(){const v=await allVers();for(const x of v.slice(15)){const id=String(x.id);if(id!==LS.getItem(K.good)&&id!==LS.getItem(K.act))await delVer(x.id)}}
+async function prune(){const v=await allVers();for(const id of MXCore.pruneList(v,LS.getItem(K.good),LS.getItem(K.act),15))await delVer(id)}
+async function markGood(id){try{const v=await getVer(+id);if(v&&!v.good){v.good=true;await putVer(v)}}catch(e){}}
 
 /* ---------- запуск игры + автооткат ---------- */
 function run(code){const s=document.createElement('script');s.textContent=PREFIX+code;document.body.appendChild(s)}
@@ -9224,17 +10171,26 @@ async function boot(){
   if(act!=='orig'){try{const v=await getVer(+act);if(v)CODE=v.code;else act='orig'}catch(e){act='orig'}}
   if(act!=='orig'&&act!==good){
     LS.setItem(K.pend,act);PENDING=true;
-    setTimeout(()=>{if(PENDING){PENDING=false;LS.removeItem(K.pend);LS.setItem(K.good,act)}},6000);
+    // наблюдение: 6 с без исключений окна и без сбоев кадра в журнале игры → версия good
+    const iv=setInterval(()=>{if(!PENDING)return clearInterval(iv);const bad=gameFrameErrors();if(bad){clearInterval(iv);rollback('Версия даёт сбои в игре ('+MXCore.maskSecrets(bad,cfg.key).slice(0,120)+') — вернул предыдущую.')}},500);
+    setTimeout(()=>{clearInterval(iv);if(PENDING){PENDING=false;LS.removeItem(K.pend);LS.setItem(K.good,act);markGood(act)}},6000);
   }
   run(CODE);
   if(notice)toast(notice);
 }
+// сбои кадра из журнала игры (ERRS объявлен кодом игры в общей области видимости; до загрузки игры его нет)
+function gameFrameErrors(){try{const r=ERRS.find(x=>/^(update|draw|window\.error|promise|event:)/.test(x.kind));return r?r.kind+': '+r.msg:''}catch(e){return ''}}
+function rollback(note){PENDING=false;markBad(LS.getItem(K.act));LS.removeItem(K.pend);LS.setItem(K.act,LS.getItem(K.good)||'orig');LS.setItem(K.note,note);location.reload()}
 addEventListener('error',e=>{
-  if(!PENDING)return;PENDING=false;markBad(LS.getItem(K.act));LS.removeItem(K.pend);
-  LS.setItem(K.act,LS.getItem(K.good)||'orig');
-  LS.setItem(K.note,'Версия не запустилась ('+String(e.message||'ошибка').slice(0,120)+') — вернул предыдущую.');
-  location.reload();
+  if(!PENDING)return;
+  rollback('Версия не запустилась ('+MXCore.maskSecrets(String(e.message||'ошибка'),cfg.key).slice(0,120)+') — вернул предыдущую.');
 });
+addEventListener('unhandledrejection',e=>{
+  if(!PENDING)return;
+  rollback('Версия не запустилась (promise: '+MXCore.maskSecrets(String(e.reason&&e.reason.message||e.reason||'ошибка'),cfg.key).slice(0,120)+') — вернул предыдущую.');
+});
+/* ---------- аварийный доступ к панели: 5 касаний левого верхнего угла за 2,5 с, даже если игра сломана ---------- */
+(()=>{let taps=[];addEventListener('pointerdown',e=>{if(e.clientX>56||e.clientY>56)return;const now=Date.now();taps=taps.filter(t=>now-t<2500);taps.push(now);if(taps.length>=5){taps=[];try{window.mxUnlock&&window.mxUnlock(true)}catch(_){}}},true)})();
 
 /* ---------- API (формат Responses, как в MY AI STUDIO) ---------- */
 function extractText(p){const o=[];(p.output||[]).forEach(it=>{if(it.type==='message')(it.content||[]).forEach(c=>{if(typeof c.text==='string')o.push(c.text)})});
@@ -9254,19 +10210,23 @@ async function ask(msgs,system,opt){
     if(withEff)body.reasoning={effort:eff};
     const c=new AbortController(),t=setTimeout(()=>c.abort(),240000);
     try{
-      const r=await fetch(b,{method:'POST',signal:c.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+cfg.key.trim()},body:JSON.stringify(body)});
+      let r;
+      try{r=await fetch(b,{method:'POST',signal:c.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+cfg.key.trim()},body:JSON.stringify(body)})}
+      catch(e){throw new Error(MXCore.apiError({error:e}))}
       const txt=await r.text();
-      if(!r.ok){if(withEff&&r.status===400){NOEFF=true;continue}throw new Error('API '+r.status+': '+txt.slice(0,200))}
-      const j=JSON.parse(txt),u=j.usage||{};
+      if(!r.ok){if(withEff&&r.status===400){NOEFF=true;continue}throw new Error(MXCore.apiError({status:r.status,body:MXCore.maskSecrets(txt,cfg.key)}))}
+      if(txt.length>4e6)throw new Error(MXCore.apiError({tooLarge:true,size:txt.length}));
+      let j;try{j=JSON.parse(txt)}catch(e){throw new Error(MXCore.apiError({badJson:true}))}
+      const u=j.usage||{};
       SPENT.i+=u.input_tokens||u.prompt_tokens||0;SPENT.o+=u.output_tokens||u.completion_tokens||0;
       const out=extractText(j);
-      if(!out){
+      if(!out||MXCore.isTruncated(j)){
         const curMax=opt.max||cfg.maxTok;
         if(curMax<64000){opt.max=curMax*2;continue}
-        throw new Error('Пустой ответ модели (лимит ответа исчерпан — увеличьте лимит в панели)');
+        throw new Error(MXCore.apiError(out?{truncated:true}:{empty:true}));
       }
       return out;
-    }catch(e){throw e.name==='AbortError'?new Error('Таймаут ответа модели'):e}finally{clearTimeout(t)}
+    }catch(e){throw e.name==='AbortError'?new Error(MXCore.apiError({timeout:true})):new Error(MXCore.maskSecrets(e.message,cfg.key))}finally{clearTimeout(t)}
   }
 }
 
@@ -9278,11 +10238,7 @@ function outline(code){
   return{L,B,text:B.map(b=>b.id+' ['+(b.en-b.st)+'] '+L[b.st].trim().slice(0,60)).join('\n')};
 }
 const blockText=(o,ids)=>ids.map(id=>o.B.find(b=>b.id===id)).filter(Boolean).map(b=>'// ===== '+b.id+' =====\n'+o.L.slice(b.st,b.en).join('\n')).join('\n\n');
-const unfence=s=>s.replace(/^```[^\n]*\n/,'').replace(/\n```\s*$/,'');
-function parsePatches(t){const P=[],re=/@@@FIND\r?\n([\s\S]*?)\r?\n@@@REPLACE\r?\n([\s\S]*?)\r?\n?@@@END/g;let m;while((m=re.exec(t)))P.push({f:unfence(m[1]),r:unfence(m[2])});return P}
-function applyPatches(code,P){const bad=[];let out=code;
-  P.forEach((p,i)=>{const n=p.f?out.split(p.f).length-1:0;if(n!==1)bad.push('патч '+(i+1)+': find найден '+n+' раз, нужен ровно 1');else out=out.replace(p.f,()=>p.r)});
-  return{out,bad}}
+const parsePatches=MXCore.parsePatches,applyPatches=MXCore.applyPatches;
 
 const SYS_PICK='Ты помогаешь править код HTML5-игры «Пробуждение монстров» (один JS-файл, canvas 1218x540). Ниже оглавление кода: id блока, [число строк], начало блока. Выбери до 15 блоков, которые нужно прочитать, чтобы выполнить запрос. Выбирай с запасом: бери не только прямые функции, но и связанные (вызовы, данные, отрисовку, сохранения). Если в запросе есть координаты области бага (x=, y=) — учитывай, где на экране эта область и какие функции её рисуют. Ответ — одна строка, например: PICK: L12, L340';
 const SYS_EDIT='Ты разработчик HTML5-игры «Пробуждение монстров» (один JS-файл, canvas, без библиотек). Тебе дают запрос и блоки кода (// ===== L<номер> =====). Ответь коротким описанием (1–3 предложения по-русски), затем патчи строго в формате:\n@@@FIND\n<точная копия фрагмента из кода, встречается ровно один раз, с теми же отступами>\n@@@REPLACE\n<новый фрагмент>\n@@@END\nПравила: делай минимальные правки; find — 2–8 строк, уникальных; не переписывай блоки целиком; не добавляй внешних библиотек и сетевых запросов; не меняй формат сохранений игрока; не трогай ASSET и ATLAS напрямую; новых героев добавляй ТОЛЬКО через regHero(def) (функция есть в коде: def={k,n,rows,pal,hp,atk,aspd,arm,rng,spd,heal,role,crit,el,ab:{n,cd,d},ult:{n,d},rar,desc,sc}; rows — пиксельная карта idle строками, точка — прозрачно, остальные символы — цвета из pal; el — одна из: phys,nature,fire,ice,poison,bolt,dark,holy,prism,chaos; rar 0-6; пример: regHero({k:"frost2",n:"Ледяной рыцарь",rows:[...],pal:{...},hp:3000,atk:70,aspd:0.8,arm:25,rng:50,spd:6,role:"Воин",crit:0.07,el:"ice",ab:{n:"Удар",cd:6,d:"..."},ult:{n:"Штурм",d:"..."},rar:2,desc:"..."});). Перед правкой проверь связанные системы: если меняешь героя — проверь HEROES, KIT, CAST, uSet/uPort/uFrame; если баг на экране — проверь отрисовку (dUnit/dProp/dCodex) и анимации; если визуал — проверь ATLAS/ASSET и размеры. Делай правку сразу полностью, не оставляй TODO. Если в показанных блоках не хватает кода, ответь только строкой NEED: L12, L340 (номера из оглавления).';
@@ -9319,7 +10275,7 @@ async function improve(req,log){
       const{out,bad}=applyPatches(CODE,P);
       if(bad.length)problem=bad.join('; ');
       else{
-        try{new Function(out)}catch(e){problem='синтаксическая ошибка после правки: '+e.message}
+        const syn=MXCore.checkSyntax(out);if(!syn.ok)problem='синтаксическая ошибка после правки: '+syn.error;
         if(!problem)return{code:out,summary:ans.split('@@@FIND')[0].trim(),n:P.length,tok:{i:SPENT.i,o:SPENT.o},diff:P.map(p=>({f:p.f.slice(0,700),r:p.r.slice(0,700)}))};
       }
     }
@@ -9329,8 +10285,31 @@ async function improve(req,log){
     ans=await ask(msgs,SYS_EDIT);
   }
 }
-async function applyNew(r,req){
-  const id=Date.now(),seq=(+LS.getItem('mx_seq')||0)+1;LS.setItem('mx_seq',seq);await putVer({id,ts:id,seq,note:req.slice(0,160),sum:r.summary,n:r.n,tok:r.tok,diff:r.diff,code:r.code});
+/* ---------- пробный запуск в песочнице ----------
+   Новый код запускается в отдельном sandbox-iframe (без доступа к хранилищу и странице):
+   игра должна загрузиться, дойти до меню и прожить 2,5 с кадров без единой ошибки в журнале.
+   Только после этого версия записывается и становится активной. */
+function trial(code,ms){
+  return new Promise(res=>{
+    let done=false;const fr=document.createElement('iframe');
+    fr.setAttribute('sandbox','allow-scripts');fr.title='Проверка правки';
+    fr.style.cssText='position:fixed;right:8px;bottom:8px;width:122px;height:54px;border:1px solid #ff3b3b;border-radius:6px;background:#000;z-index:99997;opacity:.9;pointer-events:none';
+    const finish=v=>{if(done)return;done=true;removeEventListener('message',onMsg);clearTimeout(tm);try{fr.remove()}catch(_){}res(v)};
+    const onMsg=e=>{if(e.source===fr.contentWindow&&e.data&&e.data.mx==='trial')finish(e.data)};
+    addEventListener('message',onMsg);
+    const tm=setTimeout(()=>finish({ok:false,why:'песочница не ответила за '+Math.round((ms*3+16000)/1000)+' с (вкладка свёрнута?)'}),ms*3+16000);
+    const doc='<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000;overflow:hidden}canvas{width:100%;height:100%}</style></head><body><canvas id="c"></canvas>'+
+      '<script>'+MXCore.trialScript(ms)+'<\/script><script>'+(PREFIX+code).replace(/<\/script/gi,'<\\/script')+'<\/script></body></html>';
+    document.body.appendChild(fr);fr.srcdoc=doc;
+  });
+}
+async function applyNew(r,req,log){
+  log('Пробный запуск правки в песочнице…');
+  const t=await trial(r.code,2500);
+  if(!t.ok)throw new Error('Правка не прошла пробный запуск: '+MXCore.maskSecrets(t.why,cfg.key)+'. Игра не изменена.');
+  log('Пробный запуск пройден (кадров: '+((t.state&&t.state.frame)|0)+'). Записываю версию и перезапускаю игру…');
+  const id=Date.now(),seq=(+LS.getItem('mx_seq')||0)+1;LS.setItem('mx_seq',seq);
+  await putVer({id,ts:id,seq,note:req.slice(0,160),sum:r.summary,n:r.n,tok:r.tok,diff:r.diff,code:r.code,hash:MXCore.hash(r.code),good:false,trial:{frames:(t.state&&t.state.frame)|0}});
   LS.setItem(K.act,String(id));await prune();location.reload();
 }
 
@@ -9379,11 +10358,12 @@ const diffHTML=d=>(d||[]).map(p=>'<div>'+p.f.split('\n').map(l=>'<span class="m"
 const fmt=n=>Number(n||0).toLocaleString('ru-RU');
 async function renderV(){
   const v=await allVers().catch(()=>[]),act=LS.getItem(K.act)||'orig',BAD=JSON.parse(LS.getItem('mx_bad')||'[]');
-  const cards=v.map(x=>({id:String(x.id),title:'v'+(x.seq||'·'),ts:x.ts,q:x.note,s:x.sum,n:x.n,d:x.diff,t:x.tok}));
+  const good=LS.getItem(K.good)||'orig';
+  const cards=v.map(x=>({id:String(x.id),title:'v'+(x.seq||'·'),ts:x.ts,q:x.note,s:x.sum,n:x.n,d:x.diff,t:x.tok,h:x.hash||MXCore.hash(x.code||''),g:!!x.good||String(x.id)===good}));
   cards.push({id:'orig',title:'Оригинал',ts:0,q:'Игра как была загружена',s:'',n:0});
   $('#mx-cnt').textContent=v.length?v.length+' правок':'правок пока нет';
   $('#mx-v').innerHTML=cards.map(x=>{const on=x.id===act;
-    return`<div class="mx-v${on?' on':''}"><div class="mx-vh"><b>${esc(x.title)}</b>${on?'<span class="mx-chip">сейчас</span>':''}${BAD.includes(x.id)?'<span class="mx-chip mx-bad">не запустилась</span>':''}<small>${x.ts?new Date(x.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</small></div>
+    return`<div class="mx-v${on?' on':''}"><div class="mx-vh"><b>${esc(x.title)}</b>${on?'<span class="mx-chip">сейчас</span>':''}${x.g&&x.id!=='orig'?'<span class="mx-chip" style="background:#2e7d32">проверена</span>':''}${BAD.includes(x.id)?'<span class="mx-chip mx-bad">не запустилась</span>':''}${x.h?'<span class="mx-tok" title="хеш кода">#'+esc(x.h)+'</span>':''}<small>${x.ts?new Date(x.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</small></div>
 <div class="mx-vq">${esc(x.q||'')}</div>${x.s?`<div class="mx-vs">${esc(x.s)}</div>`:''}
 ${x.t&&(x.t.i||x.t.o)?`<div class="mx-tok">Токены: вход ${fmt(x.t.i)} · выход ${fmt(x.t.o)}</div>`:''}
 ${x.d&&x.d.length?`<details><summary>Что изменено в коде (${x.n})</summary><div class="mx-d">${diffHTML(x.d)}</div></details>`:''}
@@ -9442,7 +10422,8 @@ function ui(){
 <section data-s="hist" hidden><div class="mx-s"><span>История правок</span><span id="mx-cnt"></span></div><div id="mx-v"></div></section>
 <section data-s="api" hidden>
 <label>Base URL<input id="mx-base" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-<label>API-ключ<input id="mx-key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+<label>API-ключ<span style="display:flex;gap:6px"><input id="mx-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1"><button type="button" id="mx-key-eye" title="Показать ключ">👁</button></span></label>
+<div class="mx-hint">Ключ хранится только в этом браузере и никогда не попадает в журнал, отчёты и историю правок.</div>
 <label>Модель<input id="mx-model" list="mx-ml" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
 <datalist id="mx-ml"><option>claude-sonnet-5-5</option><option>claude-opus-5-5</option><option>claude-fable-5-2</option><option>gpt-6-astra</option><option>deepseek-v4-pro</option></datalist>
 
@@ -9456,6 +10437,7 @@ function ui(){
   ['pointerdown','pointerup','touchstart','touchmove','touchend','mousedown','mouseup','click','keydown','keyup','keypress','wheel'].forEach(ev=>{
     b.addEventListener(ev,e=>e.stopPropagation());p.addEventListener(ev,e=>e.stopPropagation())});
   $('#mx-base').value=cfg.base;$('#mx-key').value=cfg.key;$('#mx-model').value=cfg.model;
+  $('#mx-key-eye').onclick=()=>{const k=$('#mx-key');k.type=k.type==='password'?'text':'password'};
   const sync=()=>{cfg.base=$('#mx-base').value;cfg.key=$('#mx-key').value;cfg.model=$('#mx-model').value;saveCfg()};
   ['mx-base','mx-key','mx-model','mx-q'].forEach(i=>{const el=$('#'+i);if(i!=='mx-q'){el.addEventListener('change',sync);el.addEventListener('input',sync)}el.addEventListener('focus',()=>{p.classList.add('mx-typing');p.style.maxHeight=(window.visualViewport?window.visualViewport.height:innerHeight)+'px';setTimeout(()=>el.scrollIntoView({block:'center'}),350)});el.addEventListener('blur',()=>{p.classList.remove('mx-typing');p.style.maxHeight=''})});
   const paint=()=>{p.querySelectorAll('#mx-eff button').forEach(x=>x.classList.toggle('on',x.dataset.e===cfg.effort));
@@ -9474,7 +10456,7 @@ function ui(){
   hd.addEventListener('pointerup',()=>{if(dr){dr=null;LS.setItem('mx_pos',JSON.stringify([parseInt(p.style.left),parseInt(p.style.top)]))}});
   /* скин убран */
   b.style.display=LS.getItem('mx_dev')==='1'?'block':'none';
-  window.mxUnlock=()=>{LS.setItem('mx_dev','1');b.style.display='block'};
+  window.mxUnlock=(open)=>{LS.setItem('mx_dev','1');b.style.display='block';if(open&&!p.classList.contains('on'))b.onclick()};
   let picked=null;
   const pickBtn=$('#mx-pick'),pickedEl=$('#mx-picked');
   pickBtn.onclick=()=>{
@@ -9503,10 +10485,10 @@ function ui(){
   $('#mx-go').onclick=async()=>{
     let req=$('#mx-q').value.trim();if(!req)return;sync();
     if(picked){let ctx='';try{ctx=' Экран игры: '+S+'.';if(G&&G.slots){const near=G.slots.filter(u=>u&&Math.hypot(u.x-picked.x,u.y-picked.y)<90).map(u=>u.n||u.k);if(near.length)ctx+=' В этой точке находится: '+near.join(', ')+'.';}}catch(e){}const zx=picked.x<406?'слева':picked.x<812?'в центре':'справа';const zy=picked.y<180?'сверху':picked.y<360?'в середине':'снизу';req='Область бага на экране игры: x='+picked.x+', y='+picked.y+' (экран 1218×540, начало координат слева сверху; область: '+zx+' '+zy+').'+ctx+' Определи, какой объект игры в этой точке (герой, враг, декорация, элемент интерфейса), и ищи баг в функциях, которые его рисуют и обновляют. '+req;}
-    const go=$('#mx-go'),L=$('#mx-log'),log=m=>{L.textContent=m};go.disabled=true;L.classList.add('busy');
+    const go=$('#mx-go'),L=$('#mx-log'),log=m=>{L.textContent=MXCore.maskSecrets(m,cfg.key)};go.disabled=true;L.classList.add('busy');
     try{const r=await improve(req,log);L.classList.remove('busy');
       log('Готово, правок: '+r.n+'.\n'+r.summary+'\nПотрачено токенов: вход '+fmt(r.tok.i)+', выход '+fmt(r.tok.o)+'\nПерезапускаю игру…');
-      await new Promise(z=>setTimeout(z,1800));await applyNew(r,req)}
+      await new Promise(z=>setTimeout(z,1200));await applyNew(r,req,log)}
     catch(e){L.classList.remove('busy');log('Ошибка: '+e.message)}finally{go.disabled=false}
   };
 }
