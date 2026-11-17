@@ -53,7 +53,18 @@ function relicTip() {
 function nodeKind(n, i) {
 	return i === 0 ? "start" : n.k || "rand";
 }
+// фон карты ещё собирается (bakeStep порциями): полоса прогресса вместо полукарты
+function dMapLoading() {
+	// первые 0,25 с — просто тёмный фон (на быстрых устройствах сборка укладывается в затемнение
+	// перехода и полоса не успевает мелькнуть); дальше — название мира и прогресс
+	if (t - MAPJ.t0 < 0.25) return;
+	const w = WORLDS[G.w];
+	txo("Мир " + (G.w + 1) + " · " + w.n, 609, 230, 30, "#ffd23c", "center");
+	pbar(409, 280, 400, 12, bakeProgress(), "#ffd23c");
+	tx("Рисую карту…", 609, 316, 14, "#b9b3c8", "center");
+}
 function dMap() {
+	if (MAPJ) return dMapLoading();
 	const w = WORLDS[G.w],
 		av = MV ? [] : avail(),
 		lead = G.slots.find(Boolean);

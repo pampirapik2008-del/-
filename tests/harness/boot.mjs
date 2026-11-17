@@ -14,7 +14,8 @@ const FRAME_MS = 1000 / 60;
 
 // dom — готовое окружение из createDom(); по умолчанию заглушка без растеризации.
 // code — готовый код игры (ассеты + секции); по умолчанию собирается из src/ и assets/.
-export function boot({ quiet = true, dom = createDom(), code = null } = {}) {
+// bakeMs — бюджет порции запекания карты за кадр (по умолчанию вся карта в первом кадре).
+export function boot({ quiet = true, dom = createDom(), code = null, bakeMs = null } = {}) {
 	const { windowObj, document, rafQueue, winListeners, mainCanvas } = dom;
 	const errors = [];
 	let fatal = null;
@@ -26,6 +27,9 @@ export function boot({ quiet = true, dom = createDom(), code = null } = {}) {
 		document,
 		navigator: windowObj.navigator,
 		__hrnow: () => Number(process.hrtime.bigint()) / 1e6,
+		// бюджет порции запекания карты: по умолчанию вся карта за один кадр (детерминированные снимки);
+		// тесты нарезки передают маленькое значение
+		__mxBakeMs: typeof bakeMs === "number" ? bakeMs : 1e9,
 		screen: windowObj.screen,
 		location: windowObj.location,
 		localStorage: windowObj.localStorage,

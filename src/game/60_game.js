@@ -5,6 +5,7 @@ let EV = null, // текущее событие (награда, находка,
 	MAPC = null, // запечённый фон карты
 	MAPK = null, // ключ запечённого фона: сид+мир
 	MAPL = [], // озёра на карте (для бликов)
+	MAPJ = null, // незавершённая запечка фона карты (см. bakeMap/bakeStep)
 	TIPN = null;
 const cmul = () => 1 + 0.5 * (G.w || 0); // доход растёт с номером мира
 const luck = () => (G.w || 0) * 0.7;
@@ -206,32 +207,102 @@ function segD(px, py, ax, ay, bx, by) {
 		k = clamp(((px - ax) * dx + (py - ay) * dy) / l, 0, 1);
 	return Math.hypot(px - ax - dx * k, py - ay - dy * k);
 }
+// Фон карты зависит только от сида и мира, собирается ~0,9 с (на телефоне в разы дольше).
+// Раньше это был один синхронный вызов — экран замирал при каждом входе в мир и при загрузке
+// сохранения. Теперь bakeMap только заводит работу MAPJ, а bakeStep() из цикла кадра выполняет
+// её порциями по BAKE_MS миллисекунд: игра продолжает рисовать кадры, экран карты показывает
+// полосу прогресса (dMapLoading), а по готовности MAPK = ключ и карта появляется.
+// Результат побайтово тот же, что у синхронной версии: порядок обхода пикселей и обращений
+// к rng32 не изменился (проверяется контрольной суммой в tests/unit/map.test.mjs).
+// бюджет одной порции; обвязка тестов задаёт __mxBakeMs (по умолчанию там — всё за один кадр,
+// чтобы снимки и golden не зависели от скорости машины)
+const BAKE_MS = typeof __mxBakeMs === "number" ? __mxBakeMs : 9;
 function bakeMap(seed) {
-	// Фон карты зависит только от сида и мира. Пока ключ совпадает — пересборка не нужна
-	// (каждая занимает ~0.9 c и заметно подвешивает загрузку сохранения).
 	const wi = G ? G.w || 0 : 0,
 		key = seed + ":" + wi;
-	if (MAPC && MAPK === key) {
-		SD = seed;
-		return;
-	}
 	SD = seed;
-	const w = WORLDS[G ? G.w || 0 : 0],
+	if (MAPC && MAPK === key && !MAPJ) return; // уже готово
+	if (MAPJ && MAPJ.key === key) return; // уже собирается
+	const w = WORLDS[wi],
 		P = MAPT[w.id],
-		R = rng32(seed),
 		c = MAPC || (MAPC = mkC(609, 270)),
-		x = c.getContext("2d"),
-		im = mapImg(w),
-		AM = ATL.map;
+		x = c.getContext("2d");
 	x.imageSmoothingEnabled = false;
-	// земля: пятна трёх тонов по шуму, границы — шахматным дизерингом
-	const id = x.createImageData(609, 270),
-		p = id.data,
-		cols = P.g.map(hex3),
-		R2 = rng32(seed + 5);
-	for (let py = 0; py < 270; py++)
+	MAPK = null;
+	MAPL = [];
+	MAPJ = {
+		seed,
+		key,
+		w,
+		P,
+		x,
+		im: mapImg(w),
+		AM: ATL.map,
+		R: rng32(seed),
+		R2: rng32(seed + 5),
+		id: x.createImageData(609, 270),
+		cols: P.g.map(hex3),
+		py: 0, // следующая строка земли
+		stage: 0, // 0 — земля, 1 — озёра/дороги/лес
+		t0: t, // когда начали: полоса прогресса показывается, только если сборка затянулась
+	};
+}
+// земля: пятна трёх тонов по шуму, границы — шахматным дизерингом; строки [y0, y1).
+// Шум — тот же vnoise (две октавы), но развёрнутый вручную: углы решётки считаются один раз
+// на участок строки, а не на каждый пиксель (в 5 раз быстрее). Формулы и порядок операций с
+// плавающей точкой повторяют vnoise дословно, поэтому пиксели совпадают бит-в-бит
+// (контрольные суммы — в tests/unit/map.test.mjs).
+function bakeGround(J, y0, y1) {
+	const p = J.id.data,
+		cols = J.cols,
+		R2 = J.R2,
+		s1 = J.seed,
+		s2 = J.seed + 1;
+	for (let py = y0; py < y1; py++) {
+		const ya = py * 0.034,
+			yi1 = Math.floor(ya),
+			fy1 = ya - yi1,
+			v1 = fy1 * fy1 * (3 - 2 * fy1),
+			yb = py * 0.11,
+			yi2 = Math.floor(yb),
+			fy2 = yb - yi2,
+			v2 = fy2 * fy2 * (3 - 2 * fy2);
+		let cx1 = -1,
+			a1 = 0,
+			b1 = 0,
+			c1 = 0,
+			d1 = 0,
+			cx2 = -1,
+			a2 = 0,
+			b2 = 0,
+			c2 = 0,
+			d2 = 0;
 		for (let px = 0; px < 609; px++) {
-			const n = vnoise(px * 0.021, py * 0.034, seed) * 0.7 + vnoise(px * 0.08, py * 0.11, seed + 1) * 0.3;
+			const xa = px * 0.021,
+				xi1 = Math.floor(xa),
+				fx1 = xa - xi1;
+			if (xi1 !== cx1) {
+				cx1 = xi1;
+				a1 = vhash(xi1, yi1, s1);
+				b1 = vhash(xi1 + 1, yi1, s1);
+				c1 = vhash(xi1, yi1 + 1, s1);
+				d1 = vhash(xi1 + 1, yi1 + 1, s1);
+			}
+			const u1 = fx1 * fx1 * (3 - 2 * fx1),
+				n1 = a1 + (b1 - a1) * u1 + (c1 - a1) * v1 + (a1 - b1 - c1 + d1) * u1 * v1,
+				xb = px * 0.08,
+				xi2 = Math.floor(xb),
+				fx2 = xb - xi2;
+			if (xi2 !== cx2) {
+				cx2 = xi2;
+				a2 = vhash(xi2, yi2, s2);
+				b2 = vhash(xi2 + 1, yi2, s2);
+				c2 = vhash(xi2, yi2 + 1, s2);
+				d2 = vhash(xi2 + 1, yi2 + 1, s2);
+			}
+			const u2 = fx2 * fx2 * (3 - 2 * fx2),
+				n2 = a2 + (b2 - a2) * u2 + (c2 - a2) * v2 + (a2 - b2 - c2 + d2) * u2 * v2,
+				n = n1 * 0.7 + n2 * 0.3;
 			let tn = n < 0.46 ? 0 : n < 0.6 ? 1 : 2;
 			if ((n > 0.44 && n < 0.46) || (n > 0.58 && n < 0.6)) tn = (px + py) & 1 ? tn : n < 0.5 ? 1 : 2;
 			let cc = cols[tn];
@@ -244,7 +315,12 @@ function bakeMap(seed) {
 			p[i + 2] = cc[2] * sh;
 			p[i + 3] = 255;
 		}
-	x.putImageData(id, 0, 0);
+	}
+}
+// озёра, дороги, площадки под значками, лес и мелочи — поверх готовой земли
+function bakeDecor(J) {
+	const { x, im, AM, R, P, seed } = J;
+	x.putImageData(J.id, 0, 0);
 	const nodes = N.map((n) => [n.x / 2, n.y / 2]),
 		edges = E.map(([a, b]) => [nodes[a][0], nodes[a][1], nodes[b][0], nodes[b][1]]),
 		roadD = (px, py) => {
@@ -327,7 +403,30 @@ function bakeMap(seed) {
 		x.fill();
 		x.drawImage(im, q[0], q[1], q[2], q[3], Math.round(o.x - q[2] / 2), Math.round(o.y - q[3]), q[2], q[3]);
 	}
-	MAPK = key;
+}
+// порция работы: не дольше ms миллисекунд (земля — по строкам), затем декор одним куском.
+// Возвращает true, когда карта готова.
+function bakeStep(ms) {
+	const J = MAPJ;
+	if (!J) return true;
+	const t0 = performance.now();
+	while (J.py < 270) {
+		const y1 = Math.min(270, J.py + 6);
+		bakeGround(J, J.py, y1);
+		J.py = y1;
+		if (performance.now() - t0 >= ms) return false;
+	}
+	J.stage = 1;
+	bakeDecor(J);
+	MAPK = J.key;
+	MAPJ = null;
+	return true;
+}
+// доля готовности для полосы прогресса (декор — последние ~7 %)
+const bakeProgress = () => (MAPJ ? Math.min(0.93, (MAPJ.py / 270) * 0.93) : 1);
+// дождаться готовности синхронно (тесты, снимки, экспорт)
+function bakeNow() {
+	while (MAPJ) bakeStep(1e9);
 }
 function avail() {
 	const a = ADJ[G.cur].filter((n) => !G.vis.has(n) && N[n].x > N[G.cur].x);

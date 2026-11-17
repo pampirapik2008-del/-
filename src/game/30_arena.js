@@ -50,20 +50,22 @@ function mobImg(w, key) {
 	}
 	return (TINTC[id] = rules.length ? recolor(IMG.mobs, rules) : IMG.mobs);
 }
+// хеш узла решётки шума: раньше был замыканием внутри vnoise и создавался на каждый вызов
+// (329 тысяч раз за одну карту); вынесен наружу — арифметика та же, биты результата те же
+function vhash(i, j, s) {
+	let n = (Math.imul(i, 374761393) + Math.imul(j, 668265263) + Math.imul(s | 0, 1442695041)) | 0;
+	n = Math.imul(n ^ (n >>> 13), 1274126177);
+	return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+}
 function vnoise(x, y, s) {
-	const h = (i, j) => {
-		let n = (Math.imul(i, 374761393) + Math.imul(j, 668265263) + Math.imul(s | 0, 1442695041)) | 0;
-		n = Math.imul(n ^ (n >>> 13), 1274126177);
-		return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
-	};
 	const xi = Math.floor(x),
 		yi = Math.floor(y),
 		fx = x - xi,
 		fy = y - yi,
-		a = h(xi, yi),
-		b = h(xi + 1, yi),
-		c = h(xi, yi + 1),
-		d = h(xi + 1, yi + 1),
+		a = vhash(xi, yi, s),
+		b = vhash(xi + 1, yi, s),
+		c = vhash(xi, yi + 1, s),
+		d = vhash(xi + 1, yi + 1, s),
 		u = fx * fx * (3 - 2 * fx),
 		v = fy * fy * (3 - 2 * fy);
 	return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;

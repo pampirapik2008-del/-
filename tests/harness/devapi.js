@@ -172,6 +172,7 @@
 		newGame,
 		genMap,
 		bakeMap,
+		bakeNow: () => (typeof bakeNow === "function" ? bakeNow() : undefined),
 		startRun,
 		fight,
 		startFight,

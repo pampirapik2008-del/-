@@ -86,6 +86,15 @@ function loop(ts) {
 			}
 		}
 	}
+	// фон карты собирается порциями между симуляцией и отрисовкой (см. bakeMap)
+	if (MAPJ && READY && G) {
+		try {
+			bakeStep(BAKE_MS);
+		} catch (e) {
+			MAPJ = null;
+			logErr("update", e);
+		}
+	}
 	try {
 		const t1 = performance.now();
 		draw();

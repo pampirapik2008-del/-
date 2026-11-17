@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Soak-тест: бот сам проходит игру, пока не наберётся заданное игровое время.
 // Следим за ошибками консоли, NaN в состоянии, «залипаниями» экранов и ростом кучи.
-//   node --expose-gc tools/soak.mjs [--minutes 30] [--seed 7]
+//   node --expose-gc tools/soak.mjs [--minutes 30] [--seed 7] [--bake-ms 0.5]
 import { boot } from "../tests/harness/boot.mjs";
 
 const args = process.argv.slice(2);
@@ -11,6 +11,7 @@ const num = (f, d) => {
 };
 const MINUTES = num("--minutes", 30);
 const SEED = num("--seed", 7);
+const BAKE_MS = num("--bake-ms", 0); // >0 — собирать фон карты порциями, как в браузере (проверка экрана загрузки)
 const MAX_FRAMES = Math.round(MINUTES * 60 * 60); // 60 кадров в секунду
 
 // собственный детерминированный генератор бота (в игру не попадает)
@@ -28,7 +29,7 @@ const heap = () => {
 	return process.memoryUsage().heapUsed / 1048576;
 };
 
-const g = boot();
+const g = boot(BAKE_MS > 0 ? { bakeMs: BAKE_MS } : {});
 if (!(await g.ready())) {
 	console.error("игра не загрузилась");
 	process.exit(1);
