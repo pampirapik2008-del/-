@@ -18,6 +18,7 @@
 		"lint": "node tools/lint.mjs",
 		"shotdiff": "node tools/shotdiff.mjs",
 		"e2e": "node tools/e2e.mjs",
+		"abcmd": "node tools/abcmd.mjs",
 		"all": "npm run check && npm run lint && npm test && npm run fuzz && npm run golden"
 	},
 	"devDependencies": {

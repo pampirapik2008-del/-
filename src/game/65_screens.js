@@ -245,12 +245,12 @@ function cardFace(c, i, x, y, w, h) {
 	rframe(r, x, y, w, h);
 	rfx(r, x, y, w, h, i * 0.4);
 }
-function dMsg() {
-	const e = EV;
-	if (!e) {
-		Machine.go("map", "событие потеряно");
-		return dMap();
-	}
+// размеры карточки события
+const MCW = 164,
+	MCH = 206,
+	MGAP = 18;
+// фон под окном события: арена, сцена или карта; карта под окном не получает касаний
+function msgBG(e) {
 	if (e.bg && BGA) {
 		ctx.drawImage(BGA.floor, 0, 0, W, H);
 		resBar();
@@ -259,28 +259,107 @@ function dMsg() {
 		resBar();
 	} else dMap();
 	Input.layer(); // карта под окном события не получает касаний
+}
+// момент раскрытия i-й карты
+const evRt = (e, i) => (e.to || e.t0) + (e.chest === undefined ? 0.3 : 0.55) + i * 0.32;
+// касание по экрану: открыть сундук или ускорить раскрытие карт
+function evSkip(e) {
+	if (!e.open) {
+		e.open = 1;
+		e.to = t;
+		sfx("chest");
+		shake(0.15);
+	} else if (t < evRt(e, e.cards.length - 1) + 0.3) e.to = t - 10;
+}
+// закрытый сундук: покачивание, подсказка, автооткрытие через 1,6 с
+function msgChestClosed(e, cy, best) {
+	const sh = Math.sin(t * 26) * Math.max(0, Math.sin(t * 3)) * 4;
+	glow(609, cy + 96, 110, RAR[best].c, 0.25 + 0.15 * Math.sin(t * 5));
+	uc("ui", "chest0", Math.round(609 + sh), cy + 100, 4);
+	txo("Нажми, чтобы открыть", 609, cy + 190, 15, "#fff3c0", "center");
+	if (t - e.t0 > 1.6) evSkip(e);
+}
+// первые 0,75 с после открытия сундука: вспышка и разлёт искр
+function msgChestOpen(e, cy, best) {
+	const k = t - e.to;
+	if (k < 0.75) {
+		ctx.globalAlpha = k < 0.45 ? 1 : 1 - (k - 0.45) / 0.3;
+		glow(609, cy + 90, 90 + 240 * k, RAR[best].c, 0.7 * (1 - k));
+		uc("ui", k < 0.14 ? "chest1" : "chest2", 609, cy + 100, 4);
+		ctx.globalAlpha = 1;
+		if (!e.cf) {
+			e.cf = 1;
+			burst(609, cy + 80, 30 + best * 12, { c: [RAR[best].c, "#fff3a0", "#ffffff"], sp: 380, s: 6, sv: 0.8, life: 0.9, up: 180, l: 2 });
+			if (best >= 3) shake(0.2 + best * 0.08);
+		}
+	}
+}
+// одна карта события: переворот, звук и эффекты по редкости, выбор при e.pick
+function msgCard(e, c, i, cy, x0) {
+	const k = (t - evRt(e, i)) / 0.34;
+	if (e.chest !== undefined && t - e.to < 0.35 + i * 0.1) return;
+	const r = c.t === "relic" || c.t === "hero" ? c.r : 0,
+		x = x0 + i * (MCW + MGAP),
+		picked = e.pick && e.sel === i,
+		yy = cy + (picked ? -8 : 0) + (k < 0 ? 0 : -6 * Math.sin(Math.PI * clamp(k, 0, 1))),
+		cx = x + MCW / 2;
+	c.x = cx;
+	c.y = yy + MCH / 2;
+	if (k >= 0.5 && !e.rv[i]) {
+		// момент раскрытия: звук и эффект по редкости
+		e.rv[i] = 1;
+		c.rt = t;
+		sfx(c.t === "res" ? (c.ic === "coin" ? "coin" : "pick") : c.t === "txt" ? "heal" : "rev" + r);
+		burst(cx, yy + MCH / 2, 10 + r * 9, { c: [RAR[r].c, "#ffffff"], sp: 200 + r * 50, s: 5, sv: 0.8, life: 0.7 + r * 0.1, l: 2, g: 200 });
+		if (r >= 3) ring(cx, yy + MCH / 2, 150 + r * 30, RAR[r].c, 0.6, 6, 1, 2);
+		if (r >= 4) {
+			shake(r >= 5 ? 0.5 : 0.3);
+			FLASH = { c: RAR[r].c, t0: t, d: r >= 5 ? 0.7 : 0.45 };
+		}
+	}
+	if (k >= 0.5 && r >= 3) rays(cx, yy + MCH / 2, r, 150 + r * 14);
+	if (k >= 0.5 && r >= 4 && Rand.next() < 0.3) Parts.add({ x: cx + rr(-80, 80), y: yy + rr(0, MCH), vy: -40, life: 1, c: r >= 5 ? `hsl(${(Rand.next() * 360) | 0},95%,70%)` : "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
+	const fl = Math.abs(Math.cos(Math.PI * clamp(k, 0, 1)));
+	ctx.save();
+	ctx.translate(cx, 0);
+	ctx.scale(Math.max(0.03, fl), 1);
+	ctx.translate(-cx, 0);
+	if (e.pick && e.sel >= 0 && !picked) ctx.globalAlpha = 0.55;
+	if (k < 0.5) {
+		ctx.fillStyle = "#231b30";
+		ctx.fillRect(x + 6, yy + 6, MCW - 12, MCH - 12);
+		rframe(0, x, yy, MCW, MCH);
+		uc("ui", "g_rand", cx, yy + MCH / 2, 4);
+	} else cardFace(c, i, x, yy, MCW, MCH);
+	ctx.restore();
+	if (picked) {
+		ctx.strokeStyle = "#ffe27a";
+		ctx.lineWidth = 4;
+		ctx.strokeRect(x - 4, yy - 4, MCW + 8, MCH + 8);
+	}
+	if (e.pick && k >= 1)
+		area(x, cy - 8, MCW, MCH + 8, () => {
+			e.sel = i;
+			sfx("pick");
+		});
+}
+function dMsg() {
+	const e = EV;
+	if (!e) {
+		Machine.go("map", "событие потеряно");
+		return dMap();
+	}
+	msgBG(e);
 	const a = Math.min(1, (t - e.t0) * 5),
 		n = e.cards.length,
-		cw = 164,
-		ch = 206,
-		gap = 18,
-		tot = n * cw + (n - 1) * gap,
+		tot = n * MCW + (n - 1) * MGAP,
 		pw = Math.max(460, tot + 90),
-		ph = (n ? ch + 24 : 0) + 150 + (e.stats ? 26 : 0),
+		ph = (n ? MCH + 24 : 0) + 150 + (e.stats ? 26 : 0),
 		px = 609 - pw / 2,
 		py = Math.round(270 - ph / 2) + 6;
 	ctx.fillStyle = "rgba(8,6,14," + 0.72 * a + ")";
 	ctx.fillRect(0, 0, W, H);
-	const skip = () => {
-		if (!e.open) {
-			e.open = 1;
-			e.to = t;
-			sfx("chest");
-			shake(0.15);
-		} else if (t < rt(n - 1) + 0.3) e.to = t - 10;
-	};
-	const rt = (i) => (e.to || e.t0) + (e.chest === undefined ? 0.3 : 0.55) + i * 0.32;
-	area(0, 0, W, H, skip);
+	area(0, 0, W, H, () => evSkip(e));
 	ctx.save();
 	ctx.translate(609, 270);
 	ctx.scale(0.9 + 0.1 * ez.back(a), 0.9 + 0.1 * ez.back(a));
@@ -298,77 +377,12 @@ function dMsg() {
 	ctx.globalAlpha = 1;
 	// сундук
 	const best = e.cards.reduce((m, c) => Math.max(m, c.r || 0), 0);
-	if (e.chest !== undefined && !e.open) {
-		const sh = Math.sin(t * 26) * Math.max(0, Math.sin(t * 3)) * 4;
-		glow(609, cy + 96, 110, RAR[best].c, 0.25 + 0.15 * Math.sin(t * 5));
-		uc("ui", "chest0", Math.round(609 + sh), cy + 100, 4);
-		txo("Нажми, чтобы открыть", 609, cy + 190, 15, "#fff3c0", "center");
-		if (t - e.t0 > 1.6) skip();
-	} else {
-		if (e.chest !== undefined) {
-			const k = t - e.to;
-			if (k < 0.75) {
-				ctx.globalAlpha = k < 0.45 ? 1 : 1 - (k - 0.45) / 0.3;
-				glow(609, cy + 90, 90 + 240 * k, RAR[best].c, 0.7 * (1 - k));
-				uc("ui", k < 0.14 ? "chest1" : "chest2", 609, cy + 100, 4);
-				ctx.globalAlpha = 1;
-				if (!e.cf) {
-					e.cf = 1;
-					burst(609, cy + 80, 30 + best * 12, { c: [RAR[best].c, "#fff3a0", "#ffffff"], sp: 380, s: 6, sv: 0.8, life: 0.9, up: 180, l: 2 });
-					if (best >= 3) shake(0.2 + best * 0.08);
-				}
-			}
-		}
+	if (e.chest !== undefined && !e.open) msgChestClosed(e, cy, best);
+	else {
+		if (e.chest !== undefined) msgChestOpen(e, cy, best);
 		const x0 = 609 - tot / 2;
-		e.cards.forEach((c, i) => {
-			const k = (t - rt(i)) / 0.34;
-			if (e.chest !== undefined && t - e.to < 0.35 + i * 0.1) return;
-			const r = c.t === "relic" || c.t === "hero" ? c.r : 0,
-				x = x0 + i * (cw + gap),
-				picked = e.pick && e.sel === i,
-				yy = cy + (picked ? -8 : 0) + (k < 0 ? 0 : -6 * Math.sin(Math.PI * clamp(k, 0, 1))),
-				cx = x + cw / 2;
-			c.x = cx;
-			c.y = yy + ch / 2;
-			if (k >= 0.5 && !e.rv[i]) {
-				// момент раскрытия: звук и эффект по редкости
-				e.rv[i] = 1;
-				c.rt = t;
-				sfx(c.t === "res" ? (c.ic === "coin" ? "coin" : "pick") : c.t === "txt" ? "heal" : "rev" + r);
-				burst(cx, yy + ch / 2, 10 + r * 9, { c: [RAR[r].c, "#ffffff"], sp: 200 + r * 50, s: 5, sv: 0.8, life: 0.7 + r * 0.1, l: 2, g: 200 });
-				if (r >= 3) ring(cx, yy + ch / 2, 150 + r * 30, RAR[r].c, 0.6, 6, 1, 2);
-				if (r >= 4) {
-					shake(r >= 5 ? 0.5 : 0.3);
-					FLASH = { c: RAR[r].c, t0: t, d: r >= 5 ? 0.7 : 0.45 };
-				}
-			}
-			if (k >= 0.5 && r >= 3) rays(cx, yy + ch / 2, r, 150 + r * 14);
-			if (k >= 0.5 && r >= 4 && Rand.next() < 0.3) Parts.add({ x: cx + rr(-80, 80), y: yy + rr(0, ch), vy: -40, life: 1, c: r >= 5 ? `hsl(${(Rand.next() * 360) | 0},95%,70%)` : "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
-			const fl = Math.abs(Math.cos(Math.PI * clamp(k, 0, 1)));
-			ctx.save();
-			ctx.translate(cx, 0);
-			ctx.scale(Math.max(0.03, fl), 1);
-			ctx.translate(-cx, 0);
-			if (e.pick && e.sel >= 0 && !picked) ctx.globalAlpha = 0.55;
-			if (k < 0.5) {
-				ctx.fillStyle = "#231b30";
-				ctx.fillRect(x + 6, yy + 6, cw - 12, ch - 12);
-				rframe(0, x, yy, cw, ch);
-				uc("ui", "g_rand", cx, yy + ch / 2, 4);
-			} else cardFace(c, i, x, yy, cw, ch);
-			ctx.restore();
-			if (picked) {
-				ctx.strokeStyle = "#ffe27a";
-				ctx.lineWidth = 4;
-				ctx.strokeRect(x - 4, yy - 4, cw + 8, ch + 8);
-			}
-			if (e.pick && k >= 1)
-				area(x, cy - 8, cw, ch + 8, () => {
-					e.sel = i;
-					sfx("pick");
-				});
-		});
-		const done = t > rt(n - 1) + 0.45 || !n;
+		e.cards.forEach((c, i) => msgCard(e, c, i, cy, x0));
+		const done = t > evRt(e, n - 1) + 0.45 || !n;
 		if (done) {
 			const by = py + ph - 56;
 			if (e.pick) btn(509, by, 200, 46, e.sel >= 0 ? "Забрать" : "Выбери карту", () => e.sel >= 0 && evClose(), "#2e7d32", { dis: e.sel < 0, pulse: e.sel >= 0, sz: 19 });
@@ -435,11 +449,15 @@ function shopAct(c) {
 		}
 	}
 }
-function dShop() {
-	const w = WORLDS[G.w],
-		st = shopStock();
-	stageBG(G.w, 0.5);
-	// прилавок и торговец
+// геометрия прилавка: 5 колонок × 3 ряда карточек
+const SHX0 = 346,
+	SHY0 = 74,
+	SHCW = 166,
+	SHCH = 112,
+	SHGX = 6,
+	SHGY = 8;
+// прилавок и торговец: свет, фигура (перекрашенный маг), сундуки, искры
+function shopMerchant() {
 	const mx = 168,
 		my = 438,
 		buyT = t - MERCH.t;
@@ -463,107 +481,96 @@ function dShop() {
 	uc("ui", "coin", mx + 30, my - 40, 1);
 	uc("ui", "meat", mx + 8, my - 42, 1);
 	if (Rand.next() < 0.08) Parts.add({ x: mx + 86 + rr(-20, 20), y: my - 60, vy: -30, life: 0.8, c: "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
-	// товары
-	title(G.arena ? "Лавка · волна " + G.wave : "Лавка гоблина", 34, "#fff3c0", 24);
-	resBar();
-	const X0 = 346,
-		Y0 = 74,
-		CW = 166,
-		CH = 112,
-		GX = 6,
-		GY = 8;
-	["Реликвии", "Значки отряда", "Припасы"].forEach((s, r) => {
+}
+// значок товара на карточке
+function shopIcon(c, inf, ix, iy, idx) {
+	if (c[0] === "relic") {
+		if (inf.q.nw && t - inf.q.nw < 0.5) glow(ix, iy, 60, "#ffffff", 1 - (t - inf.q.nw) * 2);
+		glow(ix, iy, 30, RAR[inf.r].c, 0.4);
+		uc("ui", "r_" + inf.q.id, ix, Math.round(iy + Math.sin(t * 2 + idx) * 2), 3);
+	} else if (c[0] === "rr") {
 		ctx.save();
-		ctx.translate(X0 - 16, Y0 + r * (CH + GY) + CH / 2);
-		ctx.rotate(-Math.PI / 2);
-		txo(s, 0, 0, 11, "#cfc9db", "center");
+		ctx.translate(ix, iy);
+		ctx.rotate(t * 1.2);
+		uc("ui", "g_arrow", 0, -12, AP);
+		ctx.rotate(Math.PI);
+		uc("ui", "g_arrow", 0, -12, AP);
 		ctx.restore();
-	});
-	SHOPG.forEach((c, idx) => {
-		if (!c) return;
-		const col = idx % 5,
-			row = (idx / 5) | 0,
-			inf = shopInfo(c),
-			sl = SS.sel === idx,
-			x = X0 + col * (CW + GX),
-			y = Y0 + row * (CH + GY) - (sl ? 4 : 0),
-			can = G.coin >= inf.p && !inf.sold,
-			act = (c[1] === "sk" && G.sk) || (c[1] === "rm" && G.rm);
-		ctx.fillStyle = sl ? "#2e2440" : "#1c1626";
-		ctx.fillRect(x + 5, y + 5, CW - 10, CH - 10);
-		if (inf.r > 0) {
-			ctx.globalAlpha = 0.18;
-			ctx.fillStyle = RAR[inf.r].c;
-			ctx.fillRect(x + 5, y + 5, CW - 10, CH - 10);
-			ctx.globalAlpha = 1;
-		}
-		if (inf.sold) ctx.globalAlpha = 0.35;
-		// значок товара
-		const ix = x + 36,
-			iy = y + 40;
-		if (c[0] === "relic") {
-			if (inf.q.nw && t - inf.q.nw < 0.5) glow(ix, iy, 60, "#ffffff", 1 - (t - inf.q.nw) * 2);
-			glow(ix, iy, 30, RAR[inf.r].c, 0.4);
-			uc("ui", "r_" + inf.q.id, ix, Math.round(iy + Math.sin(t * 2 + idx) * 2), 3);
-		} else if (c[0] === "rr") {
-			ctx.save();
-			ctx.translate(ix, iy);
-			ctx.rotate(t * 1.2);
-			uc("ui", "g_arrow", 0, -12, AP);
-			ctx.rotate(Math.PI);
-			uc("ui", "g_arrow", 0, -12, AP);
-			ctx.restore();
-		} else if (c[0] === "b") {
-			ctx.fillStyle = INK;
-			ctx.fillRect(ix - 22, iy - 22, 44, 44);
-			ctx.fillStyle = BCOL[c[1]];
-			ctx.fillRect(ix - 19, iy - 19, 38, 38);
-			ctx.fillStyle = "rgba(255,255,255,.35)";
-			ctx.fillRect(ix - 19, iy - 19, 38, 6);
-			gly(c[1], ix, iy + 1, 24, "#17121f");
-		} else if (c[1] === "heal") {
-			gly("hp", ix, iy, 40, "#6dff7a", "#17121f");
-			txo("+", ix, iy - 2, 22, "#fff", "center");
-		} else if (c[1] === "meat") uc("ui", "meat", ix, iy, AP);
-		else if (c[1] === "sk") uc("ui", "skull", ix, iy, AP);
-		else {
-			uc("ui", "g_skull", ix - 6, iy, AP);
-			uc("ui", "g_arrow", ix + 16, iy, AP);
-		}
-		txw(inf.n.replace("Значок: ", ""), x + 66, y + 22, CW - 74, 15, 13, "#fff", "left", true);
-		if (inf.sub) tx(RAR[inf.r].n, x + 66, y + 62, 11, RAR[inf.r].c);
-		if (inf.own !== undefined) tx("куплено: " + inf.own, x + 66, y + 62, 11, "#b9b3c8");
-		// цена
-		ctx.globalAlpha = inf.sold ? 0.35 : 1;
-		chip(x + 10, y + CH - 36, CW - 20, 26, act ? "rgba(46,125,50,.9)" : can ? "rgba(20,16,28,.85)" : "rgba(60,16,20,.85)");
-		if (inf.sold) txo("Продано", x + CW / 2, y + CH - 22, 13, "#b9b3c8", "center");
-		else if (act) txo("Выбери бойца внизу", x + CW / 2, y + CH - 22, 12, "#fff", "center");
-		else if (inf.p > 0) {
-			uc("ui", "coin_s", x + CW / 2 - 16, y + CH - 23, AP);
-			txo("" + inf.p, x + CW / 2 + 4, y + CH - 22, 15, can ? "#fff3a0" : "#ff8a7a", "left");
-		} else txo(c[1] === "rm" ? "Вернёт 2 монеты" : "Бесплатно", x + CW / 2, y + CH - 22, 12, "#fff3a0", "center");
+	} else if (c[0] === "b") {
+		ctx.fillStyle = INK;
+		ctx.fillRect(ix - 22, iy - 22, 44, 44);
+		ctx.fillStyle = BCOL[c[1]];
+		ctx.fillRect(ix - 19, iy - 19, 38, 38);
+		ctx.fillStyle = "rgba(255,255,255,.35)";
+		ctx.fillRect(ix - 19, iy - 19, 38, 6);
+		gly(c[1], ix, iy + 1, 24, "#17121f");
+	} else if (c[1] === "heal") {
+		gly("hp", ix, iy, 40, "#6dff7a", "#17121f");
+		txo("+", ix, iy - 2, 22, "#fff", "center");
+	} else if (c[1] === "meat") uc("ui", "meat", ix, iy, AP);
+	else if (c[1] === "sk") uc("ui", "skull", ix, iy, AP);
+	else {
+		uc("ui", "g_skull", ix - 6, iy, AP);
+		uc("ui", "g_arrow", ix + 16, iy, AP);
+	}
+}
+// одна карточка товара: фон, значок, название, цена, рамка редкости, касание (второе — покупка)
+function shopCard(c, idx) {
+	if (!c) return;
+	const col = idx % 5,
+		row = (idx / 5) | 0,
+		inf = shopInfo(c),
+		sl = SS.sel === idx,
+		x = SHX0 + col * (SHCW + SHGX),
+		y = SHY0 + row * (SHCH + SHGY) - (sl ? 4 : 0),
+		can = G.coin >= inf.p && !inf.sold,
+		act = (c[1] === "sk" && G.sk) || (c[1] === "rm" && G.rm);
+	ctx.fillStyle = sl ? "#2e2440" : "#1c1626";
+	ctx.fillRect(x + 5, y + 5, SHCW - 10, SHCH - 10);
+	if (inf.r > 0) {
+		ctx.globalAlpha = 0.18;
+		ctx.fillStyle = RAR[inf.r].c;
+		ctx.fillRect(x + 5, y + 5, SHCW - 10, SHCH - 10);
 		ctx.globalAlpha = 1;
-		rframe(inf.r, x, y, CW, CH);
-		if (!inf.sold) rfx(inf.r, x, y, CW, CH, idx * 0.3);
-		if (sl) {
-			ctx.strokeStyle = "#ffe27a";
-			ctx.lineWidth = 3;
-			ctx.strokeRect(x - 3, y - 3, CW + 6, CH + 6);
+	}
+	if (inf.sold) ctx.globalAlpha = 0.35;
+	// значок товара
+	const ix = x + 36,
+		iy = y + 40;
+	shopIcon(c, inf, ix, iy, idx);
+	txw(inf.n.replace("Значок: ", ""), x + 66, y + 22, SHCW - 74, 15, 13, "#fff", "left", true);
+	if (inf.sub) tx(RAR[inf.r].n, x + 66, y + 62, 11, RAR[inf.r].c);
+	if (inf.own !== undefined) tx("куплено: " + inf.own, x + 66, y + 62, 11, "#b9b3c8");
+	// цена
+	ctx.globalAlpha = inf.sold ? 0.35 : 1;
+	chip(x + 10, y + SHCH - 36, SHCW - 20, 26, act ? "rgba(46,125,50,.9)" : can ? "rgba(20,16,28,.85)" : "rgba(60,16,20,.85)");
+	if (inf.sold) txo("Продано", x + SHCW / 2, y + SHCH - 22, 13, "#b9b3c8", "center");
+	else if (act) txo("Выбери бойца внизу", x + SHCW / 2, y + SHCH - 22, 12, "#fff", "center");
+	else if (inf.p > 0) {
+		uc("ui", "coin_s", x + SHCW / 2 - 16, y + SHCH - 23, AP);
+		txo("" + inf.p, x + SHCW / 2 + 4, y + SHCH - 22, 15, can ? "#fff3a0" : "#ff8a7a", "left");
+	} else txo(c[1] === "rm" ? "Вернёт 2 монеты" : "Бесплатно", x + SHCW / 2, y + SHCH - 22, 12, "#fff3a0", "center");
+	ctx.globalAlpha = 1;
+	rframe(inf.r, x, y, SHCW, SHCH);
+	if (!inf.sold) rfx(inf.r, x, y, SHCW, SHCH, idx * 0.3);
+	if (sl) {
+		ctx.strokeStyle = "#ffe27a";
+		ctx.lineWidth = 3;
+		ctx.strokeRect(x - 3, y - 3, SHCW + 6, SHCH + 6);
+	}
+	area(x, SHY0 + row * (SHCH + SHGY), SHCW, SHCH, () => {
+		if (inf.sold) return;
+		if (SS.sel === idx) shopAct(c);
+		else {
+			SS.sel = idx;
+			G.sm = "";
+			sfx("pick");
 		}
-		area(x, Y0 + row * (CH + GY), CW, CH, () => {
-			if (inf.sold) return;
-			if (SS.sel === idx) shopAct(c);
-			else {
-				SS.sel = idx;
-				G.sm = "";
-				sfx("pick");
-			}
-		});
 	});
-	// реплика торговца
-	const selc = SS.sel >= 0 ? SHOPG[SS.sel] : null,
-		inf = selc ? shopInfo(selc) : null,
-		bx = 14,
+}
+// реплика торговца слева (описание выбранного товара или присказка) и кнопки покупки/выхода
+function shopSpeech(selc, inf) {
+	const bx = 14,
 		by = 84,
 		bw = 312,
 		bh = 168;
@@ -602,6 +609,26 @@ function dShop() {
 		"#8e24aa",
 		{ sz: 22 },
 	);
+}
+function dShop() {
+	shopStock(); // товар появляется при первом заходе
+	stageBG(G.w, 0.5);
+	shopMerchant();
+	// товары
+	title(G.arena ? "Лавка · волна " + G.wave : "Лавка гоблина", 34, "#fff3c0", 24);
+	resBar();
+	["Реликвии", "Значки отряда", "Припасы"].forEach((s, r) => {
+		ctx.save();
+		ctx.translate(SHX0 - 16, SHY0 + r * (SHCH + SHGY) + SHCH / 2);
+		ctx.rotate(-Math.PI / 2);
+		txo(s, 0, 0, 11, "#cfc9db", "center");
+		ctx.restore();
+	});
+	SHOPG.forEach((c, idx) => shopCard(c, idx));
+	// реплика торговца
+	const selc = SS.sel >= 0 ? SHOPG[SS.sel] : null,
+		inf = selc ? shopInfo(selc) : null;
+	shopSpeech(selc, inf);
 	relicRow(10, 46, 11, 30, 28);
 	hud();
 	Parts.draw(2);

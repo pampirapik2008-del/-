@@ -122,9 +122,6 @@ function ibtn(n, x, y, f, o = {}) {
 		f();
 	});
 }
-function ib(k, x, y) {
-	uc("ui", "ic_" + k, x + 45, y + 33);
-}
 function ic(k, cx, cy, sz) {
 	const n = k === "cell" || k === "cells" || k === "card" ? k : sz < 34 ? k + "_s" : k;
 	if (ATL.ui[n]) uc("ui", n, cx, cy);

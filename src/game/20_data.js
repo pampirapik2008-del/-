@@ -93,7 +93,6 @@ const EL = {
 	prism: { c: "#ff8af0", c2: "#b0f4ff", st: "shock" },
 	chaos: { c: "#ff4fd8", c2: "#5ff0e0", st: "rnd" },
 };
-const STN = { burn: "Горение", poison: "Яд", chill: "Холод", shock: "Шок", curse: "Проклятие", stun: "Оглушение", shield: "Щит", rage: "Ярость" };
 
 // ---------- реликвии: общие пассивки отряда. st — меняет характеристики (как значки), p — эффект в бою ----------
 const RELIC = {

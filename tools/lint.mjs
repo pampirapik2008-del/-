@@ -4,7 +4,11 @@
 //   - запрет eval / new Function в игровом коде;
 //   - запрет неявных глобалов: после запуска игры в обвязке в глобальной области
 //     не должно появиться имён, кроме объявленных function/var/class верхнего уровня;
-//   - длина функций: предупреждение > 120 строк (не ошибка — список в отчёте).
+//   - длина функций: предупреждение > 120 строк (не ошибка — список в отчёте);
+//     модуль-замыкание `const X = (() => { … })()` — пространство имён, а не функция:
+//     его не меряем целиком, а проверяем функции внутри него;
+//   - мёртвый код: объявление верхнего уровня в src/game, на которое нет ни одной
+//     ссылки (кроме комментариев) ни в игре, ни в обвязке тестов, — ошибка.
 //   node tools/lint.mjs            — проверка, код выхода 1 при ошибках
 //   node tools/lint.mjs --long     — только список длинных функций
 import fs from "node:fs";
@@ -47,6 +51,8 @@ export function longFunctions(text, limit = LIMIT) {
 		if (!m) continue;
 		const name = m[1] || m[2] || m[3];
 		if (!name || name === "if" || name === "for" || name === "while" || name === "switch" || name === "catch") continue;
+		// модуль-замыкание: внутрь заходим и меряем его функции по отдельности
+		if (/=\s*\(\s*(?:async\s*)?(?:\(\)\s*=>|function\b)/.test(lines[i])) continue;
 		// считаем фигурные скобки до закрытия тела (строки и комментарии грубо игнорируем)
 		let depth = 0,
 			started = false,
@@ -71,6 +77,30 @@ export function longFunctions(text, limit = LIMIT) {
 for (const f of files) {
 	const text = fs.readFileSync(path.join(SRC, f), "utf8");
 	for (const fn of longFunctions(text)) warnings.push(`${f}:${fn.line}: функция ${fn.name} — ${fn.len} строк (лимит ${LIMIT})`);
+}
+
+/* ---------- мёртвый код: объявления верхнего уровня без единой ссылки ---------- */
+// Ссылкой считается любое вхождение имени вне комментариев в src/game или в обвязке
+// (devapi/boot открывают функции тестам и инструментам). Имена с префиксом __ — рычаги обвязки.
+export function deadDeclarations(texts, extraText = "") {
+	const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
+	const all = strip(texts.map((x) => x.text).join("\n")) + "\n" + strip(extraText);
+	const out = [];
+	for (const { file, text } of texts) {
+		text.split("\n").forEach((ln, i) => {
+			const m = /^(?:async\s+)?function\s*\*?\s*([A-Za-z_$][\w$]*)\s*\(/.exec(ln) || /^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/.exec(ln) || /^class\s+([A-Za-z_$][\w$]*)\b/.exec(ln);
+			if (!m || m[1].startsWith("__")) return;
+			const re = new RegExp("(?<![\\w$.])" + m[1].replace(/\$/g, "\\$") + "(?![\\w$])", "g");
+			if ((all.match(re) || []).length <= 1) out.push({ name: m[1], file, line: i + 1 });
+		});
+	}
+	return out;
+}
+
+{
+	const texts = files.map((f) => ({ file: f, text: fs.readFileSync(path.join(SRC, f), "utf8") }));
+	const extra = ["tests/harness/devapi.js", "tests/harness/boot.mjs"].map((p) => fs.readFileSync(path.join(ROOT, p), "utf8")).join("\n");
+	for (const d of deadDeclarations(texts, extra)) errors.push(`${d.file}:${d.line}: мёртвый код — ${d.name} нигде не используется`);
 }
 
 /* ---------- неявные глобалы ---------- */

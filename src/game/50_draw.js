@@ -388,130 +388,144 @@ function dProj() {
 		ctx.restore();
 	}
 }
+// отрисовка сценических эффектов по виду (f.k); k — доля прожитого времени 0…1.
+// Каждый рисовальщик сам выставляет globalAlpha, dFx сбрасывает её после (тела перенесены из прежней цепочки if/else без изменений).
+const FXDRAW = {
+	slash(f, k) {
+		ctx.save();
+		ctx.translate(f.x, f.y);
+		ctx.scale(f.f, 1);
+		ctx.rotate(f.rot || 0);
+		ctx.lineCap = "round";
+		const a1 = -1.25 + 2.5 * ez.o3(k),
+			a0 = a1 - 1.9 * (1 - k * 0.5);
+		ctx.globalAlpha = 1 - k * k;
+		ctx.strokeStyle = f.c;
+		ctx.lineWidth = f.w * (1 - k * 0.5);
+		ctx.beginPath();
+		ctx.arc(-f.r * 0.35, 0, f.r, Math.max(-1.25, a0), a1);
+		ctx.stroke();
+		ctx.strokeStyle = "#ffffff";
+		ctx.lineWidth = Math.max(2, f.w * 0.35 * (1 - k));
+		ctx.beginPath();
+		ctx.arc(-f.r * 0.35, 0, f.r, Math.max(-1.25, a1 - 0.7), a1);
+		ctx.stroke();
+		ctx.restore();
+	},
+	beam(f, k) {
+		ctx.globalAlpha = 1 - k;
+		ctx.strokeStyle = f.c;
+		ctx.lineWidth = (f.w || 4) * (1 + k);
+		ctx.beginPath();
+		ctx.moveTo(f.x0, f.y0);
+		ctx.lineTo(f.x1, f.y1);
+		ctx.stroke();
+		ctx.strokeStyle = "#fff";
+		ctx.lineWidth = Math.max(2, (f.w || 4) * 0.4);
+		ctx.stroke();
+	},
+	bolt(f, k) {
+		ctx.globalAlpha = 1 - k * k;
+		ctx.strokeStyle = f.c;
+		ctx.lineWidth = (f.w || 3) + 3;
+		const sd = ((f.x0 * 13 + f.y1 * 7) | 0) + ((f.t * 24) | 0);
+		jag(f.x0, f.y0, f.x1, f.y1, 34, sd);
+		ctx.strokeStyle = "#fff";
+		ctx.lineWidth = Math.max(2, (f.w || 3) - 1);
+		jag(f.x0, f.y0, f.x1, f.y1, 34, sd);
+	},
+	pillar(f, k) {
+		const w = f.w * (k < 0.2 ? k / 0.2 : 1 - (k - 0.2) * 0.9);
+		ctx.globalAlpha = 0.75 * (1 - k);
+		ctx.fillStyle = f.c;
+		ctx.fillRect(f.x - w / 2, -20, w, f.y + 20);
+		ctx.globalAlpha = 0.95 * (1 - k);
+		ctx.fillStyle = "#ffffff";
+		ctx.fillRect(f.x - w / 5, -20, w / 2.5, f.y + 20);
+		ctx.globalAlpha = 0.8 * (1 - k);
+		ctx.fillStyle = f.c;
+		ctx.beginPath();
+		ctx.ellipse(f.x, f.y, f.w * (0.6 + k), f.w * (0.6 + k) * 0.36, 0, 0, TAU);
+		ctx.fill();
+	},
+	bubble(f, k) {
+		const u = f.u;
+		if (u.hp > 0) {
+			const r = u.boss ? 104 : 34,
+				cy = u.y - (u.boss ? 80 : 30) - (u.z || 0);
+			ctx.globalAlpha = (1 - k) * 0.9;
+			ctx.strokeStyle = f.c;
+			ctx.lineWidth = 4;
+			ctx.beginPath();
+			ctx.ellipse(u.x, cy, r * (0.8 + 0.25 * ez.o(Math.min(1, k * 4))), r * 1.15 * (0.8 + 0.25 * ez.o(Math.min(1, k * 4))), 0, 0, TAU);
+			ctx.stroke();
+			ctx.globalAlpha = (1 - k) * 0.18;
+			ctx.fillStyle = f.c;
+			ctx.fill();
+		}
+	},
+	ghost(f, k, wi) {
+		const [A, img] = uSet(f.u, wi);
+		ctx.globalAlpha = 0.6 * (1 - k);
+		fr(silOf(img, "#c9a0ff"), A.idle[0], f.x, f.y, f.f, AP);
+	},
+	vines(f, k) {
+		const u = f.u,
+			g = Math.min(1, k * 5),
+			a = k > 0.85 ? (1 - k) / 0.15 : 1;
+		ctx.globalAlpha = a;
+		ctx.lineWidth = 5;
+		for (let i = 0; i < 4; i++) {
+			const bx = u.x + (i - 1.5) * 13;
+			ctx.strokeStyle = i & 1 ? "#3a7a2a" : "#5aa03c";
+			ctx.beginPath();
+			ctx.moveTo(bx, u.y + 2);
+			for (let j = 1; j <= 5; j++) ctx.lineTo(bx + Math.sin(j * 1.9 + i) * 9, u.y + 2 - j * 11 * g);
+			ctx.stroke();
+			ctx.fillStyle = "#b8ff8a";
+			ctx.fillRect(bx + Math.sin(5 * 1.9 + i) * 9 - 3, u.y - 55 * g - 2, 6, 6);
+		}
+	},
+	wave(f, k) {
+		ctx.strokeStyle = f.c;
+		for (let i = 0; i < 3; i++) {
+			const q = clamp(k * 1.4 - i * 0.2, 0, 1);
+			if (q <= 0 || q >= 1) continue;
+			ctx.globalAlpha = 1 - q;
+			ctx.lineWidth = 8 * (1 - q) + 2;
+			ctx.beginPath();
+			ctx.ellipse(f.x, f.y, 520 * ez.o(q), 200 * ez.o(q), 0, 0, TAU);
+			ctx.stroke();
+		}
+	},
+	star(f, k) {
+		const r = 46 * (0.4 + ez.o(k));
+		ctx.globalAlpha = 1 - k;
+		ctx.fillStyle = f.c;
+		ctx.beginPath();
+		for (let i = 0; i < 8; i++) {
+			const a = (i / 8) * TAU + 0.4,
+				rr2 = i & 1 ? r * 0.22 : r;
+			ctx.lineTo(f.x + Math.cos(a) * rr2, f.y + Math.sin(a) * rr2);
+		}
+		ctx.fill();
+	},
+	sweep(f, k) {
+		const x = f.x0 - (f.x0 - FLD.x0 + 80) * ez.o(k);
+		ctx.globalAlpha = 0.85 * (1 - k * k);
+		ctx.fillStyle = f.c;
+		ctx.fillRect(x, f.y - f.h / 2, 90 + 80 * k, f.h);
+		ctx.fillStyle = "#fff";
+		ctx.fillRect(x, f.y - f.h / 2, 16, f.h);
+		ctx.globalAlpha = 0.35 * (1 - k);
+		ctx.fillStyle = f.c;
+		ctx.fillRect(x, f.y - f.h / 2, f.x0 - x, f.h);
+	},
+};
 function dFx(wi) {
 	for (const f of F.fx) {
-		const k = Math.min(1, f.t / f.d);
-		if (f.k === "slash") {
-			ctx.save();
-			ctx.translate(f.x, f.y);
-			ctx.scale(f.f, 1);
-			ctx.rotate(f.rot || 0);
-			ctx.lineCap = "round";
-			const a1 = -1.25 + 2.5 * ez.o3(k),
-				a0 = a1 - 1.9 * (1 - k * 0.5);
-			ctx.globalAlpha = 1 - k * k;
-			ctx.strokeStyle = f.c;
-			ctx.lineWidth = f.w * (1 - k * 0.5);
-			ctx.beginPath();
-			ctx.arc(-f.r * 0.35, 0, f.r, Math.max(-1.25, a0), a1);
-			ctx.stroke();
-			ctx.strokeStyle = "#ffffff";
-			ctx.lineWidth = Math.max(2, f.w * 0.35 * (1 - k));
-			ctx.beginPath();
-			ctx.arc(-f.r * 0.35, 0, f.r, Math.max(-1.25, a1 - 0.7), a1);
-			ctx.stroke();
-			ctx.restore();
-		} else if (f.k === "beam") {
-			ctx.globalAlpha = 1 - k;
-			ctx.strokeStyle = f.c;
-			ctx.lineWidth = (f.w || 4) * (1 + k);
-			ctx.beginPath();
-			ctx.moveTo(f.x0, f.y0);
-			ctx.lineTo(f.x1, f.y1);
-			ctx.stroke();
-			ctx.strokeStyle = "#fff";
-			ctx.lineWidth = Math.max(2, (f.w || 4) * 0.4);
-			ctx.stroke();
-		} else if (f.k === "bolt") {
-			ctx.globalAlpha = 1 - k * k;
-			ctx.strokeStyle = f.c;
-			ctx.lineWidth = (f.w || 3) + 3;
-			const sd = ((f.x0 * 13 + f.y1 * 7) | 0) + ((f.t * 24) | 0);
-			jag(f.x0, f.y0, f.x1, f.y1, 34, sd);
-			ctx.strokeStyle = "#fff";
-			ctx.lineWidth = Math.max(2, (f.w || 3) - 1);
-			jag(f.x0, f.y0, f.x1, f.y1, 34, sd);
-		} else if (f.k === "pillar") {
-			const w = f.w * (k < 0.2 ? k / 0.2 : 1 - (k - 0.2) * 0.9);
-			ctx.globalAlpha = 0.75 * (1 - k);
-			ctx.fillStyle = f.c;
-			ctx.fillRect(f.x - w / 2, -20, w, f.y + 20);
-			ctx.globalAlpha = 0.95 * (1 - k);
-			ctx.fillStyle = "#ffffff";
-			ctx.fillRect(f.x - w / 5, -20, w / 2.5, f.y + 20);
-			ctx.globalAlpha = 0.8 * (1 - k);
-			ctx.fillStyle = f.c;
-			ctx.beginPath();
-			ctx.ellipse(f.x, f.y, f.w * (0.6 + k), f.w * (0.6 + k) * 0.36, 0, 0, TAU);
-			ctx.fill();
-		} else if (f.k === "bubble") {
-			const u = f.u;
-			if (u.hp > 0) {
-				const r = u.boss ? 104 : 34,
-					cy = u.y - (u.boss ? 80 : 30) - (u.z || 0);
-				ctx.globalAlpha = (1 - k) * 0.9;
-				ctx.strokeStyle = f.c;
-				ctx.lineWidth = 4;
-				ctx.beginPath();
-				ctx.ellipse(u.x, cy, r * (0.8 + 0.25 * ez.o(Math.min(1, k * 4))), r * 1.15 * (0.8 + 0.25 * ez.o(Math.min(1, k * 4))), 0, 0, TAU);
-				ctx.stroke();
-				ctx.globalAlpha = (1 - k) * 0.18;
-				ctx.fillStyle = f.c;
-				ctx.fill();
-			}
-		} else if (f.k === "ghost") {
-			const [A, img] = uSet(f.u, wi);
-			ctx.globalAlpha = 0.6 * (1 - k);
-			fr(silOf(img, "#c9a0ff"), A.idle[0], f.x, f.y, f.f, AP);
-		} else if (f.k === "vines") {
-			const u = f.u,
-				g = Math.min(1, k * 5),
-				a = k > 0.85 ? (1 - k) / 0.15 : 1;
-			ctx.globalAlpha = a;
-			ctx.lineWidth = 5;
-			for (let i = 0; i < 4; i++) {
-				const bx = u.x + (i - 1.5) * 13;
-				ctx.strokeStyle = i & 1 ? "#3a7a2a" : "#5aa03c";
-				ctx.beginPath();
-				ctx.moveTo(bx, u.y + 2);
-				for (let j = 1; j <= 5; j++) ctx.lineTo(bx + Math.sin(j * 1.9 + i) * 9, u.y + 2 - j * 11 * g);
-				ctx.stroke();
-				ctx.fillStyle = "#b8ff8a";
-				ctx.fillRect(bx + Math.sin(5 * 1.9 + i) * 9 - 3, u.y - 55 * g - 2, 6, 6);
-			}
-		} else if (f.k === "wave") {
-			ctx.strokeStyle = f.c;
-			for (let i = 0; i < 3; i++) {
-				const q = clamp(k * 1.4 - i * 0.2, 0, 1);
-				if (q <= 0 || q >= 1) continue;
-				ctx.globalAlpha = 1 - q;
-				ctx.lineWidth = 8 * (1 - q) + 2;
-				ctx.beginPath();
-				ctx.ellipse(f.x, f.y, 520 * ez.o(q), 200 * ez.o(q), 0, 0, TAU);
-				ctx.stroke();
-			}
-		} else if (f.k === "star") {
-			const r = 46 * (0.4 + ez.o(k));
-			ctx.globalAlpha = 1 - k;
-			ctx.fillStyle = f.c;
-			ctx.beginPath();
-			for (let i = 0; i < 8; i++) {
-				const a = (i / 8) * TAU + 0.4,
-					rr2 = i & 1 ? r * 0.22 : r;
-				ctx.lineTo(f.x + Math.cos(a) * rr2, f.y + Math.sin(a) * rr2);
-			}
-			ctx.fill();
-		} else if (f.k === "sweep") {
-			const x = f.x0 - (f.x0 - FLD.x0 + 80) * ez.o(k);
-			ctx.globalAlpha = 0.85 * (1 - k * k);
-			ctx.fillStyle = f.c;
-			ctx.fillRect(x, f.y - f.h / 2, 90 + 80 * k, f.h);
-			ctx.fillStyle = "#fff";
-			ctx.fillRect(x, f.y - f.h / 2, 16, f.h);
-			ctx.globalAlpha = 0.35 * (1 - k);
-			ctx.fillStyle = f.c;
-			ctx.fillRect(x, f.y - f.h / 2, f.x0 - x, f.h);
-		}
+		const d = FXDRAW[f.k];
+		if (d) d(f, Math.min(1, f.t / f.d), wi);
 		ctx.globalAlpha = 1;
 	}
 }
@@ -637,12 +651,8 @@ function fightLerpOut() {
 	}
 	LERP_UNDO.length = 0;
 }
-function dFight() {
-	const A = F.A,
-		fight = S === "fight",
-		wi = F.w,
-		w = WORLDS[wi];
-	// камера: лёгкий наезд на финальный удар и смену фазы
+// камера боя: лёгкий наезд на финальный удар и смену фазы (ctx.save() здесь — парный restore в dFight)
+function fightCamera(fight) {
 	const tz = fight && F.slowT > 0 && F.slowS < 0.32 ? 1.12 : 1,
 		fo = F.focus || { x: 609, y: 300 };
 	CAM.z += (tz - CAM.z) * Math.min(1, DT * 7);
@@ -655,12 +665,9 @@ function dFight() {
 		ctx.scale(CAM.z, CAM.z);
 		ctx.translate(-cx, -cy);
 	}
-	ctx.drawImage(A.floor, 0, 0, W, H);
-	stageFx(A);
-	heatHaze(A);
-	const units = fight ? F.pl.concat(F.en) : G.slots.filter((u) => u && u.placed).concat(F.en),
-		selU = !fight && sel >= 0 ? G.slots[sel] : null;
-	// --- слой земли ---
+}
+// слой земли: зона расстановки, лужи, телеграфы, тени и кольца под бойцами, частицы слоя 0
+function fightGround(A, w, fight, units) {
 	layBegin();
 	if (!fight) {
 		// зона расстановки
@@ -705,7 +712,9 @@ function dFight() {
 	}
 	Parts.draw(0);
 	layEnd();
-	// --- объекты и бойцы по глубине ---
+}
+// объекты, декор, бойцы и трупы — в порядке глубины (y)
+function fightDepth(A, w, wi, units, selU) {
 	const list = [];
 	for (const o of A.obs)
 		if (!o.dead) {
@@ -733,7 +742,9 @@ function dFight() {
 		else deadDraw(q.dd, wi);
 	}
 	if (F.cat) drawCat();
-	// --- верхний слой эффектов ---
+}
+// верхний слой: снаряды, эффекты, падающие бомбы, частицы слоя 1
+function fightTop(fight, wi) {
 	layBegin();
 	if (fight) dProj();
 	dFx(wi);
@@ -752,7 +763,9 @@ function dFight() {
 			}
 	layEnd();
 	Parts.draw(1);
-	// --- свет ---
+}
+// свет, свечения, погодный тон, виньетка
+function fightLight(A, w, fight, units) {
 	if (QL.lv > 0) {
 		Light.begin(w.amb[A.tod]);
 		arenaLights(A);
@@ -781,11 +794,9 @@ function dFight() {
 	wxTint(A);
 	Parts.draw(2);
 	vignette(A.tod === 2 ? 1 : 0.7);
-	// --- полосы и цифры ---
-	for (const u of units) uBar(u, fight);
-	if (fight) dNums();
-	ctx.restore();
-	// --- ввод в сцене ---
+}
+// ввод в сцене: расстановка бойцов (до боя) и карточки по касанию
+function fightInput(A, fight) {
 	if (!fight) {
 		area(ZONE.x0 - 10, A.y0 - 30, ZONE.x1 - ZONE.x0 + 20, FLD.y1 - A.y0 + 44, (px, py) => {
 			const hit = G.slots.find((u) => u && u.placed && Math.abs(px - u.x) < 26 && py < u.y + 12 && py > u.y - 84);
@@ -820,6 +831,27 @@ function dFight() {
 			area(u.x - 24, u.y - 84, 48, 92, () => {
 				pop = { u, mine: false };
 			});
+}
+function dFight() {
+	const A = F.A,
+		fight = S === "fight",
+		wi = F.w,
+		w = WORLDS[wi];
+	fightCamera(fight);
+	ctx.drawImage(A.floor, 0, 0, W, H);
+	stageFx(A);
+	heatHaze(A);
+	const units = fight ? F.pl.concat(F.en) : G.slots.filter((u) => u && u.placed).concat(F.en),
+		selU = !fight && sel >= 0 ? G.slots[sel] : null;
+	fightGround(A, w, fight, units);
+	fightDepth(A, w, wi, units, selU);
+	fightTop(fight, wi);
+	fightLight(A, w, fight, units);
+	// --- полосы и цифры ---
+	for (const u of units) uBar(u, fight);
+	if (fight) dNums();
+	ctx.restore();
+	fightInput(A, fight);
 	fightHud(fight);
 }
 function autoPlace() {
