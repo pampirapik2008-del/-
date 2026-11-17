@@ -12,8 +12,9 @@ const DEVAPI = fs.readFileSync(path.join(ROOT, "tests/harness/devapi.js"), "utf8
 
 const FRAME_MS = 1000 / 60;
 
-export function boot({ quiet = true } = {}) {
-	const dom = createDom();
+// dom — готовое окружение из createDom(); по умолчанию заглушка без растеризации.
+// code — готовый код игры (ассеты + секции); по умолчанию собирается из src/ и assets/.
+export function boot({ quiet = true, dom = createDom(), code = null } = {}) {
 	const { windowObj, document, rafQueue, winListeners, mainCanvas } = dom;
 	const errors = [];
 	let fatal = null;
@@ -46,7 +47,7 @@ export function boot({ quiet = true } = {}) {
 		FontFace: windowObj.FontFace,
 		innerWidth: windowObj.innerWidth,
 		innerHeight: windowObj.innerHeight,
-		devicePixelRatio: 2,
+		devicePixelRatio: windowObj.devicePixelRatio,
 		addEventListener: windowObj.addEventListener,
 		removeEventListener: windowObj.removeEventListener,
 		matchMedia: windowObj.matchMedia,
@@ -83,9 +84,10 @@ export function boot({ quiet = true } = {}) {
 		decodeURIComponent,
 	});
 
+	const preKeys = new Set(Object.keys(sandbox));
 	const ctx = vm.createContext(sandbox);
-	const code = loadAssetsJs(ROOT) + "\n" + loadGameSrc(ROOT) + "\n" + DEVAPI;
-	vm.runInContext(code, ctx, { filename: "game.js" });
+	const src = (code == null ? loadAssetsJs(ROOT) + "\n" + loadGameSrc(ROOT) : code) + "\n" + DEVAPI;
+	vm.runInContext(src, ctx, { filename: "game.js" });
 
 	let ts = 0;
 	let frames = 0;
@@ -116,6 +118,10 @@ export function boot({ quiet = true } = {}) {
 		dev,
 		errors,
 		storage,
+		// имена, появившиеся в глобальной области после запуска (для проверки неявных глобалов)
+		newGlobals() {
+			return Object.keys(sandbox).filter((k) => !preKeys.has(k));
+		},
 		setStorage(k, v) {
 			storage.setItem(k, String(v));
 		},

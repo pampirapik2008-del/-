@@ -34,7 +34,16 @@ if (!(await g.ready())) {
 	process.exit(1);
 }
 g.step(10);
+g.dev.labelButtons(); // подписи кнопок — чтобы ходить по тексту, а не по индексу
 
+// размеры кэшей и подписок: по ним видно, что именно растёт, если растёт куча
+const sizes = () =>
+	JSON.parse(
+		g.dev.run(
+			'JSON.stringify({ glow: Object.keys(GLOWC).length, sil: SILC.size, tint: Object.keys(TINTC).length, ev: Object.values(Events.h).reduce((n, a) => n + a.length, 0), timers: Timers.list.length, bts: Object.keys(BTS).length, cnt: Object.keys(CNT).length, errs: ERRS.length, parts: Parts.n === undefined ? -1 : Parts.n })'
+		)
+	);
+const sizes0 = sizes();
 const heap0 = heap();
 const heapSamples = []; // снимаем по ходу: первые проценты роста — это прогрев кэшей и JIT, а не утечка
 
@@ -57,7 +66,8 @@ let nan = 0,
 	states = 0,
 	lastS = null,
 	sameFor = 0;
-const seen = new Map();
+const seen = new Map(),
+	stuckBy = {};
 
 for (let f = 0; f < MAX_FRAMES; f++) {
 	g.step(1);
@@ -78,8 +88,13 @@ for (let f = 0; f < MAX_FRAMES; f++) {
 		g.dev.paused = false;
 		continue;
 	}
-	if (sameFor > 900) {
-		stuck++;
+	// «залипание» — экран не меняется дольше 15 с (бой с таймером не в счёт: он идёт до 110–200 с);
+	// считаем один раз на застревание, а выбираться пробуем каждые 15 с
+	if (sameFor > 900 && sameFor % 900 < 3) {
+		if (S !== "fight") {
+			stuck++;
+			stuckBy[S] = (stuckBy[S] || 0) + 1;
+		}
 		for (const h of (g.dev.hits || []).slice()) {
 			g.clickHit(h);
 			g.step(2);
@@ -88,7 +103,13 @@ for (let f = 0; f < MAX_FRAMES; f++) {
 		g.key(" ");
 	}
 	if (sameFor > 6000) break;
-	if (S === "prep" || S === "msg") g.key(" ");
+	if (S === "msg" && g.dev.run("!!(EV && EV.open && EV.pick)")) {
+		// событие с выбором («выбери одну реликвию»): пробел его не закрывает — тыкаем карту, потом «Забрать»
+		const take = g.dev.findHit("Забрать"),
+			hs = g.dev.hits || [];
+		if (take && g.dev.run("EV.sel >= 0")) g.clickHit(take);
+		else if (hs.length) g.clickHit(hs[pickIdx(hs.length)]);
+	} else if (S === "prep" || S === "msg") g.key(" ");
 	else if (S === "fight") {
 		if (f % 30 === 0) g.key(String(1 + pickIdx(3)));
 	} else if (S === "map") {
@@ -100,12 +121,26 @@ for (let f = 0; f < MAX_FRAMES; f++) {
 	} else if (S === "shop" || S === "world" || S === "codex" || S === "pick") {
 		const hs = g.dev.hits || [];
 		if (hs.length) g.clickHit(hs[pickIdx(hs.length)]);
+	} else if (S === "win" || S === "lose") {
+		g.clickHit((g.dev.hits || [])[0]); // «Новый поход» / «Ещё раз»
+	} else if (S === "menu") {
+		g.clickHit((g.dev.hits || [])[1 + pickIdx(2)]); // «Новая игра» или «Боевая арена»
+	} else if (S === "settings") {
+		// «Назад» ищем по подписи: правее него теперь стоят «Экспорт»/«Импорт» (окно переноса сохранения)
+		const back = g.dev.findHit("Назад"),
+			hs = g.dev.hits || [];
+		g.clickHit(back || hs[hs.length - 1]);
 	}
 }
 
 // Отдельная фаза «30 боёв подряд в одинаковых условиях» — именно она отвечает
 // на вопрос об утечке: миры и герои по ходу партии прогревают свои кэши один раз,
 // и этот рост к утечке не относится.
+// Главный цикл мог оборваться посреди боя: newGame() обнуляет F, но не экран,
+// поэтому сначала уходим в меню — как это делает сама игра перед новой партией.
+g.dev.paused = false;
+g.dev.S = "menu";
+g.step(2);
 g.dev.seed(424242);
 g.dev.newGame();
 g.step(10);
@@ -115,6 +150,7 @@ for (let i = 0; i < 32; i++) {
 	for (let k = 0; k < 8; k++) g.dev.setSlot(k, null);
 	for (let k = 0; k < 4; k++) g.dev.setSlot(k, g.dev.HEROES[k]);
 	g.dev.setWorld(0, 4);
+	g.dev.S = "menu"; // прошлый бой оборван на F.out — переход fight → prep таблицей запрещён
 	g.dev.fight(i % 4 === 3 ? "boss" : "fight");
 	g.dev.startFight();
 	let f = 0;
@@ -130,6 +166,7 @@ for (let i = 0; i < 32; i++) {
 const battleGrowth = battleHeap.length >= 2 ? ((battleHeap[battleHeap.length - 1] - battleHeap[0]) / battleHeap[0]) * 100 : 0;
 
 const heap1 = heap();
+const sizes1 = sizes();
 const growth = heap0 > 0 ? ((heap1 - heap0) / heap0) * 100 : 0;
 // установившийся рост: от второго замера до последнего (первый — ещё прогрев)
 const steady = heapSamples.length >= 2 ? ((heapSamples[heapSamples.length - 1] - heapSamples[1]) / heapSamples[1]) * 100 : growth;
@@ -137,8 +174,9 @@ const fatal = g.fatal ? String(g.fatal).slice(0, 200) : null;
 
 console.log(`soak: ${MINUTES} минут игрового времени (${g.frames} кадров, сид ${SEED})`);
 console.log(`  экраны: ${[...seen.entries()].map(([k, v]) => k + "×" + v).join(", ")}`);
-console.log(`  переходов экранов ${states}, «залипаний» ${stuck}`);
+console.log(`  переходов экранов ${states}, «залипаний» ${stuck}${stuck ? " (" + Object.entries(stuckBy).map(([k, v]) => k + "×" + v).join(", ") + ")" : ""}`);
 console.log(`  ошибок консоли ${g.errors.length}, NaN/Infinity в состоянии ${nan}, fatal ${fatal ? "ДА: " + fatal : "нет"}`);
+console.log(`  кэши/подписки (до → после): ${Object.keys(sizes0).map((k) => k + " " + sizes0[k] + "→" + sizes1[k]).join(", ")}`);
 console.log(
 	`  куча: ${heap0.toFixed(1)} → ${heap1.toFixed(1)} МБ (всего ${growth >= 0 ? "+" : ""}${growth.toFixed(1)}%, ` +
 		`после прогрева ${steady >= 0 ? "+" : ""}${steady.toFixed(1)}%; замеры: ${heapSamples.map((v) => v.toFixed(1)).join(" → ")})`
@@ -148,5 +186,9 @@ console.log(
 	`  30 боёв подряд (один мир, одинаковый состав): ${battleHeap.map((v) => v.toFixed(1)).join(" → ")} МБ, рост ${battleGrowth >= 0 ? "+" : ""}${battleGrowth.toFixed(1)}%`
 );
 const ok = !fatal && nan === 0 && g.errors.length === 0 && battleGrowth <= 5;
-if (!ok && g.errors.length) console.log("  первые ошибки:", g.errors.slice(0, 5));
+if (!ok && g.errors.length) {
+	console.log("  первые ошибки:", g.errors.slice(0, 5));
+	const e = g.dev.errs()[0];
+	if (e) console.log("  первая по журналу: кадр " + e.frame + ", экран " + e.screen + "\n    " + String(e.stack || "").split("\n").slice(0, 4).join("\n    "));
+}
 process.exit(ok ? 0 : 1);

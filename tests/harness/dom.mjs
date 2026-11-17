@@ -1,7 +1,9 @@
 // Заглушка браузерного окружения для headless-прогона игры в Node.
 // Намеренно минимальная: вся отрисовка — no-op, но API canvas/DOM присутствует,
 // чтобы игровой код не падал и можно было проверять логику, сохранения и переходы экранов.
-export function createDom({ width = 1280, height = 720 } = {}) {
+// Необязательные параметры позволяют подменить холст и Image на настоящие (см. tools/shots.mjs):
+//   canvasFactory(w, h) — вернуть объект с width/height/getContext; ImageClass — класс с src/onload.
+export function createDom({ width = 1280, height = 720, dpr = 2, canvasFactory = null, ImageClass = null } = {}) {
 	const gradient = () => ({ addColorStop() {} });
 	const makeCtx = (canvas) => ({
 		canvas,
@@ -26,7 +28,24 @@ export function createDom({ width = 1280, height = 720 } = {}) {
 	});
 
 	let canvasCount = 0;
-	const makeCanvas = (w, h) => ({
+	// настоящий холст (если передан) дополняем полями DOM-элемента, которых у него нет
+	const realCanvas = (w, h) => {
+		const c = canvasFactory(w || 300, h || 150);
+		c._id = ++canvasCount;
+		c.style = {};
+		c.dataset = {};
+		c.classList = { add() {}, remove() {}, toggle() {}, contains: () => false };
+		c.listeners = {};
+		c.addEventListener = function (t, f) { (this.listeners[t] = this.listeners[t] || []).push(f); };
+		c.removeEventListener = () => {};
+		c.getBoundingClientRect = function () { return { left: 0, top: 0, width: this.width, height: this.height, right: this.width, bottom: this.height }; };
+		c.appendChild = () => {};
+		c.remove = () => {};
+		c.setAttribute = () => {};
+		c.querySelector = () => null;
+		return c;
+	};
+	const makeCanvas = (w, h) => canvasFactory ? realCanvas(w, h) : ({
 		_id: ++canvasCount,
 		width: w || 300,
 		height: h || 150,
@@ -90,7 +109,7 @@ export function createDom({ width = 1280, height = 720 } = {}) {
 		document,
 		innerWidth: width,
 		innerHeight: height,
-		devicePixelRatio: 2,
+		devicePixelRatio: dpr,
 		addEventListener(t, f) { (winListeners[t] = winListeners[t] || []).push(f); },
 		removeEventListener() {},
 		requestAnimationFrame(f) { rafQueue.push(f); return rafQueue.length; },
@@ -108,7 +127,7 @@ export function createDom({ width = 1280, height = 720 } = {}) {
 		matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
 		getComputedStyle: () => ({ getPropertyValue: () => "" }),
 		console,
-		Image: class {
+		Image: ImageClass || class {
 			constructor() { this.width = 64; this.height = 64; this.complete = false; }
 			set src(v) { this._src = v; setTimeout(() => { this.complete = true; if (this.onload) this.onload({}); }, 0); }
 			get src() { return this._src; }

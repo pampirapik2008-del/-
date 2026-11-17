@@ -47,6 +47,9 @@ async function main() {
 			depth = (i * 5) % 12,
 			kind = KINDS[i % KINDS.length];
 		g.dev.setWorld(w, depth);
+		// предыдущий бой обрывается на F.out, экран ещё «fight»: таблица переходов запрещает
+		// fight → prep, поэтому, как и сама игра, сначала возвращаемся в меню (на Rand не влияет)
+		g.dev.S = "menu";
 		g.dev.fight(kind);
 		g.dev.startFight();
 		// крутим кадры до развязки: F.out появляется за полсекунды до смены экрана,

@@ -47,6 +47,22 @@
 		get hits() {
 			return hits;
 		},
+		// подписи кнопок: после включения каждый hit от btn() получает поле label,
+		// и по экрану можно ходить по тексту кнопки, а не по индексу
+		labelButtons() {
+			if (this._labeled) return;
+			this._labeled = true;
+			const orig = btn;
+			btn = function (x, y, w, h, s) {
+				const n = hits.length,
+					r = orig.apply(this, arguments);
+				if (hits.length > n) hits[hits.length - 1].label = String(s);
+				return r;
+			};
+		},
+		findHit(label) {
+			return (hits || []).find((h) => h.label && h.label.indexOf(label) >= 0) || null;
+		},
 		get paused() {
 			return paused;
 		},
@@ -74,6 +90,10 @@
 		seed(v) {
 			Rand.seed(v);
 		},
+		// выполнить выражение в глобальной области игры (только для тестов)
+		run(code) {
+			return (0, eval)(code);
+		},
 		get randState() {
 			return Rand.state;
 		},
@@ -100,12 +120,14 @@
 			this._wrapped = true;
 			const ACC = this._timers,
 				now = __hrnow,
-				u = upd,
+				mu = Machine.update,
 				d = draw;
-			upd = function () {
+			// симуляцию зовёт Machine.update (экран fight держит ссылку на upd с момента регистрации,
+			// поэтому подмена самой переменной upd до цикла не дотянулась бы)
+			Machine.update = function () {
 				const t0 = now();
 				try {
-					return u.apply(this, arguments);
+					return mu.apply(Machine, arguments);
 				} finally {
 					ACC.upd += now() - t0;
 				}
@@ -124,7 +146,7 @@
 			return this._timers;
 		},
 		// журнал ошибок и аварийный режим
-		errs: () => ERRS.map((r) => ({ kind: r.kind, msg: r.msg, frame: r.frame, screen: r.screen })),
+		errs: () => ERRS.map((r) => ({ kind: r.kind, msg: r.msg, frame: r.frame, screen: r.screen, stack: r.stack })),
 		crash: () => ERR_CRASH,
 		makeDrawThrow(n = 1) {
 			const orig = draw;
@@ -137,8 +159,9 @@
 			};
 		},
 		makeUpdateThrow(n = 1) {
-			const orig = upd;
-			upd = function () {
+			// цикл кадра зовёт Machine.update → хук update текущего экрана
+			const orig = Machine.update;
+			Machine.update = function () {
 				if (n > 0) {
 					n--;
 					throw new Error("тестовая ошибка update");

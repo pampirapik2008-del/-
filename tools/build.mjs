@@ -34,6 +34,8 @@ fs.writeFileSync(out, html);
 if (args.has("--dist")) {
 	fs.mkdirSync(path.join(ROOT, "dist"), { recursive: true });
 	fs.writeFileSync(path.join(ROOT, "dist/game.html"), html);
-	console.log("dist/game.html записан");
+	// контрольная сумма релизного файла — рядом, в формате sha256sum -c
+	fs.writeFileSync(path.join(ROOT, "dist/SHA256SUMS.txt"), `${hash}  game.html\n`);
+	console.log(`dist/game.html записан, sha256 ${hash} (dist/SHA256SUMS.txt)`);
 }
 console.log(`index.html собран: ${(html.length / 1024 / 1024).toFixed(2)} МБ, секций ${sections}, sha256 ${hash}`);
