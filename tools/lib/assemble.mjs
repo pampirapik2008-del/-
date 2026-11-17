@@ -41,7 +41,9 @@ export function loadGameSrc(root) {
 
 export function buildHtml(root) {
 	const shell = readText(root, "src/shell.html");
-	const loader = readText(root, "src/editor/loader.js");
+	// ядро редактора (чистые функции, тестируются в Node) + загрузчик с интерфейсом — вне #game-src,
+	// поэтому ИИ-правки их не касаются
+	const loader = readText(root, "src/editor/core.js") + "\n" + readText(root, "src/editor/loader.js");
 	return shell
 		.replace("@@ASSETS@@", () => loadAssetsJs(root))
 		.replace("@@SRC@@", () => loadGameSrc(root))
