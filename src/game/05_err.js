@@ -177,8 +177,9 @@ function dbgDraw() {
 	if (F) L.push("бойцы " + F.pl.length + "+" + F.en.length + "  снаряды " + (F.proj ? F.proj.length : 0) + "  эффекты " + F.fx.length + "  числа " + F.nums.length + "  телеграфы " + F.tele.length);
 	L.push("частицы " + Parts.a.length + "/" + Parts.cap + "  таймеры " + Timers.count() + "  очередь " + Seq.q.length + "  экран " + S + (paused ? " (пауза)" : "") + "  переходов откл. " + Machine.rejected);
 	L.push("цели " + hits.length + "  слои " + Input.layers + "  указатели " + Input.active.size + "  касаний " + Input.taps + "  вторичных " + Input.ignored + "  путь " + Machine.trail.slice(-3).join(" "));
-	const mem = typeof performance !== "undefined" && performance.memory;
-	if (mem) L.push("куча " + (mem.usedJSHeapSize / 1048576).toFixed(1) + " / " + (mem.totalJSHeapSize / 1048576).toFixed(1) + " МБ");
+	const mem = typeof performance !== "undefined" && performance.memory,
+		cs = cacheStats();
+	L.push("кэши: свечение " + cs.glow + "  силуэты " + cs.sil + "  перекраски " + cs.tint + "  пол " + cs.floors + "  растры " + cs.mb.toFixed(1) + " МБ" + (mem ? "  куча " + (mem.usedJSHeapSize / 1048576).toFixed(1) + " / " + (mem.totalJSHeapSize / 1048576).toFixed(1) + " МБ" : ""));
 	let ver = "orig";
 	try {
 		ver = window.__mxStorage.getItem("mx_active") || "orig";

@@ -100,11 +100,13 @@
 		snapshot: snap,
 		// размеры внутренних кэшей и пулов — для контроля утечек
 		mem() {
-			const cnt = (o) => (o && typeof o === "object" ? Object.keys(o).length : 0);
+			const cs = typeof cacheStats === "function" ? cacheStats() : { glow: 0, sil: 0, tint: 0, floors: 0, mb: 0 };
 			return {
-				glow: cnt(typeof GLOWC !== "undefined" ? GLOWC : null),
-				sil: typeof SILC !== "undefined" && SILC ? SILC.size : 0,
-				tint: cnt(typeof TINTC !== "undefined" ? TINTC : null),
+				glow: cs.glow,
+				sil: cs.sil,
+				tint: cs.tint,
+				floors: cs.floors,
+				cacheMb: cs.mb,
 				recol: typeof RECOL !== "undefined" && RECOL && RECOL.size ? RECOL.size : 0,
 				fx: F && F.fx ? F.fx.length : 0,
 				nums: F && F.nums ? F.nums.length : 0,

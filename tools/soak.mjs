@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 // Soak-тест: бот сам проходит игру, пока не наберётся заданное игровое время.
 // Следим за ошибками консоли, NaN в состоянии, «залипаниями» экранов и ростом кучи.
-//   node --expose-gc tools/soak.mjs [--minutes 30] [--seed 7] [--bake-ms 0.5]
+//   node --expose-gc tools/soak.mjs [--minutes 30] [--seed 7] [--bake-ms 0.5] [--heap-snapshots DIR]
+import fs from "node:fs";
+import path from "node:path";
+import v8 from "node:v8";
 import { boot } from "../tests/harness/boot.mjs";
 
 const args = process.argv.slice(2);
@@ -12,6 +15,10 @@ const num = (f, d) => {
 const MINUTES = num("--minutes", 30);
 const SEED = num("--seed", 7);
 const BAKE_MS = num("--bake-ms", 0); // >0 — собирать фон карты порциями, как в браузере (проверка экрана загрузки)
+const SNAPDIR = (() => {
+	const i = args.indexOf("--heap-snapshots");
+	return i >= 0 && args[i + 1] ? args[i + 1] : null;
+})(); // каталог для двух снимков кучи (после прогрева и в конце) — разбирать tools/heapdiff.mjs
 const MAX_FRAMES = Math.round(MINUTES * 60 * 60); // 60 кадров в секунду
 
 // собственный детерминированный генератор бота (в игру не попадает)
@@ -28,6 +35,16 @@ const heap = () => {
 	if (global.gc) global.gc();
 	return process.memoryUsage().heapUsed / 1048576;
 };
+// только данные (new/old/large object space): без code/trusted space, куда V8 складывает машинный код,
+// байткод и обратную связь JIT — они растут весь прогон независимо от игры
+const DATA_SPACES = new Set(["new_space", "old_space", "large_object_space", "new_large_object_space"]);
+const heapData = () => v8.getHeapSpaceStatistics().reduce((n, sp) => n + (DATA_SPACES.has(sp.space_name) ? sp.space_used_size : 0), 0) / 1048576;
+const dataSamples = [];
+const snapshot = (name) => {
+	if (global.gc) global.gc();
+	fs.mkdirSync(SNAPDIR, { recursive: true });
+	v8.writeHeapSnapshot(path.join(SNAPDIR, name + ".heapsnapshot"));
+};
 
 const g = boot(BAKE_MS > 0 ? { bakeMs: BAKE_MS } : {});
 if (!(await g.ready())) {
@@ -41,7 +58,7 @@ g.dev.labelButtons(); // подписи кнопок — чтобы ходить
 const sizes = () =>
 	JSON.parse(
 		g.dev.run(
-			'JSON.stringify({ glow: Object.keys(GLOWC).length, sil: SILC.size, tint: Object.keys(TINTC).length, ev: Object.values(Events.h).reduce((n, a) => n + a.length, 0), timers: Timers.list.length, bts: Object.keys(BTS).length, cnt: Object.keys(CNT).length, errs: ERRS.length, parts: Parts.n === undefined ? -1 : Parts.n })'
+			'JSON.stringify({ ...cacheStats(), ev: Object.values(Events.h).reduce((n, a) => n + a.length, 0), timers: Timers.list.length, bts: Object.keys(BTS).length, cnt: Object.keys(CNT).length, errs: ERRS.length, parts: Parts.n === undefined ? -1 : Parts.n })'
 		)
 	);
 const sizes0 = sizes();
@@ -84,7 +101,11 @@ for (let f = 0; f < MAX_FRAMES; f++) {
 		const snap = g.dev.snapshot();
 		if (snap.includes("NaN") || snap.includes("Infinity")) nan++;
 	}
-	if (f > 0 && f % Math.max(600, Math.round(MAX_FRAMES / 10)) === 0) heapSamples.push(heap());
+	if (f > 0 && f % Math.max(600, Math.round(MAX_FRAMES / 10)) === 0) {
+		heapSamples.push(heap());
+		dataSamples.push(heapData());
+		if (SNAPDIR && heapSamples.length === 2) snapshot("warm");
+	}
 	if (g.dev.paused) {
 		g.dev.paused = false;
 		continue;
@@ -134,6 +155,8 @@ for (let f = 0; f < MAX_FRAMES; f++) {
 	}
 }
 
+if (SNAPDIR) snapshot("end"); // конец свободной игры — разница с warm показывает, что именно выросло
+
 // Отдельная фаза «30 боёв подряд в одинаковых условиях» — именно она отвечает
 // на вопрос об утечке: миры и герои по ходу партии прогревают свои кэши один раз,
 // и этот рост к утечке не относится.
@@ -171,17 +194,24 @@ const sizes1 = sizes();
 const growth = heap0 > 0 ? ((heap1 - heap0) / heap0) * 100 : 0;
 // установившийся рост: от второго замера до последнего (первый — ещё прогрев)
 const steady = heapSamples.length >= 2 ? ((heapSamples[heapSamples.length - 1] - heapSamples[1]) / heapSamples[1]) * 100 : growth;
+const dataSteady = dataSamples.length >= 2 ? ((dataSamples[dataSamples.length - 1] - dataSamples[1]) / dataSamples[1]) * 100 : 0;
 const fatal = g.fatal ? String(g.fatal).slice(0, 200) : null;
 
 console.log(`soak: ${MINUTES} минут игрового времени (${g.frames} кадров, сид ${SEED})`);
 console.log(`  экраны: ${[...seen.entries()].map(([k, v]) => k + "×" + v).join(", ")}`);
 console.log(`  переходов экранов ${states}, «залипаний» ${stuck}${stuck ? " (" + Object.entries(stuckBy).map(([k, v]) => k + "×" + v).join(", ") + ")" : ""}`);
 console.log(`  ошибок консоли ${g.errors.length}, NaN/Infinity в состоянии ${nan}, fatal ${fatal ? "ДА: " + fatal : "нет"}`);
-console.log(`  кэши/подписки (до → после): ${Object.keys(sizes0).map((k) => k + " " + sizes0[k] + "→" + sizes1[k]).join(", ")}`);
+const fmtv = (v) => (typeof v === "number" && !Number.isInteger(v) ? v.toFixed(2) : v);
+console.log(`  кэши/подписки (до → после): ${Object.keys(sizes0).map((k) => k + " " + fmtv(sizes0[k]) + "→" + fmtv(sizes1[k])).join(", ")}`);
 console.log(
 	`  куча: ${heap0.toFixed(1)} → ${heap1.toFixed(1)} МБ (всего ${growth >= 0 ? "+" : ""}${growth.toFixed(1)}%, ` +
 		`после прогрева ${steady >= 0 ? "+" : ""}${steady.toFixed(1)}%; замеры: ${heapSamples.map((v) => v.toFixed(1)).join(" → ")})`
 );
+if (dataSamples.length >= 2)
+	console.log(
+		`  данные без кода V8 (new/old/large space): ${dataSamples[1].toFixed(1)} → ${dataSamples[dataSamples.length - 1].toFixed(1)} МБ после прогрева ` +
+			`(${dataSteady >= 0 ? "+" : ""}${dataSteady.toFixed(1)}%)`
+	);
 
 console.log(
 	`  30 боёв подряд (один мир, одинаковый состав): ${battleHeap.map((v) => v.toFixed(1)).join(" → ")} МБ, рост ${battleGrowth >= 0 ? "+" : ""}${battleGrowth.toFixed(1)}%`

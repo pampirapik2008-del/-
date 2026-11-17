@@ -89,7 +89,8 @@ function uPort(u, cx, by, sc = AP, dim = false) {
 	const f = is3 ? ATL.heroes3[u.k].port[0] : is2 ? ATL.heroes2[u.k].port[0] : ATL.heroes[u.k].port[0];
 	const img = is3 ? IMG.heroes3 : is2 ? (IMG["gen_" + u.k] || IMG.heroes2) : IMG.heroes;
 	const sc2 = (is3 || is2) ? (sc * 34) / f[2] : sc;
-	fr(dim ? silOf(img, "#2a2436") : img, f, cx, by, 1, sc2);
+	if (dim) frSil(img, f, "#2a2436", cx, by, 1, sc2);
+	else fr(img, f, cx, by, 1, sc2);
 }
 // фигура бойца «в полный рост» для экранов вне боя
 function uIdle(u, x, y, sc = AP, face = 1, wi = 0, an = "idle") {
@@ -142,16 +143,14 @@ function dUnit(u, wi, o = {}) {
 	y = Math.round(y);
 	const fx = u.face;
 	if (o.sel) {
-		const s = silOf(img, "#ffe27a");
 		for (const [ox, oy] of [
 			[-2, 0],
 			[2, 0],
 			[0, -2],
 			[0, 2],
 		])
-			fr(s, f, x + ox, y + oy, fx, sc, sy);
+			frSil(img, f, "#ffe27a", x + ox, y + oy, fx, sc, sy);
 	} else if (u.inv > 0) {
-		const s = silOf(img, "#fff3b0");
 		ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 16);
 		for (const [ox, oy] of [
 			[-2, 0],
@@ -159,7 +158,7 @@ function dUnit(u, wi, o = {}) {
 			[0, -2],
 			[0, 2],
 		])
-			fr(s, f, x + ox, y + oy, fx, sc, sy);
+			frSil(img, f, "#fff3b0", x + ox, y + oy, fx, sc, sy);
 		ctx.globalAlpha = 1;
 	}
 	const baseAlpha = o.a === undefined ? 1 : o.a;
@@ -174,7 +173,7 @@ function dUnit(u, wi, o = {}) {
 	const s = u.st || {},
 		tint = (c, a) => {
 			ctx.globalAlpha = a * (o.a === undefined ? 1 : o.a);
-			fr(silOf(img, c), f, x, y, fx, sc, sy);
+			frSil(img, f, c, x, y, fx, sc, sy);
 		};
 	if (s.stun && s.stun.ice) tint("#bff0ff", 0.62);
 	else if (s.chill) tint("#6fd0ff", 0.36);
@@ -467,7 +466,7 @@ const FXDRAW = {
 	ghost(f, k, wi) {
 		const [A, img] = uSet(f.u, wi);
 		ctx.globalAlpha = 0.6 * (1 - k);
-		fr(silOf(img, "#c9a0ff"), A.idle[0], f.x, f.y, f.f, AP);
+		frSil(img, A.idle[0], "#c9a0ff", f.x, f.y, f.f, AP);
 	},
 	vines(f, k) {
 		const u = f.u,
@@ -601,7 +600,7 @@ function deadDraw(d, wi) {
 		const x = u.x + Math.sin(t * 60) * 5 * (1 - k);
 		fr(img, f, x, u.y, u.face, AP * (u.sc || 1), 1 - k * 0.25);
 		ctx.globalAlpha *= Math.abs(Math.sin(t * 20)) * 0.8;
-		fr(silOf(img, "#ffffff"), f, x, u.y, u.face, AP * (u.sc || 1), 1 - k * 0.25);
+		frSil(img, f, "#ffffff", x, u.y, u.face, AP * (u.sc || 1), 1 - k * 0.25);
 	} else fr(img, f, u.x, u.y, u.face, AP * (u.sc || 1), u.team ? 1 - k * 0.3 : 1);
 	ctx.globalAlpha = 1;
 }

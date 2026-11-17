@@ -3,11 +3,46 @@
 // Вся графика нарисована на сетке 609x270 «арт-пикселей»; 1 арт-пиксель = AP логических px холста 1218x540.
 const AP = 2,
 	TAU = 6.2832;
+// Кэши холстов ограничены (D21): силуэты — по кадру атласа, очередь FIFO на SIL_MAX записей;
+// свечение — по цвету (радужный тон квантован до 6°, см. rfx); перекраски атласов — LRU в 30_arena.js.
 const IMG = {},
 	ATL = ATLAS,
-	SILC = new Map(),
+	SILC = new Map(), // img → Map(ключ кадра → {цвет: холст-силуэт кадра})
+	SILQ = [], // порядок создания силуэтов парами [{цвет: холст}, цвет] — вытесняется самый старый
+	SIL_MAX = 512,
 	GLOWC = {};
 let GLOWN = 0; // сколько холстов свечения в кэше (предохранитель от динамических цветов)
+// кэш с лимитом записей: обращение делает запись «свежей», переполнение вытесняет самую старую
+// (Map помнит порядок вставки); onEvict(v, k) — освободить связанное с записью
+function lru(max, onEvict) {
+	const m = new Map();
+	return {
+		get size() {
+			return m.size;
+		},
+		get(k) {
+			const v = m.get(k);
+			if (v !== undefined) {
+				m.delete(k);
+				m.set(k, v);
+			}
+			return v;
+		},
+		set(k, v) {
+			if (m.has(k)) m.delete(k);
+			else if (m.size >= max) {
+				const ok = m.keys().next().value,
+					ov = m.get(ok);
+				m.delete(ok);
+				if (onEvict) onEvict(ov, ok);
+			}
+			m.set(k, v);
+			return v;
+		},
+		values: () => m.values(),
+		keys: () => m.keys(),
+	};
+}
 let READY = false,
 	LOADP = 0,
 	TSC = 1; // масштаб времени боя (слоумо)
@@ -267,20 +302,46 @@ function n9(n, x, y, w, h, cs, sc = AP, c2 = ctx, hollow = false) {
 			if (dw > 0 && dh > 0 && !(hollow && i === 1 && j === 1)) c2.drawImage(im, r[0] + xs[i], r[1] + ys[j], xs[i + 1] - xs[i], ys[j + 1] - ys[j], xd[i], yd[j], dw, dh);
 		}
 }
-// одноцветный силуэт атласа (тень, белая вспышка попадания)
-function silOf(img, col) {
-	let m = SILC.get(img);
-	if (!m) SILC.set(img, (m = {}));
-	if (!m[col]) {
-		const c = mkC(img.width, img.height),
-			x = c.getContext("2d");
-		x.drawImage(img, 0, 0);
+// одноцветный силуэт кадра f атласа img (тень, белая вспышка попадания, статусы). Раньше силуэт
+// делался копией всего атласа на каждый цвет (heroes3 — 11 МБ за цвет); теперь — холст размером
+// с кадр, и только для кадров, которые реально рисовались. Ключ кадра — его прямоугольник в атласе
+// (координаты < 4096, размеры < 512).
+function silFr(img, f, col) {
+	let fm = SILC.get(img);
+	if (!fm) SILC.set(img, (fm = new Map()));
+	const k = ((f[0] * 4096 + f[1]) * 512 + f[2]) * 512 + f[3];
+	let m = fm.get(k);
+	if (!m) fm.set(k, (m = {}));
+	let c = m[col];
+	if (!c) {
+		c = mkC(f[2], f[3]);
+		const x = c.getContext("2d");
+		x.drawImage(img, f[0], f[1], f[2], f[3], 0, 0, f[2], f[3]);
 		x.globalCompositeOperation = "source-in";
 		x.fillStyle = col;
-		x.fillRect(0, 0, c.width, c.height);
+		x.fillRect(0, 0, f[2], f[3]);
 		m[col] = c;
+		SILQ.push(m, col);
+		if (SILQ.length > SIL_MAX * 2) {
+			const om = SILQ.shift(),
+				oc = SILQ.shift();
+			delete om[oc];
+		}
 	}
-	return m[col];
+	return c;
+}
+// силуэт кадра там же, где fr() нарисовал бы сам кадр
+function frSil(img, f, col, x, y, fx = 1, sc = AP, sy = 1) {
+	const c = silFr(img, f, col),
+		w = f[2] * sc,
+		h = f[3] * sc * sy;
+	if (fx < 0) {
+		ctx.save();
+		ctx.translate(x, y);
+		ctx.scale(-1, 1);
+		ctx.drawImage(c, -f[4] * sc, -f[5] * sc * sy, w, h);
+		ctx.restore();
+	} else ctx.drawImage(c, x - f[4] * sc, y - f[5] * sc * sy, w, h);
 }
 // перекраска атласа по правилам HSV: {h:[lo,hi], to, sat, val} — диапазон тона; {gray:1, to, sat, val} — тонировка серого
 function recolor(img, rules) {

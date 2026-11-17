@@ -198,7 +198,7 @@ const hex3 = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), p
 function mapImg(w) {
 	const P = MAPT[w.id];
 	if (!P.tint) return IMG.map;
-	return TINTC["map" + w.i] || (TINTC["map" + w.i] = recolor(IMG.map, P.tint));
+	return TINTC.get("map" + w.i) || TINTC.set("map" + w.i, recolor(IMG.map, P.tint));
 }
 function segD(px, py, ax, ay, bx, by) {
 	const dx = bx - ax,

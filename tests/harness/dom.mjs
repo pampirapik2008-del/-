@@ -3,30 +3,85 @@
 // чтобы игровой код не падал и можно было проверять логику, сохранения и переходы экранов.
 // Необязательные параметры позволяют подменить холст и Image на настоящие (см. tools/shots.mjs):
 //   canvasFactory(w, h) — вернуть объект с width/height/getContext; ImageClass — класс с src/onload.
-export function createDom({ width = 1280, height = 720, dpr = 2, canvasFactory = null, ImageClass = null } = {}) {
-	const gradient = () => ({ addColorStop() {} });
-	const makeCtx = (canvas) => ({
-		canvas,
-		save() {}, restore() {}, translate() {}, rotate() {}, scale() {}, setTransform() {}, resetTransform() {},
-		clearRect() {}, fillRect() {}, strokeRect() {}, beginPath() {}, closePath() {}, moveTo() {},
-		lineTo() {}, quadraticCurveTo() {}, bezierCurveTo() {}, arc() {}, ellipse() {}, rect() {},
-		fill() {}, stroke() {}, clip() {}, fillText() {}, strokeText() {}, drawImage() {},
-		setLineDash() {}, putImageData() {}, drawFocusIfNeeded() {},
-		measureText: (t) => ({ width: String(t).length * 8 }),
-		createLinearGradient: gradient, createRadialGradient: gradient, createConicGradient: gradient,
-		createPattern: () => ({}),
-		getImageData(x, y, w, h) {
-			w = Math.max(1, Math.round(w || 1));
-			h = Math.max(1, Math.round(h || 1));
-			return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
-		},
-		createImageData(w, h) {
-			w = Math.max(1, Math.round(w || 1));
-			h = Math.max(1, Math.round(h || 1));
-			return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
-		},
-	});
+// Заглушка 2D-контекста: методы лежат в прототипе, чтобы каждый новый холст стоил байты, а не
+// полсотни замыканий — иначе рост кучи в soak-тесте измерял бы заглушку, а не кэши игры.
+const gradient = () => ({ addColorStop() {} });
+const pixels = (w, h) => {
+	w = Math.max(1, Math.round(w || 1));
+	h = Math.max(1, Math.round(h || 1));
+	return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
+};
+class StubCtx {
+	constructor(canvas) {
+		this.canvas = canvas;
+	}
+	measureText(t) {
+		return { width: String(t).length * 8 };
+	}
+	createLinearGradient() {
+		return gradient();
+	}
+	createRadialGradient() {
+		return gradient();
+	}
+	createConicGradient() {
+		return gradient();
+	}
+	createPattern() {
+		return {};
+	}
+	getImageData(x, y, w, h) {
+		return pixels(w, h);
+	}
+	createImageData(w, h) {
+		return pixels(w, h);
+	}
+}
+for (const m of "save restore translate rotate scale setTransform resetTransform clearRect fillRect strokeRect beginPath closePath moveTo lineTo quadraticCurveTo bezierCurveTo arc ellipse rect fill stroke clip fillText strokeText drawImage setLineDash putImageData drawFocusIfNeeded".split(" "))
+	StubCtx.prototype[m] = function () {};
+// ширина и высота PNG из первых байт data-URL (IHDR: байты 16–23), иначе null
+function pngSize(src) {
+	if (typeof src !== "string" || !src.startsWith("data:image/png;base64,")) return null;
+	const b = Buffer.from(src.slice(22, 22 + 44), "base64");
+	if (b.length < 24 || b[1] !== 0x50 || b[2] !== 0x4e) return null;
+	return [b.readUInt32BE(16), b.readUInt32BE(20)];
+}
+const noClass = { add() {}, remove() {}, toggle() {}, contains: () => false };
+class StubCanvas {
+	constructor(id, w, h) {
+		this._id = id;
+		this.width = w || 300;
+		this.height = h || 150;
+		this.style = {};
+		this.dataset = {};
+		this.listeners = {};
+		this._ctx = null;
+	}
+	get classList() {
+		return noClass;
+	}
+	getContext() {
+		return this._ctx || (this._ctx = new StubCtx(this));
+	}
+	addEventListener(t, f) {
+		(this.listeners[t] = this.listeners[t] || []).push(f);
+	}
+	removeEventListener() {}
+	getBoundingClientRect() {
+		return { left: 0, top: 0, width: this.width, height: this.height, right: this.width, bottom: this.height };
+	}
+	appendChild() {}
+	remove() {}
+	setAttribute() {}
+	querySelector() {
+		return null;
+	}
+	toDataURL() {
+		return "data:,";
+	}
+}
 
+export function createDom({ width = 1280, height = 720, dpr = 2, canvasFactory = null, ImageClass = null } = {}) {
 	let canvasCount = 0;
 	// настоящий холст (если передан) дополняем полями DOM-элемента, которых у него нет
 	const realCanvas = (w, h) => {
@@ -45,24 +100,7 @@ export function createDom({ width = 1280, height = 720, dpr = 2, canvasFactory =
 		c.querySelector = () => null;
 		return c;
 	};
-	const makeCanvas = (w, h) => canvasFactory ? realCanvas(w, h) : ({
-		_id: ++canvasCount,
-		width: w || 300,
-		height: h || 150,
-		style: {},
-		dataset: {},
-		classList: { add() {}, remove() {}, toggle() {}, contains: () => false },
-		listeners: {},
-		getContext() {
-			if (!this._ctx) this._ctx = makeCtx(this);
-			return this._ctx;
-		},
-		addEventListener(t, f) { (this.listeners[t] = this.listeners[t] || []).push(f); },
-		removeEventListener() {},
-		getBoundingClientRect() { return { left: 0, top: 0, width: this.width, height: this.height, right: this.width, bottom: this.height }; },
-		appendChild() {}, remove() {}, setAttribute() {}, querySelector: () => null,
-		toDataURL: () => "data:,",
-	});
+	const makeCanvas = (w, h) => (canvasFactory ? realCanvas(w, h) : new StubCanvas(++canvasCount, w, h));
 
 	const makeEl = (tag) =>
 		tag === "canvas"
@@ -129,7 +167,8 @@ export function createDom({ width = 1280, height = 720, dpr = 2, canvasFactory =
 		console,
 		Image: ImageClass || class {
 			constructor() { this.width = 64; this.height = 64; this.complete = false; }
-			set src(v) { this._src = v; setTimeout(() => { this.complete = true; if (this.onload) this.onload({}); }, 0); }
+			// размеры берём из заголовка PNG (data-URL), чтобы холсты-копии атласов в кэшах были настоящего размера
+			set src(v) { this._src = v; const d = pngSize(v); if (d) [this.width, this.height] = d; setTimeout(() => { this.complete = true; if (this.onload) this.onload({}); }, 0); }
 			get src() { return this._src; }
 			decode() { return Promise.resolve(); }
 		},

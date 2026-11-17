@@ -30,15 +30,48 @@ const PATCH = {
 	bog: { c: ["#1e3a3a", "#1a3232", "#162a2a"], slow: 0.72, shine: 1, n: "Трясина" },
 	toxic: { c: ["#b8ff5e", "#7ad03c", "#3c8a28"], haz: "poison", glow: "#9be04e", n: "Ядовитая лужа" },
 };
-const TINTC = {};
+// перекраски атласов под мир: текущему миру нужны ≤ 5 записей (реквизит, две пары монстров, карта,
+// торговец), лимит 12 держит и соседний мир; вытесненный холст теряет и свои силуэты (D21)
+const TINT_MAX = 12,
+	TINTC = lru(TINT_MAX, (c) => {
+		if (c && c.getContext) SILC.delete(c);
+	});
+// пол арены печётся в холст 609×270; живы только арены текущего боя (F.A) и фона наград (BGA),
+// поэтому холсты берутся из пула и переиспользуются, а не создаются на каждый бой
+const FLOORP = [];
+function floorCanvas() {
+	const a = F && F.A ? F.A.floor : null,
+		b = BGA ? BGA.floor : null;
+	for (const c of FLOORP) if (c !== a && c !== b) return c;
+	const c = mkC(609, 270);
+	FLOORP.push(c);
+	return c;
+}
+// сводка кэшей холстов: записи и мегабайты растров — для панели отладки, soak-теста и тестов утечек
+function cacheStats() {
+	let n = 0,
+		px = 0;
+	const add = (c) => {
+		if (c && c.getContext) {
+			n++;
+			px += c.width * c.height;
+		}
+	};
+	for (const k in GLOWC) add(GLOWC[k]);
+	for (let i = 0; i < SILQ.length; i += 2) add(SILQ[i][SILQ[i + 1]]);
+	for (const c of TINTC.values()) add(c);
+	for (const c of FLOORP) add(c);
+	return { glow: GLOWN, sil: SILQ.length / 2, tint: TINTC.size, floors: FLOORP.length, n, mb: (px * 4) / 1048576 };
+}
 function propImg(w) {
 	if (!w.pt) return IMG.props;
-	return TINTC["p" + w.i] || (TINTC["p" + w.i] = recolor(IMG.props, w.pt));
+	return TINTC.get("p" + w.i) || TINTC.set("p" + w.i, recolor(IMG.props, w.pt));
 }
 // атлас монстров, перекрашенный под мир: "a" — основная пара, "m" — тёмная родня
 function mobImg(w, key) {
-	const id = "m" + w.i + key;
-	if (TINTC[id]) return TINTC[id];
+	const id = "m" + w.i + key,
+		hit = TINTC.get(id);
+	if (hit) return hit;
 	let rules = [];
 	if (key === "m") {
 		const q = w.tM || { to: (w.tA ? w.tA.to : 120) + 14, sat: (w.tA ? w.tA.sat : 1) * 0.9, val: (w.tA ? w.tA.val : 1) * 0.62 };
@@ -48,7 +81,7 @@ function mobImg(w, key) {
 		if (w.tA) rules.push({ h: GREEN_H, ...w.tA });
 		if (w.tB) rules.push({ h: RED_H, ...w.tB });
 	}
-	return (TINTC[id] = rules.length ? recolor(IMG.mobs, rules) : IMG.mobs);
+	return TINTC.set(id, rules.length ? recolor(IMG.mobs, rules) : IMG.mobs);
 }
 // хеш узла решётки шума: раньше был замыканием внутри vnoise и создавался на каждый вызов
 // (329 тысяч раз за одну карту); вынесен наружу — арифметика та же, биты результата те же
@@ -307,11 +340,12 @@ function surfAt(A, x, y) {
 }
 // запечь пол: фон арены + покрытия + тени неподвижных объектов (в арт-пикселях)
 function bakeFloor(A) {
-	const c = A.floor || (A.floor = mkC(609, 270)),
+	const c = A.floor || (A.floor = floorCanvas()),
 		x = c.getContext("2d"),
 		st = IMG[A.w.stage] || IMG.stage_taiga;
 	x.imageSmoothingEnabled = false;
 	x.setTransform(1, 0, 0, 1, 0, 0);
+	x.clearRect(0, 0, 609, 270); // холст из пула мог хранить пол прошлой арены
 	if (A.flip) {
 		x.translate(609, 0);
 		x.scale(-1, 1);

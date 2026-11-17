@@ -465,7 +465,7 @@ function shopMerchant() {
 	Light.add(mx - 96, my - 110, 300, "#ffd27a", 1);
 	Light.add(mx + 40, my - 30, 260, "#ffb060", 0.8);
 	Light.end();
-	const mi = TINTC.merch || (TINTC.merch = recolor(IMG.heroes, [{ h: [180, 262], to: 26, sat: 1, val: 1.05 }, { h: [80, 172], to: 288, sat: 0.85, val: 0.95 }])),
+	const mi = TINTC.get("merch") || TINTC.set("merch", recolor(IMG.heroes, [{ h: [180, 262], to: 26, sat: 1, val: 1.05 }, { h: [80, 172], to: 288, sat: 0.85, val: 0.95 }])),
 		A = ATL.heroes.mage,
 		f = buyT < 0.6 ? aFrame(A, "cast", 0) : aFrame(A, "idle", 0, t * 2.2);
 	ctx.fillStyle = "rgba(10,8,20,.45)";
