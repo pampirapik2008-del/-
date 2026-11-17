@@ -3,7 +3,7 @@
  "generatedBy": "tools/golden.mjs",
  "battles": {
   "count": 200,
-  "summary": "297e1dc9a0f961fa",
+  "summary": "1cb5dc38c5d3d9bd",
   "items": [
    {
     "i": 0,
@@ -13,15 +13,15 @@
     "depth": 0,
     "party": 1,
     "result": "win",
-    "frames": 634,
+    "frames": 638,
     "st": {
-     "dmg": 937,
-     "taken": 400,
+     "dmg": 914,
+     "taken": 628,
      "kills": 1,
      "crits": 0
     },
-    "rand": 4203724669,
-    "hash": "e63cb9df46fedcc7"
+    "rand": 3470066302,
+    "hash": "f0af623686262b98"
    },
    {
     "i": 1,
@@ -31,15 +31,15 @@
     "depth": 5,
     "party": 2,
     "result": "win",
-    "frames": 898,
+    "frames": 905,
     "st": {
-     "dmg": 5846,
-     "taken": 2854,
+     "dmg": 5743,
+     "taken": 2754,
      "kills": 2,
-     "crits": 13
+     "crits": 14
     },
-    "rand": 3760968479,
-    "hash": "3c688166b8f6b219"
+    "rand": 1372415290,
+    "hash": "e564503a3a34f909"
    },
    {
     "i": 2,
@@ -49,15 +49,15 @@
     "depth": 10,
     "party": 3,
     "result": "lose",
-    "frames": 1611,
+    "frames": 1489,
     "st": {
-     "dmg": 5844,
-     "taken": 10667,
+     "dmg": 5587,
+     "taken": 10634,
      "kills": 0,
-     "crits": 7
+     "crits": 5
     },
-    "rand": 1816534129,
-    "hash": "3eb49e34d67af65c"
+    "rand": 3167790272,
+    "hash": "fde554d51f94da62"
    },
    {
     "i": 3,
@@ -67,15 +67,15 @@
     "depth": 3,
     "party": 4,
     "result": "win",
-    "frames": 1463,
+    "frames": 1451,
     "st": {
-     "dmg": 14912,
-     "taken": 5195,
+     "dmg": 14871,
+     "taken": 5354,
      "kills": 3,
-     "crits": 36
+     "crits": 38
     },
-    "rand": 5350507,
-    "hash": "4a34e83a9ac4fc82"
+    "rand": 2231470599,
+    "hash": "5c139d6d9daab3d3"
    },
    {
     "i": 4,
@@ -85,15 +85,15 @@
     "depth": 8,
     "party": 5,
     "result": "win",
-    "frames": 1421,
+    "frames": 1428,
     "st": {
-     "dmg": 12794,
-     "taken": 4537,
+     "dmg": 13016,
+     "taken": 4388,
      "kills": 2,
-     "crits": 10
+     "crits": 14
     },
-    "rand": 3866380646,
-    "hash": "d630ecd17452b3d2"
+    "rand": 688718899,
+    "hash": "7993717fb0b7479a"
    },
    {
     "i": 5,
@@ -103,15 +103,15 @@
     "depth": 1,
     "party": 1,
     "result": "win",
-    "frames": 670,
+    "frames": 743,
     "st": {
-     "dmg": 1947,
-     "taken": 1536,
+     "dmg": 1882,
+     "taken": 1871,
      "kills": 1,
-     "crits": 3
+     "crits": 2
     },
-    "rand": 133302290,
-    "hash": "385a30be670405c6"
+    "rand": 3713094616,
+    "hash": "971bc87fcc4b1bb9"
    },
    {
     "i": 6,
@@ -121,15 +121,15 @@
     "depth": 6,
     "party": 2,
     "result": "lose",
-    "frames": 900,
+    "frames": 906,
     "st": {
-     "dmg": 4127,
-     "taken": 6565,
+     "dmg": 4386,
+     "taken": 6698,
      "kills": 0,
-     "crits": 2
+     "crits": 3
     },
-    "rand": 3818834796,
-    "hash": "8dd05dbffeb16854"
+    "rand": 915421234,
+    "hash": "8f67ee9172d0e39a"
    },
    {
     "i": 7,
@@ -139,15 +139,15 @@
     "depth": 11,
     "party": 3,
     "result": "lose",
-    "frames": 758,
+    "frames": 820,
     "st": {
-     "dmg": 2286,
-     "taken": 9229,
+     "dmg": 2993,
+     "taken": 9882,
      "kills": 0,
-     "crits": 7
+     "crits": 8
     },
-    "rand": 1050293256,
-    "hash": "1342d1b4ac3ecb96"
+    "rand": 2233956093,
+    "hash": "52b6bcbda451e837"
    },
    {
     "i": 8,
@@ -157,15 +157,15 @@
     "depth": 4,
     "party": 4,
     "result": "lose",
-    "frames": 868,
+    "frames": 803,
     "st": {
-     "dmg": 6051,
-     "taken": 12352,
+     "dmg": 6200,
+     "taken": 12097,
      "kills": 0,
-     "crits": 6
+     "crits": 16
     },
-    "rand": 42058684,
-    "hash": "3a4aef9531b2d905"
+    "rand": 1388154618,
+    "hash": "c445598795b751fa"
    },
    {
     "i": 9,
@@ -175,15 +175,15 @@
     "depth": 9,
     "party": 5,
     "result": "win",
-    "frames": 1856,
+    "frames": 1898,
     "st": {
-     "dmg": 17520,
-     "taken": 16240,
+     "dmg": 16843,
+     "taken": 17443,
      "kills": 2,
      "crits": 39
     },
-    "rand": 651026711,
-    "hash": "2161a3d886909acb"
+    "rand": 2143488436,
+    "hash": "22b06376023f2b20"
    },
    {
     "i": 10,
@@ -193,15 +193,15 @@
     "depth": 2,
     "party": 1,
     "result": "win",
-    "frames": 1285,
+    "frames": 1199,
     "st": {
-     "dmg": 1540,
-     "taken": 615,
+     "dmg": 1518,
+     "taken": 585,
      "kills": 1,
-     "crits": 0
+     "crits": 2
     },
-    "rand": 4032213957,
-    "hash": "04454519a451c3e3"
+    "rand": 3423107187,
+    "hash": "61423fbc4fb205b9"
    },
    {
     "i": 11,
@@ -211,15 +211,15 @@
     "depth": 7,
     "party": 2,
     "result": "lose",
-    "frames": 1069,
+    "frames": 945,
     "st": {
-     "dmg": 5318,
-     "taken": 5404,
+     "dmg": 5089,
+     "taken": 5392,
      "kills": 1,
-     "crits": 6
+     "crits": 5
     },
-    "rand": 488732378,
-    "hash": "3da6851f5c2a5bf4"
+    "rand": 759649766,
+    "hash": "3c090c42174453b6"
    },
    {
     "i": 12,
@@ -229,15 +229,15 @@
     "depth": 0,
     "party": 3,
     "result": "lose",
-    "frames": 2042,
+    "frames": 2005,
     "st": {
-     "dmg": 6645,
-     "taken": 14722,
+     "dmg": 6702,
+     "taken": 14318,
      "kills": 1,
-     "crits": 21
+     "crits": 28
     },
-    "rand": 3126836697,
-    "hash": "8931b6f2b77d9537"
+    "rand": 953750705,
+    "hash": "36d9156afc40b580"
    },
    {
     "i": 13,
@@ -247,15 +247,15 @@
     "depth": 5,
     "party": 4,
     "result": "win",
-    "frames": 812,
+    "frames": 787,
     "st": {
-     "dmg": 5099,
-     "taken": 9351,
+     "dmg": 5422,
+     "taken": 9138,
      "kills": 3,
-     "crits": 5
+     "crits": 11
     },
-    "rand": 1429038923,
-    "hash": "1497d380b2d14701"
+    "rand": 2508462972,
+    "hash": "cfc2d3c000499488"
    },
    {
     "i": 14,
@@ -265,15 +265,15 @@
     "depth": 10,
     "party": 5,
     "result": "win",
-    "frames": 1429,
+    "frames": 1416,
     "st": {
-     "dmg": 14547,
-     "taken": 6129,
+     "dmg": 14535,
+     "taken": 5880,
      "kills": 2,
-     "crits": 29
+     "crits": 36
     },
-    "rand": 4195751065,
-    "hash": "13050dc7e3b11785"
+    "rand": 514136042,
+    "hash": "00089e0e722cbfdf"
    },
    {
     "i": 15,
@@ -283,15 +283,15 @@
     "depth": 3,
     "party": 1,
     "result": "lose",
-    "frames": 650,
+    "frames": 683,
     "st": {
-     "dmg": 3027,
-     "taken": 2469,
+     "dmg": 2991,
+     "taken": 2454,
      "kills": 0,
-     "crits": 8
+     "crits": 6
     },
-    "rand": 1244861021,
-    "hash": "f5bd4ecd7383c44d"
+    "rand": 3482802916,
+    "hash": "311dbd8beaae8a0c"
    },
    {
     "i": 16,
@@ -301,15 +301,15 @@
     "depth": 8,
     "party": 2,
     "result": "lose",
-    "frames": 530,
+    "frames": 549,
     "st": {
-     "dmg": 2263,
-     "taken": 4745,
+     "dmg": 2243,
+     "taken": 4922,
      "kills": 0,
-     "crits": 4
+     "crits": 2
     },
-    "rand": 1615771701,
-    "hash": "88e54d349f370157"
+    "rand": 2702772050,
+    "hash": "fe1053d5ac196e98"
    },
    {
     "i": 17,
@@ -319,15 +319,15 @@
     "depth": 1,
     "party": 3,
     "result": "lose",
-    "frames": 1583,
+    "frames": 1580,
     "st": {
-     "dmg": 5976,
-     "taken": 9722,
+     "dmg": 6588,
+     "taken": 9249,
      "kills": 1,
-     "crits": 30
+     "crits": 28
     },
-    "rand": 3780625346,
-    "hash": "b4b1b732e2b8677e"
+    "rand": 2983025782,
+    "hash": "6b50c9c59a55c002"
    },
    {
     "i": 18,
@@ -337,15 +337,15 @@
     "depth": 6,
     "party": 4,
     "result": "lose",
-    "frames": 667,
+    "frames": 679,
     "st": {
-     "dmg": 3892,
-     "taken": 10837,
+     "dmg": 3697,
+     "taken": 10905,
      "kills": 0,
-     "crits": 4
+     "crits": 3
     },
-    "rand": 4091581680,
-    "hash": "f6052324fc807327"
+    "rand": 402390357,
+    "hash": "1c746da8ff673976"
    },
    {
     "i": 19,
@@ -354,16 +354,16 @@
     "w": 9,
     "depth": 11,
     "party": 5,
-    "result": "win",
-    "frames": 1780,
+    "result": "lose",
+    "frames": 2005,
     "st": {
-     "dmg": 15773,
-     "taken": 18827,
-     "kills": 2,
-     "crits": 29
+     "dmg": 16137,
+     "taken": 21056,
+     "kills": 1,
+     "crits": 25
     },
-    "rand": 38589214,
-    "hash": "ec7a96d12cae0b32"
+    "rand": 1980140703,
+    "hash": "d4ec896087b656d7"
    },
    {
     "i": 20,
@@ -373,15 +373,15 @@
     "depth": 4,
     "party": 1,
     "result": "win",
-    "frames": 1896,
+    "frames": 1801,
     "st": {
-     "dmg": 3797,
-     "taken": 3173,
+     "dmg": 3779,
+     "taken": 3064,
      "kills": 2,
-     "crits": 0
+     "crits": 5
     },
-    "rand": 4091581694,
-    "hash": "f228b8887f973e3f"
+    "rand": 827249850,
+    "hash": "82a5dee83a4dcf41"
    },
    {
     "i": 21,
@@ -391,15 +391,15 @@
     "depth": 9,
     "party": 2,
     "result": "lose",
-    "frames": 537,
+    "frames": 509,
     "st": {
-     "dmg": 1924,
-     "taken": 6591,
+     "dmg": 1911,
+     "taken": 6460,
      "kills": 0,
-     "crits": 3
+     "crits": 4
     },
-    "rand": 3011242946,
-    "hash": "a634051a07b9f6af"
+    "rand": 792699154,
+    "hash": "c5d4e2232741c51d"
    },
    {
     "i": 22,
@@ -409,15 +409,15 @@
     "depth": 2,
     "party": 3,
     "result": "lose",
-    "frames": 1944,
+    "frames": 1963,
     "st": {
-     "dmg": 8458,
-     "taken": 8745,
+     "dmg": 8035,
+     "taken": 8820,
      "kills": 1,
-     "crits": 14
+     "crits": 8
     },
-    "rand": 3566262167,
-    "hash": "cdeab626175b703b"
+    "rand": 1693484057,
+    "hash": "7c8c79cdffbb0856"
    },
    {
     "i": 23,
@@ -427,15 +427,15 @@
     "depth": 7,
     "party": 4,
     "result": "win",
-    "frames": 947,
+    "frames": 908,
     "st": {
-     "dmg": 7079,
-     "taken": 10380,
+     "dmg": 6730,
+     "taken": 12897,
      "kills": 3,
-     "crits": 13
+     "crits": 6
     },
-    "rand": 761409887,
-    "hash": "39a69cd10483c498"
+    "rand": 3307235964,
+    "hash": "99293b64c6b91af0"
    },
    {
     "i": 24,
@@ -445,15 +445,15 @@
     "depth": 0,
     "party": 5,
     "result": "win",
-    "frames": 633,
+    "frames": 662,
     "st": {
-     "dmg": 5599,
-     "taken": 870,
+     "dmg": 5595,
+     "taken": 918,
      "kills": 2,
-     "crits": 11
+     "crits": 8
     },
-    "rand": 2482144700,
-    "hash": "473825ca6c805ee7"
+    "rand": 2888520782,
+    "hash": "14ab938bca500e6c"
    },
    {
     "i": 25,
@@ -463,15 +463,15 @@
     "depth": 5,
     "party": 1,
     "result": "lose",
-    "frames": 660,
+    "frames": 626,
     "st": {
-     "dmg": 2113,
-     "taken": 3198,
+     "dmg": 2036,
+     "taken": 3134,
      "kills": 0,
      "crits": 2
     },
-    "rand": 1578804970,
-    "hash": "ece76b4b24a62d58"
+    "rand": 416956327,
+    "hash": "c7a29e31c1e6c97c"
    },
    {
     "i": 26,
@@ -481,15 +481,15 @@
     "depth": 10,
     "party": 2,
     "result": "lose",
-    "frames": 295,
+    "frames": 305,
     "st": {
-     "dmg": 927,
-     "taken": 6105,
+     "dmg": 938,
+     "taken": 6228,
      "kills": 0,
-     "crits": 4
+     "crits": 3
     },
-    "rand": 3750389584,
-    "hash": "580acd5bd3b28263"
+    "rand": 1775788777,
+    "hash": "dbb76ef5fad96ab0"
    },
    {
     "i": 27,
@@ -499,15 +499,15 @@
     "depth": 3,
     "party": 3,
     "result": "lose",
-    "frames": 728,
+    "frames": 736,
     "st": {
-     "dmg": 2896,
-     "taken": 7785,
+     "dmg": 2748,
+     "taken": 8019,
      "kills": 0,
-     "crits": 8
+     "crits": 5
     },
-    "rand": 3600364976,
-    "hash": "a1414a12a5338864"
+    "rand": 448762926,
+    "hash": "cfada34f7217b0c0"
    },
    {
     "i": 28,
@@ -517,15 +517,15 @@
     "depth": 8,
     "party": 4,
     "result": "lose",
-    "frames": 965,
+    "frames": 963,
     "st": {
-     "dmg": 4927,
-     "taken": 15681,
+     "dmg": 5014,
+     "taken": 14936,
      "kills": 0,
-     "crits": 8
+     "crits": 9
     },
-    "rand": 678139997,
-    "hash": "3048f695ae275856"
+    "rand": 2762139801,
+    "hash": "b0456a9d85797ba0"
    },
    {
     "i": 29,
@@ -535,15 +535,15 @@
     "depth": 1,
     "party": 5,
     "result": "win",
-    "frames": 1267,
+    "frames": 1261,
     "st": {
-     "dmg": 12331,
-     "taken": 4819,
+     "dmg": 12271,
+     "taken": 5414,
      "kills": 2,
-     "crits": 31
+     "crits": 27
     },
-    "rand": 2328133269,
-    "hash": "ef030e48f434ac08"
+    "rand": 1853570487,
+    "hash": "382eebaa07cb117f"
    },
    {
     "i": 30,
@@ -553,15 +553,15 @@
     "depth": 6,
     "party": 1,
     "result": "lose",
-    "frames": 450,
+    "frames": 470,
     "st": {
      "dmg": 1232,
-     "taken": 2230,
+     "taken": 2235,
      "kills": 0,
      "crits": 0
     },
-    "rand": 967282144,
-    "hash": "287ae019605aeff9"
+    "rand": 952129544,
+    "hash": "0502deaec4410b59"
    },
    {
     "i": 31,
@@ -571,15 +571,15 @@
     "depth": 11,
     "party": 2,
     "result": "lose",
-    "frames": 845,
+    "frames": 941,
     "st": {
-     "dmg": 5494,
-     "taken": 6456,
+     "dmg": 6510,
+     "taken": 6494,
      "kills": 0,
-     "crits": 10
+     "crits": 17
     },
-    "rand": 3184583210,
-    "hash": "66db33e2363b8b40"
+    "rand": 3142456207,
+    "hash": "fbee2494d6e1e95c"
    },
    {
     "i": 32,
@@ -589,15 +589,15 @@
     "depth": 4,
     "party": 3,
     "result": "lose",
-    "frames": 1775,
+    "frames": 2083,
     "st": {
-     "dmg": 6626,
-     "taken": 11013,
+     "dmg": 7221,
+     "taken": 12869,
      "kills": 1,
-     "crits": 4
+     "crits": 10
     },
-    "rand": 1213174457,
-    "hash": "1429450b972fea4f"
+    "rand": 3708969204,
+    "hash": "b0a01e4be377fb66"
    },
    {
     "i": 33,
@@ -606,16 +606,16 @@
     "w": 3,
     "depth": 9,
     "party": 4,
-    "result": "win",
-    "frames": 2876,
+    "result": "lose",
+    "frames": 1658,
     "st": {
-     "dmg": 13451,
-     "taken": 14920,
-     "kills": 3,
-     "crits": 19
+     "dmg": 9818,
+     "taken": 15838,
+     "kills": 2,
+     "crits": 20
     },
-    "rand": 1846252867,
-    "hash": "0cab1da932acc520"
+    "rand": 2633273361,
+    "hash": "b43575ce28621a08"
    },
    {
     "i": 34,
@@ -625,15 +625,15 @@
     "depth": 2,
     "party": 5,
     "result": "win",
-    "frames": 852,
+    "frames": 914,
     "st": {
-     "dmg": 7349,
-     "taken": 2660,
+     "dmg": 7374,
+     "taken": 2634,
      "kills": 2,
-     "crits": 10
+     "crits": 4
     },
-    "rand": 2076942046,
-    "hash": "8cf4412fb5b4b45d"
+    "rand": 2768473410,
+    "hash": "29d1e31ca5b29cf7"
    },
    {
     "i": 35,
@@ -643,15 +643,15 @@
     "depth": 7,
     "party": 1,
     "result": "lose",
-    "frames": 319,
+    "frames": 312,
     "st": {
-     "dmg": 961,
-     "taken": 2555,
+     "dmg": 920,
+     "taken": 2581,
      "kills": 0,
-     "crits": 3
+     "crits": 2
     },
-    "rand": 990925785,
-    "hash": "e3364e07afae2d04"
+    "rand": 878195991,
+    "hash": "aa9598584ba70f09"
    },
    {
     "i": 36,
@@ -661,15 +661,15 @@
     "depth": 0,
     "party": 2,
     "result": "win",
-    "frames": 630,
+    "frames": 626,
     "st": {
-     "dmg": 2494,
+     "dmg": 2498,
      "taken": 275,
      "kills": 1,
-     "crits": 3
+     "crits": 4
     },
-    "rand": 1027892586,
-    "hash": "89b5432deb3f11d0"
+    "rand": 3803423754,
+    "hash": "edb7054d68fc7473"
    },
    {
     "i": 37,
@@ -679,15 +679,15 @@
     "depth": 5,
     "party": 3,
     "result": "lose",
-    "frames": 1012,
+    "frames": 1041,
     "st": {
-     "dmg": 3983,
-     "taken": 11639,
+     "dmg": 4192,
+     "taken": 11374,
      "kills": 0,
-     "crits": 10
+     "crits": 13
     },
-    "rand": 2423035776,
-    "hash": "b1ad0be86d1a8f8a"
+    "rand": 2648495364,
+    "hash": "5381ecd20b79080e"
    },
    {
     "i": 38,
@@ -697,15 +697,15 @@
     "depth": 10,
     "party": 4,
     "result": "lose",
-    "frames": 814,
+    "frames": 754,
     "st": {
-     "dmg": 4591,
-     "taken": 14263,
+     "dmg": 3866,
+     "taken": 14345,
      "kills": 0,
-     "crits": 8
+     "crits": 4
     },
-    "rand": 1289662928,
-    "hash": "976d8a38ebcf652d"
+    "rand": 335705182,
+    "hash": "127c51245f147948"
    },
    {
     "i": 39,
@@ -715,15 +715,15 @@
     "depth": 3,
     "party": 5,
     "result": "win",
-    "frames": 1450,
+    "frames": 1425,
     "st": {
-     "dmg": 15669,
-     "taken": 5873,
+     "dmg": 15658,
+     "taken": 5932,
      "kills": 2,
-     "crits": 30
+     "crits": 33
     },
-    "rand": 819276281,
-    "hash": "0612acc1d3ae8d77"
+    "rand": 2883877982,
+    "hash": "5ada1b11068aace8"
    },
    {
     "i": 40,
@@ -733,15 +733,15 @@
     "depth": 8,
     "party": 1,
     "result": "lose",
-    "frames": 769,
+    "frames": 759,
     "st": {
-     "dmg": 1345,
-     "taken": 5557,
+     "dmg": 1335,
+     "taken": 5553,
      "kills": 0,
      "crits": 0
     },
-    "rand": 1645749042,
-    "hash": "4974e804b7c5ef80"
+    "rand": 261771608,
+    "hash": "f69947bce4f572e8"
    },
    {
     "i": 41,
@@ -751,15 +751,15 @@
     "depth": 1,
     "party": 2,
     "result": "win",
-    "frames": 331,
+    "frames": 330,
     "st": {
      "dmg": 1559,
      "taken": 288,
      "kills": 1,
      "crits": 3
     },
-    "rand": 626676748,
-    "hash": "26b7815a9e422a41"
+    "rand": 58782275,
+    "hash": "681945b75d17c7eb"
    },
    {
     "i": 42,
@@ -769,15 +769,15 @@
     "depth": 6,
     "party": 3,
     "result": "lose",
-    "frames": 3146,
+    "frames": 3289,
     "st": {
-     "dmg": 9285,
-     "taken": 19701,
+     "dmg": 8669,
+     "taken": 19371,
      "kills": 1,
-     "crits": 7
+     "crits": 13
     },
-    "rand": 151180419,
-    "hash": "79bc88e2db4bf989"
+    "rand": 3308529357,
+    "hash": "f7f14cd4333c56cc"
    },
    {
     "i": 43,
@@ -789,13 +789,13 @@
     "result": "lose",
     "frames": 857,
     "st": {
-     "dmg": 5787,
-     "taken": 11672,
+     "dmg": 5887,
+     "taken": 11536,
      "kills": 0,
-     "crits": 9
+     "crits": 10
     },
-    "rand": 4269426204,
-    "hash": "8a28ecc416c24c53"
+    "rand": 1700871227,
+    "hash": "88a28f39ffae94a8"
    },
    {
     "i": 44,
@@ -805,15 +805,15 @@
     "depth": 4,
     "party": 5,
     "result": "win",
-    "frames": 886,
+    "frames": 917,
     "st": {
-     "dmg": 9166,
-     "taken": 2045,
+     "dmg": 9225,
+     "taken": 1931,
      "kills": 2,
-     "crits": 23
+     "crits": 21
     },
-    "rand": 2960297071,
-    "hash": "c8371040f7945994"
+    "rand": 3208485559,
+    "hash": "1dbc379cfda8dc0a"
    },
    {
     "i": 45,
@@ -825,13 +825,13 @@
     "result": "lose",
     "frames": 158,
     "st": {
-     "dmg": 478,
-     "taken": 2126,
+     "dmg": 364,
+     "taken": 2101,
      "kills": 0,
-     "crits": 3
+     "crits": 2
     },
-    "rand": 2935221462,
-    "hash": "83df7671cbc0b457"
+    "rand": 678796170,
+    "hash": "0e1b1f16ada546f8"
    },
    {
     "i": 46,
@@ -849,7 +849,7 @@
      "crits": 6
     },
     "rand": 1079097344,
-    "hash": "994805f54cf5e0a7"
+    "hash": "7c4ae37cd2eaaff1"
    },
    {
     "i": 47,
@@ -859,15 +859,15 @@
     "depth": 7,
     "party": 3,
     "result": "lose",
-    "frames": 1588,
+    "frames": 1506,
     "st": {
-     "dmg": 6286,
-     "taken": 11604,
+     "dmg": 8128,
+     "taken": 11967,
      "kills": 0,
-     "crits": 17
+     "crits": 30
     },
-    "rand": 3291824880,
-    "hash": "44354b232d2de769"
+    "rand": 2226638725,
+    "hash": "87b3b0afde13e9bc"
    },
    {
     "i": 48,
@@ -879,13 +879,13 @@
     "result": "lose",
     "frames": 1253,
     "st": {
-     "dmg": 7918,
-     "taken": 11441,
+     "dmg": 8321,
+     "taken": 11571,
      "kills": 0,
      "crits": 9
     },
-    "rand": 1982367720,
-    "hash": "55218c8fb46f7f4e"
+    "rand": 1106589065,
+    "hash": "bfb03fa8059cf7cb"
    },
    {
     "i": 49,
@@ -895,15 +895,15 @@
     "depth": 5,
     "party": 5,
     "result": "win",
-    "frames": 1270,
+    "frames": 1374,
     "st": {
-     "dmg": 13604,
-     "taken": 9040,
+     "dmg": 14583,
+     "taken": 9438,
      "kills": 2,
-     "crits": 33
+     "crits": 36
     },
-    "rand": 1622622803,
-    "hash": "75ed99841a523977"
+    "rand": 872897130,
+    "hash": "464a9924c0c6d59b"
    },
    {
     "i": 50,
@@ -921,7 +921,7 @@
      "crits": 0
     },
     "rand": 2921242255,
-    "hash": "47f7d1848f0b76bd"
+    "hash": "38e99c2c6116d6cd"
    },
    {
     "i": 51,
@@ -939,7 +939,7 @@
      "crits": 3
     },
     "rand": 1666976634,
-    "hash": "923611ae37ead1c0"
+    "hash": "336847e868b9a05c"
    },
    {
     "i": 52,
@@ -949,15 +949,15 @@
     "depth": 8,
     "party": 3,
     "result": "lose",
-    "frames": 2339,
+    "frames": 2441,
     "st": {
-     "dmg": 8721,
-     "taken": 13415,
+     "dmg": 9550,
+     "taken": 13853,
      "kills": 1,
-     "crits": 24
+     "crits": 26
     },
-    "rand": 3663183517,
-    "hash": "d1dd0303a5f9fd21"
+    "rand": 4138332978,
+    "hash": "60c06b63eb361706"
    },
    {
     "i": 53,
@@ -967,15 +967,15 @@
     "depth": 1,
     "party": 4,
     "result": "win",
-    "frames": 1082,
+    "frames": 809,
     "st": {
-     "dmg": 8190,
-     "taken": 12785,
+     "dmg": 6647,
+     "taken": 8250,
      "kills": 3,
-     "crits": 8
+     "crits": 7
     },
-    "rand": 1719285319,
-    "hash": "d05f1e2108ee7aca"
+    "rand": 1413558576,
+    "hash": "d4e50a66cea28ee2"
    },
    {
     "i": 54,
@@ -985,15 +985,15 @@
     "depth": 6,
     "party": 5,
     "result": "win",
-    "frames": 995,
+    "frames": 996,
     "st": {
-     "dmg": 10989,
-     "taken": 2239,
+     "dmg": 10987,
+     "taken": 2731,
      "kills": 2,
-     "crits": 17
+     "crits": 26
     },
-    "rand": 1298154046,
-    "hash": "ddb2eae242a303a9"
+    "rand": 556919379,
+    "hash": "29e5508d385634e2"
    },
    {
     "i": 55,
@@ -1003,15 +1003,15 @@
     "depth": 11,
     "party": 1,
     "result": "lose",
-    "frames": 223,
+    "frames": 222,
     "st": {
-     "dmg": 298,
-     "taken": 2477,
+     "dmg": 394,
+     "taken": 2347,
      "kills": 0,
-     "crits": 1
+     "crits": 2
     },
-    "rand": 1743982395,
-    "hash": "32febf9fba4beca4"
+    "rand": 3639489405,
+    "hash": "2a2884693dc0644b"
    },
    {
     "i": 56,
@@ -1021,15 +1021,15 @@
     "depth": 4,
     "party": 2,
     "result": "win",
-    "frames": 1906,
+    "frames": 1774,
     "st": {
-     "dmg": 8167,
-     "taken": 5007,
+     "dmg": 8149,
+     "taken": 4698,
      "kills": 2,
-     "crits": 5
+     "crits": 8
     },
-    "rand": 3496385043,
-    "hash": "b55868c976091e39"
+    "rand": 3162441164,
+    "hash": "5e4bb76fd7e1163c"
    },
    {
     "i": 57,
@@ -1039,15 +1039,15 @@
     "depth": 9,
     "party": 3,
     "result": "lose",
-    "frames": 1484,
+    "frames": 1616,
     "st": {
-     "dmg": 4334,
-     "taken": 9241,
+     "dmg": 6814,
+     "taken": 9155,
      "kills": 0,
-     "crits": 7
+     "crits": 17
     },
-    "rand": 1337536952,
-    "hash": "0239979b41724c6e"
+    "rand": 1613286522,
+    "hash": "4c59773217fb8922"
    },
    {
     "i": 58,
@@ -1057,15 +1057,15 @@
     "depth": 2,
     "party": 4,
     "result": "lose",
-    "frames": 839,
+    "frames": 1010,
     "st": {
-     "dmg": 4056,
-     "taken": 12722,
+     "dmg": 6487,
+     "taken": 13563,
      "kills": 0,
-     "crits": 4
+     "crits": 15
     },
-    "rand": 2963955993,
-    "hash": "972213709e92be60"
+    "rand": 2644836687,
+    "hash": "40906db9cb9c08eb"
    },
    {
     "i": 59,
@@ -1074,16 +1074,16 @@
     "w": 9,
     "depth": 7,
     "party": 5,
-    "result": "win",
-    "frames": 1632,
+    "result": "lose",
+    "frames": 1525,
     "st": {
-     "dmg": 16481,
-     "taken": 11705,
-     "kills": 2,
-     "crits": 42
+     "dmg": 13121,
+     "taken": 14443,
+     "kills": 1,
+     "crits": 24
     },
-    "rand": 608641406,
-    "hash": "345ce660f588bc7f"
+    "rand": 422892730,
+    "hash": "70599635249d6eee"
    },
    {
     "i": 60,
@@ -1093,15 +1093,15 @@
     "depth": 0,
     "party": 1,
     "result": "win",
-    "frames": 407,
+    "frames": 408,
     "st": {
-     "dmg": 1093,
-     "taken": 354,
+     "dmg": 1081,
+     "taken": 390,
      "kills": 1,
      "crits": 0
     },
-    "rand": 3637660028,
-    "hash": "2c7646b5f74a2421"
+    "rand": 158775693,
+    "hash": "23c059822711f93c"
    },
    {
     "i": 61,
@@ -1111,15 +1111,15 @@
     "depth": 5,
     "party": 2,
     "result": "win",
-    "frames": 1399,
+    "frames": 1462,
     "st": {
-     "dmg": 5792,
-     "taken": 1438,
+     "dmg": 5906,
+     "taken": 1699,
      "kills": 2,
-     "crits": 2
+     "crits": 4
     },
-    "rand": 3738239999,
-    "hash": "87d95465161bb0cc"
+    "rand": 3613688402,
+    "hash": "e626680b7c05fb11"
    },
    {
     "i": 62,
@@ -1129,15 +1129,15 @@
     "depth": 10,
     "party": 3,
     "result": "lose",
-    "frames": 1561,
+    "frames": 1486,
     "st": {
-     "dmg": 6619,
-     "taken": 9223,
-     "kills": 1,
-     "crits": 7
+     "dmg": 6316,
+     "taken": 8891,
+     "kills": 0,
+     "crits": 8
     },
-    "rand": 4029918132,
-    "hash": "1c3066b9e8af6168"
+    "rand": 4144477338,
+    "hash": "cdbc74f38f3d3238"
    },
    {
     "i": 63,
@@ -1147,15 +1147,15 @@
     "depth": 3,
     "party": 4,
     "result": "win",
-    "frames": 1645,
+    "frames": 1624,
     "st": {
-     "dmg": 14902,
-     "taken": 7635,
+     "dmg": 14879,
+     "taken": 8106,
      "kills": 3,
      "crits": 38
     },
-    "rand": 814444267,
-    "hash": "348ffde1da5e502c"
+    "rand": 2802368262,
+    "hash": "a2bdf23edbb8eda7"
    },
    {
     "i": 64,
@@ -1165,15 +1165,15 @@
     "depth": 8,
     "party": 5,
     "result": "win",
-    "frames": 1304,
+    "frames": 1355,
     "st": {
-     "dmg": 12858,
-     "taken": 5174,
+     "dmg": 12752,
+     "taken": 4840,
      "kills": 2,
-     "crits": 20
+     "crits": 13
     },
-    "rand": 3427283693,
-    "hash": "0274483553de941a"
+    "rand": 3465165193,
+    "hash": "6ad94d29d5b6f3a6"
    },
    {
     "i": 65,
@@ -1183,15 +1183,15 @@
     "depth": 1,
     "party": 1,
     "result": "win",
-    "frames": 636,
+    "frames": 635,
     "st": {
-     "dmg": 1949,
-     "taken": 1790,
+     "dmg": 1984,
+     "taken": 1815,
      "kills": 1,
-     "crits": 3
+     "crits": 2
     },
-    "rand": 54208913,
-    "hash": "45a369d083413aea"
+    "rand": 3540669548,
+    "hash": "1e2039b63d5ddeef"
    },
    {
     "i": 66,
@@ -1201,15 +1201,15 @@
     "depth": 6,
     "party": 2,
     "result": "lose",
-    "frames": 1009,
+    "frames": 1289,
     "st": {
-     "dmg": 4772,
-     "taken": 7762,
+     "dmg": 7170,
+     "taken": 8244,
      "kills": 0,
-     "crits": 12
+     "crits": 21
     },
-    "rand": 283585984,
-    "hash": "9332550398149dc8"
+    "rand": 1917253291,
+    "hash": "ad03aee989fba8dc"
    },
    {
     "i": 67,
@@ -1219,15 +1219,15 @@
     "depth": 11,
     "party": 3,
     "result": "lose",
-    "frames": 690,
+    "frames": 720,
     "st": {
-     "dmg": 2102,
-     "taken": 8525,
+     "dmg": 1778,
+     "taken": 8572,
      "kills": 0,
-     "crits": 6
+     "crits": 5
     },
-    "rand": 1674553046,
-    "hash": "328721ce4ffc2ffd"
+    "rand": 1009081379,
+    "hash": "970c8a5f99395c71"
    },
    {
     "i": 68,
@@ -1237,15 +1237,15 @@
     "depth": 4,
     "party": 4,
     "result": "lose",
-    "frames": 1347,
+    "frames": 1280,
     "st": {
-     "dmg": 8192,
-     "taken": 16252,
+     "dmg": 8433,
+     "taken": 15872,
      "kills": 0,
-     "crits": 15
+     "crits": 22
     },
-    "rand": 132646677,
-    "hash": "996cc948983afec3"
+    "rand": 1425708511,
+    "hash": "e8ec0f8fa67c095b"
    },
    {
     "i": 69,
@@ -1255,15 +1255,15 @@
     "depth": 9,
     "party": 5,
     "result": "lose",
-    "frames": 1014,
+    "frames": 1198,
     "st": {
-     "dmg": 8447,
-     "taken": 14295,
+     "dmg": 9561,
+     "taken": 17133,
      "kills": 0,
-     "crits": 13
+     "crits": 12
     },
-    "rand": 1193259309,
-    "hash": "904cde21be8af27b"
+    "rand": 3686637965,
+    "hash": "6572d38716405c2a"
    },
    {
     "i": 70,
@@ -1273,15 +1273,15 @@
     "depth": 2,
     "party": 1,
     "result": "win",
-    "frames": 1059,
+    "frames": 1073,
     "st": {
-     "dmg": 1516,
-     "taken": 1019,
+     "dmg": 1524,
+     "taken": 1146,
      "kills": 1,
      "crits": 2
     },
-    "rand": 2087918770,
-    "hash": "dad9ba2a121adec0"
+    "rand": 3633414595,
+    "hash": "14801f1cfe65ea59"
    },
    {
     "i": 71,
@@ -1291,15 +1291,15 @@
     "depth": 7,
     "party": 2,
     "result": "lose",
-    "frames": 1203,
+    "frames": 1188,
     "st": {
-     "dmg": 5868,
-     "taken": 5909,
+     "dmg": 5907,
+     "taken": 5934,
      "kills": 1,
-     "crits": 10
+     "crits": 13
     },
-    "rand": 1474825156,
-    "hash": "cc3f5600533fbb10"
+    "rand": 2986684984,
+    "hash": "2701fa0c07aedcd4"
    },
    {
     "i": 72,
@@ -1309,15 +1309,15 @@
     "depth": 0,
     "party": 3,
     "result": "lose",
-    "frames": 2224,
+    "frames": 2254,
     "st": {
-     "dmg": 6534,
-     "taken": 14193,
+     "dmg": 6619,
+     "taken": 14947,
      "kills": 1,
-     "crits": 7
+     "crits": 8
     },
-    "rand": 4284112230,
-    "hash": "f87d787f0475f50c"
+    "rand": 2591335908,
+    "hash": "f5d86c24c6071647"
    },
    {
     "i": 73,
@@ -1327,15 +1327,15 @@
     "depth": 5,
     "party": 4,
     "result": "win",
-    "frames": 694,
+    "frames": 727,
     "st": {
-     "dmg": 6941,
-     "taken": 7439,
+     "dmg": 7643,
+     "taken": 7762,
      "kills": 3,
-     "crits": 17
+     "crits": 20
     },
-    "rand": 4263351499,
-    "hash": "35d60dd0d30dcfca"
+    "rand": 1490236422,
+    "hash": "1be8a865be008fbe"
    },
    {
     "i": 74,
@@ -1345,15 +1345,15 @@
     "depth": 10,
     "party": 5,
     "result": "win",
-    "frames": 1526,
+    "frames": 1495,
     "st": {
-     "dmg": 14506,
-     "taken": 6202,
+     "dmg": 14543,
+     "taken": 5196,
      "kills": 2,
-     "crits": 18
+     "crits": 20
     },
-    "rand": 503229365,
-    "hash": "1941c5c13acb5780"
+    "rand": 1402651626,
+    "hash": "c456aa3f6d77a9df"
    },
    {
     "i": 75,
@@ -1363,15 +1363,15 @@
     "depth": 3,
     "party": 1,
     "result": "lose",
-    "frames": 971,
+    "frames": 1013,
     "st": {
-     "dmg": 3234,
-     "taken": 3095,
+     "dmg": 3540,
+     "taken": 3087,
      "kills": 0,
-     "crits": 0
+     "crits": 1
     },
-    "rand": 3778865715,
-    "hash": "4d49748014ac9921"
+    "rand": 3955536706,
+    "hash": "1ecd2299efbbb3c4"
    },
    {
     "i": 76,
@@ -1381,15 +1381,15 @@
     "depth": 8,
     "party": 2,
     "result": "lose",
-    "frames": 759,
+    "frames": 758,
     "st": {
-     "dmg": 3897,
-     "taken": 6808,
+     "dmg": 3546,
+     "taken": 6693,
      "kills": 0,
-     "crits": 3
+     "crits": 1
     },
-    "rand": 1368170312,
-    "hash": "26a1fab97c024ba1"
+    "rand": 1296652815,
+    "hash": "f944232f0bceef40"
    },
    {
     "i": 77,
@@ -1399,15 +1399,15 @@
     "depth": 1,
     "party": 3,
     "result": "lose",
-    "frames": 1200,
+    "frames": 951,
     "st": {
-     "dmg": 4970,
-     "taken": 11788,
+     "dmg": 3840,
+     "taken": 9332,
      "kills": 0,
-     "crits": 24
+     "crits": 15
     },
-    "rand": 3421536896,
-    "hash": "7831427cbe02dc27"
+    "rand": 3232457423,
+    "hash": "06975bba141081e0"
    },
    {
     "i": 78,
@@ -1417,15 +1417,15 @@
     "depth": 6,
     "party": 4,
     "result": "lose",
-    "frames": 870,
+    "frames": 937,
     "st": {
-     "dmg": 5321,
-     "taken": 12226,
+     "dmg": 6248,
+     "taken": 12326,
      "kills": 0,
-     "crits": 14
+     "crits": 13
     },
-    "rand": 628437044,
-    "hash": "3d7b84bc4eaf452c"
+    "rand": 587224747,
+    "hash": "ecc41e1ad666a688"
    },
    {
     "i": 79,
@@ -1435,15 +1435,15 @@
     "depth": 11,
     "party": 5,
     "result": "win",
-    "frames": 2011,
+    "frames": 1967,
     "st": {
-     "dmg": 15077,
-     "taken": 21210,
+     "dmg": 18187,
+     "taken": 20337,
      "kills": 2,
-     "crits": 24
+     "crits": 37
     },
-    "rand": 2220753311,
-    "hash": "596ee128ebba248f"
+    "rand": 880404265,
+    "hash": "d5c0e0d72da14f80"
    },
    {
     "i": 80,
@@ -1453,15 +1453,15 @@
     "depth": 4,
     "party": 1,
     "result": "win",
-    "frames": 2575,
+    "frames": 2586,
     "st": {
-     "dmg": 3738,
-     "taken": 2182,
+     "dmg": 3784,
+     "taken": 2291,
      "kills": 2,
-     "crits": 0
+     "crits": 1
     },
-    "rand": 281169991,
-    "hash": "8cddd5de49e20046"
+    "rand": 3929149017,
+    "hash": "05d6dfc92382e12d"
    },
    {
     "i": 81,
@@ -1471,15 +1471,15 @@
     "depth": 9,
     "party": 2,
     "result": "lose",
-    "frames": 553,
+    "frames": 590,
     "st": {
-     "dmg": 2808,
-     "taken": 5368,
+     "dmg": 4335,
+     "taken": 5358,
      "kills": 0,
-     "crits": 1
+     "crits": 4
     },
-    "rand": 4220051194,
-    "hash": "cc18d1fe9df0be63"
+    "rand": 2409384869,
+    "hash": "0f363e09939b3814"
    },
    {
     "i": 82,
@@ -1489,15 +1489,15 @@
     "depth": 2,
     "party": 3,
     "result": "lose",
-    "frames": 2892,
+    "frames": 2148,
     "st": {
-     "dmg": 8753,
-     "taken": 14956,
+     "dmg": 7615,
+     "taken": 14434,
      "kills": 1,
-     "crits": 28
+     "crits": 24
     },
-    "rand": 2372796636,
-    "hash": "a10b87564bc20e4a"
+    "rand": 518571298,
+    "hash": "f563c723913e74dc"
    },
    {
     "i": 83,
@@ -1507,15 +1507,15 @@
     "depth": 7,
     "party": 4,
     "result": "lose",
-    "frames": 644,
+    "frames": 664,
     "st": {
-     "dmg": 4223,
-     "taken": 11056,
+     "dmg": 4170,
+     "taken": 11404,
      "kills": 0,
-     "crits": 5
+     "crits": 6
     },
-    "rand": 3148790138,
-    "hash": "e7d3cd1fd5592f3d"
+    "rand": 2460589571,
+    "hash": "6c6b4c2b5903048e"
    },
    {
     "i": 84,
@@ -1525,15 +1525,15 @@
     "depth": 0,
     "party": 5,
     "result": "win",
-    "frames": 652,
+    "frames": 669,
     "st": {
-     "dmg": 5610,
-     "taken": 960,
+     "dmg": 5670,
+     "taken": 923,
      "kills": 2,
-     "crits": 13
+     "crits": 9
     },
-    "rand": 2023649644,
-    "hash": "ffaa35eabc1e9eda"
+    "rand": 534518716,
+    "hash": "c2afdc095401aefa"
    },
    {
     "i": 85,
@@ -1543,15 +1543,15 @@
     "depth": 5,
     "party": 1,
     "result": "lose",
-    "frames": 529,
+    "frames": 650,
     "st": {
-     "dmg": 2133,
-     "taken": 2515,
+     "dmg": 3286,
+     "taken": 2453,
      "kills": 0,
-     "crits": 5
+     "crits": 11
     },
-    "rand": 3381895415,
-    "hash": "8ebb7c8d948e4f96"
+    "rand": 1395472805,
+    "hash": "511ddc5e41845b94"
    },
    {
     "i": 86,
@@ -1563,13 +1563,13 @@
     "result": "lose",
     "frames": 247,
     "st": {
-     "dmg": 541,
+     "dmg": 498,
      "taken": 5056,
      "kills": 0,
-     "crits": 1
+     "crits": 0
     },
-    "rand": 3096740140,
-    "hash": "93639400ce158a7a"
+    "rand": 1265174327,
+    "hash": "d50170e89e98ca73"
    },
    {
     "i": 87,
@@ -1579,15 +1579,15 @@
     "depth": 3,
     "party": 3,
     "result": "lose",
-    "frames": 1149,
+    "frames": 1227,
     "st": {
-     "dmg": 4661,
-     "taken": 9539,
+     "dmg": 5494,
+     "taken": 9155,
      "kills": 0,
-     "crits": 14
+     "crits": 21
     },
-    "rand": 1765140759,
-    "hash": "a3fffb2e54517fcc"
+    "rand": 3294569278,
+    "hash": "fcbd8b4422a5c4c1"
    },
    {
     "i": 88,
@@ -1597,15 +1597,15 @@
     "depth": 8,
     "party": 4,
     "result": "lose",
-    "frames": 620,
+    "frames": 624,
     "st": {
-     "dmg": 3507,
-     "taken": 12005,
+     "dmg": 3123,
+     "taken": 12134,
      "kills": 0,
-     "crits": 5
+     "crits": 1
     },
-    "rand": 3679459200,
-    "hash": "85afa49141c78676"
+    "rand": 3559153106,
+    "hash": "d2ff2da877242081"
    },
    {
     "i": 89,
@@ -1615,15 +1615,15 @@
     "depth": 1,
     "party": 5,
     "result": "win",
-    "frames": 1337,
+    "frames": 1369,
     "st": {
-     "dmg": 12535,
-     "taken": 2855,
+     "dmg": 12237,
+     "taken": 3153,
      "kills": 2,
-     "crits": 25
+     "crits": 22
     },
-    "rand": 3969705323,
-    "hash": "0d0869205481ce14"
+    "rand": 2754822580,
+    "hash": "3bde94799901f978"
    },
    {
     "i": 90,
@@ -1633,15 +1633,15 @@
     "depth": 6,
     "party": 1,
     "result": "lose",
-    "frames": 781,
+    "frames": 804,
     "st": {
-     "dmg": 2242,
-     "taken": 3468,
+     "dmg": 2197,
+     "taken": 3428,
      "kills": 0,
-     "crits": 2
+     "crits": 1
     },
-    "rand": 3835230717,
-    "hash": "e3397b95e1cb0fc5"
+    "rand": 2210641095,
+    "hash": "4c9ecab9a62cfb89"
    },
    {
     "i": 91,
@@ -1651,15 +1651,15 @@
     "depth": 11,
     "party": 2,
     "result": "lose",
-    "frames": 527,
+    "frames": 522,
     "st": {
-     "dmg": 2169,
-     "taken": 6399,
+     "dmg": 2101,
+     "taken": 6418,
      "kills": 0,
      "crits": 4
     },
-    "rand": 2258514993,
-    "hash": "67481855b4e3db0a"
+    "rand": 3913409815,
+    "hash": "c8f70c92d264a1e6"
    },
    {
     "i": 92,
@@ -1669,15 +1669,15 @@
     "depth": 4,
     "party": 3,
     "result": "lose",
-    "frames": 1927,
+    "frames": 2000,
     "st": {
-     "dmg": 8073,
-     "taken": 8994,
+     "dmg": 8388,
+     "taken": 9004,
      "kills": 1,
-     "crits": 10
+     "crits": 8
     },
-    "rand": 4059308836,
-    "hash": "e18e5aca678573f4"
+    "rand": 1643781244,
+    "hash": "a170579d99f9948b"
    },
    {
     "i": 93,
@@ -1687,15 +1687,15 @@
     "depth": 9,
     "party": 4,
     "result": "win",
-    "frames": 2823,
+    "frames": 1865,
     "st": {
-     "dmg": 23457,
-     "taken": 19454,
+     "dmg": 13479,
+     "taken": 14771,
      "kills": 3,
-     "crits": 30
+     "crits": 20
     },
-    "rand": 2769249779,
-    "hash": "a66cbde40225911f"
+    "rand": 1516554911,
+    "hash": "256576b3c9e57127"
    },
    {
     "i": 94,
@@ -1705,15 +1705,15 @@
     "depth": 2,
     "party": 5,
     "result": "win",
-    "frames": 765,
+    "frames": 797,
     "st": {
-     "dmg": 7324,
-     "taken": 1404,
+     "dmg": 7315,
+     "taken": 1424,
      "kills": 2,
-     "crits": 14
+     "crits": 10
     },
-    "rand": 119323671,
-    "hash": "e3923e72bc579881"
+    "rand": 3601538803,
+    "hash": "01388b7290d75d37"
    },
    {
     "i": 95,
@@ -1723,15 +1723,15 @@
     "depth": 7,
     "party": 1,
     "result": "lose",
-    "frames": 445,
+    "frames": 408,
     "st": {
-     "dmg": 1380,
-     "taken": 3199,
+     "dmg": 1504,
+     "taken": 3217,
      "kills": 0,
-     "crits": 0
+     "crits": 2
     },
-    "rand": 289989129,
-    "hash": "d8757435526a7247"
+    "rand": 2328531133,
+    "hash": "82710e2e5b852807"
    },
    {
     "i": 96,
@@ -1741,15 +1741,15 @@
     "depth": 0,
     "party": 2,
     "result": "win",
-    "frames": 388,
+    "frames": 454,
     "st": {
-     "dmg": 2524,
-     "taken": 370,
+     "dmg": 2536,
+     "taken": 472,
      "kills": 1,
-     "crits": 10
+     "crits": 7
     },
-    "rand": 50291654,
-    "hash": "6819feef4dd0218c"
+    "rand": 1061529003,
+    "hash": "e1487fe052a03d54"
    },
    {
     "i": 97,
@@ -1759,15 +1759,15 @@
     "depth": 5,
     "party": 3,
     "result": "lose",
-    "frames": 825,
+    "frames": 777,
     "st": {
-     "dmg": 3701,
-     "taken": 7882,
+     "dmg": 2925,
+     "taken": 7934,
      "kills": 0,
-     "crits": 11
+     "crits": 6
     },
-    "rand": 3448839466,
-    "hash": "20704d1634807368"
+    "rand": 139964528,
+    "hash": "d0507a4143600d4b"
    },
    {
     "i": 98,
@@ -1777,15 +1777,15 @@
     "depth": 10,
     "party": 4,
     "result": "lose",
-    "frames": 756,
+    "frames": 1101,
     "st": {
-     "dmg": 3803,
-     "taken": 12537,
+     "dmg": 7715,
+     "taken": 16982,
      "kills": 0,
-     "crits": 3
+     "crits": 18
     },
-    "rand": 1453925857,
-    "hash": "7db2b27f409cb0ec"
+    "rand": 139308481,
+    "hash": "49ab5e741f94e545"
    },
    {
     "i": 99,
@@ -1795,15 +1795,15 @@
     "depth": 3,
     "party": 5,
     "result": "win",
-    "frames": 1457,
+    "frames": 1716,
     "st": {
-     "dmg": 15639,
-     "taken": 5788,
+     "dmg": 15600,
+     "taken": 7466,
      "kills": 2,
-     "crits": 22
+     "crits": 28
     },
-    "rand": 169872340,
-    "hash": "bd4a24582a00076d"
+    "rand": 4077533630,
+    "hash": "456dbb179465088f"
    },
    {
     "i": 100,
@@ -1813,15 +1813,15 @@
     "depth": 8,
     "party": 1,
     "result": "lose",
-    "frames": 375,
+    "frames": 357,
     "st": {
-     "dmg": 809,
-     "taken": 2229,
+     "dmg": 878,
+     "taken": 2223,
      "kills": 0,
-     "crits": 0
+     "crits": 1
     },
-    "rand": 401804252,
-    "hash": "09e4a68c28d6a789"
+    "rand": 3425523908,
+    "hash": "450352784079e3a3"
    },
    {
     "i": 101,
@@ -1831,15 +1831,15 @@
     "depth": 1,
     "party": 2,
     "result": "win",
-    "frames": 330,
+    "frames": 331,
     "st": {
-     "dmg": 1535,
-     "taken": 72,
+     "dmg": 1542,
+     "taken": 149,
      "kills": 1,
      "crits": 4
     },
-    "rand": 1818831011,
-    "hash": "54e629aba487e041"
+    "rand": 3052197151,
+    "hash": "495a0a792f2739ad"
    },
    {
     "i": 102,
@@ -1849,15 +1849,15 @@
     "depth": 6,
     "party": 3,
     "result": "lose",
-    "frames": 1708,
+    "frames": 1720,
     "st": {
-     "dmg": 6544,
-     "taken": 11479,
+     "dmg": 6529,
+     "taken": 10780,
      "kills": 1,
      "crits": 5
     },
-    "rand": 1608643932,
-    "hash": "bdf84edcaebb8778"
+    "rand": 3583244739,
+    "hash": "ab7c2b92399ec338"
    },
    {
     "i": 103,
@@ -1867,15 +1867,15 @@
     "depth": 11,
     "party": 4,
     "result": "lose",
-    "frames": 1326,
+    "frames": 995,
     "st": {
-     "dmg": 8388,
-     "taken": 15737,
+     "dmg": 6036,
+     "taken": 14362,
      "kills": 0,
      "crits": 7
     },
-    "rand": 2318141396,
-    "hash": "8303e412912887f2"
+    "rand": 3160612081,
+    "hash": "d0aeeee3fb0d69f1"
    },
    {
     "i": 104,
@@ -1885,15 +1885,15 @@
     "depth": 4,
     "party": 5,
     "result": "win",
-    "frames": 1073,
+    "frames": 1074,
     "st": {
-     "dmg": 9112,
-     "taken": 3823,
+     "dmg": 9088,
+     "taken": 3390,
      "kills": 2,
-     "crits": 9
+     "crits": 11
     },
-    "rand": 3596050637,
-    "hash": "296f2a002ca2fe11"
+    "rand": 3574236443,
+    "hash": "c59bd8b203df2a4f"
    },
    {
     "i": 105,
@@ -1903,15 +1903,15 @@
     "depth": 9,
     "party": 1,
     "result": "lose",
-    "frames": 214,
+    "frames": 220,
     "st": {
-     "dmg": 285,
-     "taken": 2405,
+     "dmg": 338,
+     "taken": 2414,
      "kills": 0,
-     "crits": 0
+     "crits": 1
     },
-    "rand": 2453997506,
-    "hash": "f45e81c2e580f1b9"
+    "rand": 3089163973,
+    "hash": "c1dbec8c13823412"
    },
    {
     "i": 106,
@@ -1921,15 +1921,15 @@
     "depth": 2,
     "party": 2,
     "result": "win",
-    "frames": 772,
+    "frames": 760,
     "st": {
-     "dmg": 3348,
-     "taken": 634,
+     "dmg": 3261,
+     "taken": 576,
      "kills": 1,
-     "crits": 3
+     "crits": 4
     },
-    "rand": 2723085489,
-    "hash": "20b1b8fcb40c80de"
+    "rand": 963037173,
+    "hash": "fe641578e5ffb54b"
    },
    {
     "i": 107,
@@ -1939,15 +1939,15 @@
     "depth": 7,
     "party": 3,
     "result": "lose",
-    "frames": 825,
+    "frames": 847,
     "st": {
-     "dmg": 2257,
-     "taken": 9468,
+     "dmg": 1973,
+     "taken": 9062,
      "kills": 0,
-     "crits": 6
+     "crits": 3
     },
-    "rand": 3415203539,
-    "hash": "ca3e3db56d4d450e"
+    "rand": 286330389,
+    "hash": "bdaa2873f0b2ffbd"
    },
    {
     "i": 108,
@@ -1957,15 +1957,15 @@
     "depth": 0,
     "party": 4,
     "result": "lose",
-    "frames": 1872,
+    "frames": 2472,
     "st": {
-     "dmg": 12009,
-     "taken": 14027,
+     "dmg": 15399,
+     "taken": 15564,
      "kills": 1,
-     "crits": 22
+     "crits": 31
     },
-    "rand": 1393832831,
-    "hash": "c693d809e478404a"
+    "rand": 1501074389,
+    "hash": "5f87a88dd0330025"
    },
    {
     "i": 109,
@@ -1974,16 +1974,16 @@
     "w": 9,
     "depth": 5,
     "party": 5,
-    "result": "win",
-    "frames": 1969,
+    "result": "lose",
+    "frames": 1556,
     "st": {
-     "dmg": 11625,
-     "taken": 17870,
-     "kills": 2,
-     "crits": 16
+     "dmg": 10944,
+     "taken": 18276,
+     "kills": 1,
+     "crits": 19
     },
-    "rand": 3959902349,
-    "hash": "0a2d046841fe640f"
+    "rand": 1598651590,
+    "hash": "281b1cea3509db3b"
    },
    {
     "i": 110,
@@ -1993,15 +1993,15 @@
     "depth": 10,
     "party": 1,
     "result": "lose",
-    "frames": 333,
+    "frames": 360,
     "st": {
      "dmg": 504,
-     "taken": 3990,
+     "taken": 4165,
      "kills": 0,
      "crits": 0
     },
-    "rand": 63614940,
-    "hash": "0701fba3326580ba"
+    "rand": 1432439774,
+    "hash": "40a57f1fbc00cc62"
    },
    {
     "i": 111,
@@ -2011,15 +2011,15 @@
     "depth": 3,
     "party": 2,
     "result": "win",
-    "frames": 553,
+    "frames": 554,
     "st": {
-     "dmg": 3819,
-     "taken": 1241,
+     "dmg": 3967,
+     "taken": 1184,
      "kills": 2,
-     "crits": 6
+     "crits": 5
     },
-    "rand": 3279158194,
-    "hash": "733519fbd3be8500"
+    "rand": 1790027266,
+    "hash": "7ecf846bb7e859bc"
    },
    {
     "i": 112,
@@ -2029,15 +2029,15 @@
     "depth": 8,
     "party": 3,
     "result": "lose",
-    "frames": 2367,
+    "frames": 3545,
     "st": {
-     "dmg": 7916,
-     "taken": 15765,
-     "kills": 0,
-     "crits": 7
+     "dmg": 9429,
+     "taken": 19995,
+     "kills": 1,
+     "crits": 9
     },
-    "rand": 1784330912,
-    "hash": "581e8a63b6657e9b"
+    "rand": 3632153308,
+    "hash": "43cea0c723080ed2"
    },
    {
     "i": 113,
@@ -2047,15 +2047,15 @@
     "depth": 1,
     "party": 4,
     "result": "win",
-    "frames": 743,
+    "frames": 772,
     "st": {
-     "dmg": 5454,
-     "taken": 8420,
+     "dmg": 6614,
+     "taken": 8460,
      "kills": 3,
-     "crits": 7
+     "crits": 13
     },
-    "rand": 1920256390,
-    "hash": "6fbd5fbd4cefa4dc"
+    "rand": 1121742120,
+    "hash": "538c65ca48d0b101"
    },
    {
     "i": 114,
@@ -2073,7 +2073,7 @@
      "crits": 25
     },
     "rand": 3875787128,
-    "hash": "2654c12fb6d5e85b"
+    "hash": "a97b8bd22cfd914a"
    },
    {
     "i": 115,
@@ -2091,7 +2091,7 @@
      "crits": 0
     },
     "rand": 1101240048,
-    "hash": "addd044bee480047"
+    "hash": "d248e0d8a5267bae"
    },
    {
     "i": 116,
@@ -2101,15 +2101,15 @@
     "depth": 4,
     "party": 2,
     "result": "lose",
-    "frames": 997,
+    "frames": 959,
     "st": {
-     "dmg": 4564,
-     "taken": 5160,
+     "dmg": 4917,
+     "taken": 5110,
      "kills": 0,
-     "crits": 4
+     "crits": 6
     },
-    "rand": 3034887217,
-    "hash": "f696546d43ef5d48"
+    "rand": 3520357096,
+    "hash": "3467bdda605dfad7"
    },
    {
     "i": 117,
@@ -2119,15 +2119,15 @@
     "depth": 9,
     "party": 3,
     "result": "lose",
-    "frames": 1704,
+    "frames": 1286,
     "st": {
-     "dmg": 7195,
-     "taken": 11663,
+     "dmg": 4935,
+     "taken": 10406,
      "kills": 0,
-     "crits": 22
+     "crits": 11
     },
-    "rand": 812356581,
-    "hash": "8345c55898cd87cc"
+    "rand": 2177263939,
+    "hash": "fb3a36ed5a742db7"
    },
    {
     "i": 118,
@@ -2137,15 +2137,15 @@
     "depth": 2,
     "party": 4,
     "result": "lose",
-    "frames": 955,
+    "frames": 968,
     "st": {
-     "dmg": 6450,
-     "taken": 11493,
+     "dmg": 5913,
+     "taken": 11367,
      "kills": 0,
-     "crits": 14
+     "crits": 8
     },
-    "rand": 2915754495,
-    "hash": "17b919efe33a122e"
+    "rand": 576904609,
+    "hash": "f9a5b1aa4cca8d04"
    },
    {
     "i": 119,
@@ -2155,15 +2155,15 @@
     "depth": 7,
     "party": 5,
     "result": "win",
-    "frames": 1396,
+    "frames": 1475,
     "st": {
-     "dmg": 13511,
-     "taken": 13316,
+     "dmg": 14704,
+     "taken": 13795,
      "kills": 2,
-     "crits": 28
+     "crits": 34
     },
-    "rand": 602894938,
-    "hash": "ef4fdb286c83dce4"
+    "rand": 2308079742,
+    "hash": "0da347804d4a858d"
    },
    {
     "i": 120,
@@ -2173,15 +2173,15 @@
     "depth": 0,
     "party": 1,
     "result": "win",
-    "frames": 745,
+    "frames": 765,
     "st": {
-     "dmg": 875,
-     "taken": 1036,
+     "dmg": 812,
+     "taken": 988,
      "kills": 1,
-     "crits": 2
+     "crits": 0
     },
-    "rand": 1739409320,
-    "hash": "4b286277383727b7"
+    "rand": 4067352109,
+    "hash": "9818b7a3101b0034"
    },
    {
     "i": 121,
@@ -2191,15 +2191,15 @@
     "depth": 5,
     "party": 2,
     "result": "win",
-    "frames": 1452,
+    "frames": 1460,
     "st": {
-     "dmg": 6863,
-     "taken": 5308,
+     "dmg": 6859,
+     "taken": 5496,
      "kills": 2,
      "crits": 12
     },
-    "rand": 3015161122,
-    "hash": "ef8ce190c39a72b4"
+    "rand": 4192162365,
+    "hash": "724d2361e4f1bae6"
    },
    {
     "i": 122,
@@ -2209,15 +2209,15 @@
     "depth": 10,
     "party": 3,
     "result": "lose",
-    "frames": 2270,
+    "frames": 2342,
     "st": {
-     "dmg": 9795,
-     "taken": 13130,
+     "dmg": 10002,
+     "taken": 13425,
      "kills": 1,
-     "crits": 23
+     "crits": 27
     },
-    "rand": 782499345,
-    "hash": "ff2f358f48645007"
+    "rand": 2661939049,
+    "hash": "760dcdff669d7150"
    },
    {
     "i": 123,
@@ -2227,15 +2227,15 @@
     "depth": 3,
     "party": 4,
     "result": "win",
-    "frames": 1869,
+    "frames": 1971,
     "st": {
-     "dmg": 14622,
-     "taken": 10966,
+     "dmg": 14407,
+     "taken": 11421,
      "kills": 3,
-     "crits": 14
+     "crits": 15
     },
-    "rand": 2507479661,
-    "hash": "b46e3a45b53853fd"
+    "rand": 773491042,
+    "hash": "59ab913472c7ac89"
    },
    {
     "i": 124,
@@ -2245,15 +2245,15 @@
     "depth": 8,
     "party": 5,
     "result": "win",
-    "frames": 1107,
+    "frames": 1119,
     "st": {
-     "dmg": 12738,
-     "taken": 3304,
+     "dmg": 12788,
+     "taken": 3419,
      "kills": 2,
-     "crits": 22
+     "crits": 24
     },
-    "rand": 123569384,
-    "hash": "ca2274b591772fdf"
+    "rand": 954804945,
+    "hash": "b1a293f2b658cd0f"
    },
    {
     "i": 125,
@@ -2263,15 +2263,15 @@
     "depth": 1,
     "party": 1,
     "result": "win",
-    "frames": 501,
+    "frames": 512,
     "st": {
-     "dmg": 2120,
-     "taken": 835,
+     "dmg": 2222,
+     "taken": 1342,
      "kills": 1,
-     "crits": 2
+     "crits": 4
     },
-    "rand": 3591287977,
-    "hash": "60c4ccaaedc4db72"
+    "rand": 931817400,
+    "hash": "0df4e8d712a2e17f"
    },
    {
     "i": 126,
@@ -2281,15 +2281,15 @@
     "depth": 6,
     "party": 2,
     "result": "lose",
-    "frames": 874,
+    "frames": 868,
     "st": {
-     "dmg": 4306,
-     "taken": 6508,
+     "dmg": 3700,
+     "taken": 6260,
      "kills": 0,
-     "crits": 5
+     "crits": 2
     },
-    "rand": 1387568765,
-    "hash": "6330e7d9838470e9"
+    "rand": 1602121256,
+    "hash": "a96c96104ad821e2"
    },
    {
     "i": 127,
@@ -2299,15 +2299,15 @@
     "depth": 11,
     "party": 3,
     "result": "lose",
-    "frames": 923,
+    "frames": 944,
     "st": {
-     "dmg": 3956,
-     "taken": 9565,
+     "dmg": 3941,
+     "taken": 9651,
      "kills": 0,
-     "crits": 13
+     "crits": 11
     },
-    "rand": 3709436646,
-    "hash": "75d444d547a32b1c"
+    "rand": 3833988243,
+    "hash": "c2ea3f001b7f3a62"
    },
    {
     "i": 128,
@@ -2317,15 +2317,15 @@
     "depth": 4,
     "party": 4,
     "result": "lose",
-    "frames": 633,
+    "frames": 627,
     "st": {
-     "dmg": 2913,
-     "taken": 11346,
+     "dmg": 2967,
+     "taken": 11931,
      "kills": 0,
      "crits": 5
     },
-    "rand": 3538840577,
-    "hash": "3d6a45c6e14e66b7"
+    "rand": 3549747674,
+    "hash": "01fb28373937cd11"
    },
    {
     "i": 129,
@@ -2335,15 +2335,15 @@
     "depth": 9,
     "party": 5,
     "result": "lose",
-    "frames": 1285,
+    "frames": 1492,
     "st": {
-     "dmg": 12048,
-     "taken": 14109,
-     "kills": 0,
-     "crits": 21
+     "dmg": 13624,
+     "taken": 14687,
+     "kills": 1,
+     "crits": 26
     },
-    "rand": 3550264985,
-    "hash": "3c2bccbd276838e5"
+    "rand": 596233414,
+    "hash": "577e8e48774256f0"
    },
    {
     "i": 130,
@@ -2361,7 +2361,7 @@
      "crits": 1
     },
     "rand": 3924645212,
-    "hash": "119d2bf77d73be97"
+    "hash": "ab1f7230cea2ba67"
    },
    {
     "i": 131,
@@ -2371,15 +2371,15 @@
     "depth": 7,
     "party": 2,
     "result": "win",
-    "frames": 1762,
+    "frames": 1756,
     "st": {
-     "dmg": 9746,
-     "taken": 3591,
+     "dmg": 9711,
+     "taken": 3440,
      "kills": 3,
-     "crits": 5
+     "crits": 7
     },
-    "rand": 3805184456,
-    "hash": "ec2e183245e921d0"
+    "rand": 1420876770,
+    "hash": "30fcf627fd09d2ef"
    },
    {
     "i": 132,
@@ -2389,15 +2389,15 @@
     "depth": 0,
     "party": 3,
     "result": "lose",
-    "frames": 1883,
+    "frames": 1824,
     "st": {
-     "dmg": 5552,
-     "taken": 9033,
+     "dmg": 5468,
+     "taken": 9135,
      "kills": 1,
      "crits": 5
     },
-    "rand": 3538373828,
-    "hash": "30975c6e8d9356bb"
+    "rand": 1456203436,
+    "hash": "f0a61fb22a39d793"
    },
    {
     "i": 133,
@@ -2407,15 +2407,15 @@
     "depth": 5,
     "party": 4,
     "result": "win",
-    "frames": 781,
+    "frames": 751,
     "st": {
-     "dmg": 6155,
-     "taken": 9316,
+     "dmg": 6208,
+     "taken": 9099,
      "kills": 3,
-     "crits": 11
+     "crits": 18
     },
-    "rand": 1312651145,
-    "hash": "e8af3ae8ef03ed8b"
+    "rand": 1741756127,
+    "hash": "4ecb97ccad58eb91"
    },
    {
     "i": 134,
@@ -2425,15 +2425,15 @@
     "depth": 10,
     "party": 5,
     "result": "win",
-    "frames": 1480,
+    "frames": 1448,
     "st": {
-     "dmg": 14569,
-     "taken": 5141,
+     "dmg": 14538,
+     "taken": 5160,
      "kills": 2,
-     "crits": 19
+     "crits": 24
     },
-    "rand": 3136640665,
-    "hash": "d1832bcd3443e31a"
+    "rand": 989614370,
+    "hash": "5693d06029ffab6b"
    },
    {
     "i": 135,
@@ -2443,15 +2443,15 @@
     "depth": 3,
     "party": 1,
     "result": "lose",
-    "frames": 704,
+    "frames": 722,
     "st": {
-     "dmg": 2155,
-     "taken": 3249,
+     "dmg": 2238,
+     "taken": 3354,
      "kills": 0,
-     "crits": 1
+     "crits": 2
     },
-    "rand": 3486134553,
-    "hash": "7d45cde4eab7bcd7"
+    "rand": 1319710155,
+    "hash": "449ddb1385c3e968"
    },
    {
     "i": 136,
@@ -2469,7 +2469,7 @@
      "crits": 13
     },
     "rand": 1604537417,
-    "hash": "280d74d65eeea1bd"
+    "hash": "168be340a03ed3b6"
    },
    {
     "i": 137,
@@ -2479,15 +2479,15 @@
     "depth": 1,
     "party": 3,
     "result": "lose",
-    "frames": 945,
+    "frames": 946,
     "st": {
-     "dmg": 3260,
-     "taken": 8085,
+     "dmg": 3504,
+     "taken": 8280,
      "kills": 0,
-     "crits": 5
+     "crits": 10
     },
-    "rand": 787539757,
-    "hash": "c9ae15f9fdd21535"
+    "rand": 2141211991,
+    "hash": "efd062715ab4702e"
    },
    {
     "i": 138,
@@ -2497,15 +2497,15 @@
     "depth": 6,
     "party": 4,
     "result": "lose",
-    "frames": 1218,
+    "frames": 1405,
     "st": {
-     "dmg": 6858,
-     "taken": 15819,
+     "dmg": 8561,
+     "taken": 17930,
      "kills": 0,
-     "crits": 20
+     "crits": 26
     },
-    "rand": 83858570,
-    "hash": "c5ec74ee49bbfd1e"
+    "rand": 2574821135,
+    "hash": "aa2d0fc89d5fd63f"
    },
    {
     "i": 139,
@@ -2523,7 +2523,7 @@
      "crits": 15
     },
     "rand": 3452101182,
-    "hash": "4c42abf4c88d6397"
+    "hash": "249e0d4bf316cb27"
    },
    {
     "i": 140,
@@ -2533,15 +2533,15 @@
     "depth": 4,
     "party": 1,
     "result": "win",
-    "frames": 2369,
+    "frames": 2283,
     "st": {
-     "dmg": 3772,
-     "taken": 5094,
+     "dmg": 3762,
+     "taken": 4921,
      "kills": 2,
-     "crits": 6
+     "crits": 7
     },
-    "rand": 3153364067,
-    "hash": "a74c6f4572c236f3"
+    "rand": 1416044651,
+    "hash": "519ade3fd88fb39b"
    },
    {
     "i": 141,
@@ -2551,15 +2551,15 @@
     "depth": 9,
     "party": 2,
     "result": "lose",
-    "frames": 635,
+    "frames": 611,
     "st": {
-     "dmg": 3533,
-     "taken": 5928,
+     "dmg": 3511,
+     "taken": 5933,
      "kills": 0,
-     "crits": 5
+     "crits": 6
     },
-    "rand": 1614529843,
-    "hash": "61cba043928eca67"
+    "rand": 3656402644,
+    "hash": "14f5eb45a826473b"
    },
    {
     "i": 142,
@@ -2569,15 +2569,15 @@
     "depth": 2,
     "party": 3,
     "result": "lose",
-    "frames": 2296,
+    "frames": 2136,
     "st": {
-     "dmg": 6991,
-     "taken": 13632,
+     "dmg": 6835,
+     "taken": 12917,
      "kills": 1,
-     "crits": 10
+     "crits": 11
     },
-    "rand": 1707066737,
-    "hash": "edc9f6b827fd9618"
+    "rand": 39763433,
+    "hash": "d3ca9b2fb62d2e5d"
    },
    {
     "i": 143,
@@ -2587,15 +2587,15 @@
     "depth": 7,
     "party": 4,
     "result": "win",
-    "frames": 941,
+    "frames": 948,
     "st": {
-     "dmg": 9021,
-     "taken": 8815,
+     "dmg": 9110,
+     "taken": 9387,
      "kills": 3,
-     "crits": 21
+     "crits": 22
     },
-    "rand": 2846325237,
-    "hash": "e96ac7d074c7b45e"
+    "rand": 3647255598,
+    "hash": "b94934d166ba564c"
    },
    {
     "i": 144,
@@ -2605,15 +2605,15 @@
     "depth": 0,
     "party": 5,
     "result": "win",
-    "frames": 692,
+    "frames": 709,
     "st": {
-     "dmg": 5681,
-     "taken": 942,
+     "dmg": 5710,
+     "taken": 829,
      "kills": 2,
-     "crits": 6
+     "crits": 5
     },
-    "rand": 2990344319,
-    "hash": "5240f253399c6c1b"
+    "rand": 1948801770,
+    "hash": "bebc93b4ba490283"
    },
    {
     "i": 145,
@@ -2623,15 +2623,15 @@
     "depth": 5,
     "party": 1,
     "result": "lose",
-    "frames": 679,
+    "frames": 727,
     "st": {
-     "dmg": 2096,
-     "taken": 3052,
+     "dmg": 2542,
+     "taken": 3018,
      "kills": 0,
-     "crits": 0
+     "crits": 3
     },
-    "rand": 4054943802,
-    "hash": "daf9b17ff69c4dbd"
+    "rand": 3137038144,
+    "hash": "573e83c4f16af034"
    },
    {
     "i": 146,
@@ -2643,13 +2643,13 @@
     "result": "lose",
     "frames": 491,
     "st": {
-     "dmg": 2099,
+     "dmg": 2105,
      "taken": 6664,
      "kills": 0,
      "crits": 0
     },
-    "rand": 3856130597,
-    "hash": "97f68160fabff706"
+    "rand": 2663976754,
+    "hash": "fa563869a49f1edd"
    },
    {
     "i": 147,
@@ -2659,15 +2659,15 @@
     "depth": 3,
     "party": 3,
     "result": "lose",
-    "frames": 1161,
+    "frames": 961,
     "st": {
-     "dmg": 4746,
-     "taken": 10741,
+     "dmg": 4273,
+     "taken": 9770,
      "kills": 0,
-     "crits": 18
+     "crits": 20
     },
-    "rand": 1553004779,
-    "hash": "0bd1d3779ef63f60"
+    "rand": 941481918,
+    "hash": "db4f03276c206a5f"
    },
    {
     "i": 148,
@@ -2685,7 +2685,7 @@
      "crits": 7
     },
     "rand": 1000590940,
-    "hash": "60a00df7bd376a83"
+    "hash": "edb8c1985683006e"
    },
    {
     "i": 149,
@@ -2695,15 +2695,15 @@
     "depth": 1,
     "party": 5,
     "result": "win",
-    "frames": 1330,
+    "frames": 1380,
     "st": {
-     "dmg": 12509,
-     "taken": 3906,
+     "dmg": 12590,
+     "taken": 3758,
      "kills": 2,
-     "crits": 32
+     "crits": 30
     },
-    "rand": 3773636649,
-    "hash": "a912ac3debc84191"
+    "rand": 2671483700,
+    "hash": "831381afc184fb53"
    },
    {
     "i": 150,
@@ -2713,15 +2713,15 @@
     "depth": 6,
     "party": 1,
     "result": "lose",
-    "frames": 2859,
+    "frames": 2595,
     "st": {
-     "dmg": 6136,
-     "taken": 8225,
-     "kills": 1,
-     "crits": 2
+     "dmg": 5450,
+     "taken": 7707,
+     "kills": 0,
+     "crits": 1
     },
-    "rand": 2395734137,
-    "hash": "f6cfb89b144d9859"
+    "rand": 730846924,
+    "hash": "2d6acb272a7db2ea"
    },
    {
     "i": 151,
@@ -2738,8 +2738,8 @@
      "kills": 0,
      "crits": 0
     },
-    "rand": 474823491,
-    "hash": "89a137913ff20d3b"
+    "rand": 98752609,
+    "hash": "402494a63e1e260b"
    },
    {
     "i": 152,
@@ -2749,15 +2749,15 @@
     "depth": 4,
     "party": 3,
     "result": "lose",
-    "frames": 2705,
+    "frames": 2789,
     "st": {
-     "dmg": 8682,
-     "taken": 16223,
+     "dmg": 8796,
+     "taken": 15910,
      "kills": 1,
      "crits": 27
     },
-    "rand": 972165707,
-    "hash": "2d5a999b5e59af44"
+    "rand": 1726723562,
+    "hash": "b9b61bf5d0bb9e8f"
    },
    {
     "i": 153,
@@ -2767,15 +2767,15 @@
     "depth": 9,
     "party": 4,
     "result": "lose",
-    "frames": 735,
+    "frames": 760,
     "st": {
-     "dmg": 5106,
-     "taken": 11650,
+     "dmg": 5819,
+     "taken": 11728,
      "kills": 0,
-     "crits": 2
+     "crits": 9
     },
-    "rand": 2634258282,
-    "hash": "4da354c938e5e92e"
+    "rand": 253281393,
+    "hash": "6907bab9a6c8d4ff"
    },
    {
     "i": 154,
@@ -2785,15 +2785,15 @@
     "depth": 2,
     "party": 5,
     "result": "win",
-    "frames": 793,
+    "frames": 805,
     "st": {
-     "dmg": 7378,
-     "taken": 1399,
+     "dmg": 7379,
+     "taken": 1719,
      "kills": 2,
-     "crits": 17
+     "crits": 14
     },
-    "rand": 262359085,
-    "hash": "6ae29ed2c2cbca1f"
+    "rand": 1127230643,
+    "hash": "cffb22fb253e4ef6"
    },
    {
     "i": 155,
@@ -2803,15 +2803,15 @@
     "depth": 7,
     "party": 1,
     "result": "lose",
-    "frames": 281,
+    "frames": 218,
     "st": {
-     "dmg": 785,
-     "taken": 2528,
+     "dmg": 344,
+     "taken": 2535,
      "kills": 0,
      "crits": 1
     },
-    "rand": 2371573262,
-    "hash": "a9b219d01aa64f1f"
+    "rand": 3624337505,
+    "hash": "b85cfd1d33efd44e"
    },
    {
     "i": 156,
@@ -2821,15 +2821,15 @@
     "depth": 0,
     "party": 2,
     "result": "win",
-    "frames": 598,
+    "frames": 574,
     "st": {
-     "dmg": 2515,
+     "dmg": 2483,
      "taken": 741,
      "kills": 1,
-     "crits": 3
+     "crits": 5
     },
-    "rand": 3802509888,
-    "hash": "472504a111c93094"
+    "rand": 1955791475,
+    "hash": "ea391bcbf4c1769d"
    },
    {
     "i": 157,
@@ -2839,15 +2839,15 @@
     "depth": 5,
     "party": 3,
     "result": "lose",
-    "frames": 1256,
+    "frames": 1208,
     "st": {
-     "dmg": 4877,
-     "taken": 9647,
+     "dmg": 4856,
+     "taken": 9111,
      "kills": 0,
-     "crits": 16
+     "crits": 15
     },
-    "rand": 1275425867,
-    "hash": "eb6ead74b166a1bb"
+    "rand": 4262178729,
+    "hash": "f634378b0dbef6b8"
    },
    {
     "i": 158,
@@ -2859,13 +2859,13 @@
     "result": "lose",
     "frames": 466,
     "st": {
-     "dmg": 2221,
-     "taken": 10709,
+     "dmg": 2321,
+     "taken": 11060,
      "kills": 0,
-     "crits": 3
+     "crits": 4
     },
-    "rand": 118150761,
-    "hash": "8afacc0e10ec7a9d"
+    "rand": 479069043,
+    "hash": "251e2e06356fb0e9"
    },
    {
     "i": 159,
@@ -2875,15 +2875,15 @@
     "depth": 3,
     "party": 5,
     "result": "win",
-    "frames": 1664,
+    "frames": 1645,
     "st": {
-     "dmg": 15668,
-     "taken": 4578,
+     "dmg": 15672,
+     "taken": 4436,
      "kills": 2,
-     "crits": 24
+     "crits": 25
     },
-    "rand": 1745673785,
-    "hash": "75c75f6e9e913bec"
+    "rand": 3182685319,
+    "hash": "7c4c39fbf38eb4fd"
    },
    {
     "i": 160,
@@ -2895,13 +2895,13 @@
     "result": "lose",
     "frames": 582,
     "st": {
-     "dmg": 1473,
+     "dmg": 1603,
      "taken": 3444,
      "kills": 0,
-     "crits": 0
+     "crits": 1
     },
-    "rand": 2411542861,
-    "hash": "e3511ec71e1127cc"
+    "rand": 2027895679,
+    "hash": "f9c5389af6e7f217"
    },
    {
     "i": 161,
@@ -2919,7 +2919,7 @@
      "crits": 2
     },
     "rand": 24232412,
-    "hash": "a6516e63eb377c29"
+    "hash": "953f396c1ada7f57"
    },
    {
     "i": 162,
@@ -2929,15 +2929,15 @@
     "depth": 6,
     "party": 3,
     "result": "lose",
-    "frames": 1852,
+    "frames": 1684,
     "st": {
-     "dmg": 8679,
-     "taken": 8675,
-     "kills": 1,
-     "crits": 13
+     "dmg": 7720,
+     "taken": 8713,
+     "kills": 0,
+     "crits": 8
     },
-    "rand": 2276532110,
-    "hash": "41e1154587d40ba2"
+    "rand": 1237733679,
+    "hash": "9d9a099c383f742d"
    },
    {
     "i": 163,
@@ -2947,15 +2947,15 @@
     "depth": 11,
     "party": 4,
     "result": "lose",
-    "frames": 1507,
+    "frames": 1509,
     "st": {
-     "dmg": 10485,
-     "taken": 17088,
+     "dmg": 10513,
+     "taken": 17020,
      "kills": 0,
-     "crits": 10
+     "crits": 11
     },
-    "rand": 3515127841,
-    "hash": "f1186496f04897e8"
+    "rand": 3898775023,
+    "hash": "a099c08082d40d03"
    },
    {
     "i": 164,
@@ -2965,15 +2965,15 @@
     "depth": 4,
     "party": 5,
     "result": "win",
-    "frames": 971,
+    "frames": 946,
     "st": {
-     "dmg": 9098,
-     "taken": 2078,
+     "dmg": 9131,
+     "taken": 1880,
      "kills": 2,
-     "crits": 18
+     "crits": 21
     },
-    "rand": 1657830365,
-    "hash": "ca9f349ca682b3c2"
+    "rand": 3824254763,
+    "hash": "20d7734aa9820525"
    },
    {
     "i": 165,
@@ -2985,13 +2985,13 @@
     "result": "lose",
     "frames": 217,
     "st": {
-     "dmg": 290,
-     "taken": 3336,
+     "dmg": 352,
+     "taken": 3113,
      "kills": 0,
-     "crits": 0
+     "crits": 1
     },
-    "rand": 4292225333,
-    "hash": "a570f47f51959a41"
+    "rand": 181505328,
+    "hash": "82ce2bed26ba757a"
    },
    {
     "i": 166,
@@ -3001,15 +3001,15 @@
     "depth": 2,
     "party": 2,
     "result": "win",
-    "frames": 591,
+    "frames": 574,
     "st": {
-     "dmg": 3307,
+     "dmg": 3300,
      "taken": 844,
      "kills": 1,
-     "crits": 5
+     "crits": 6
     },
-    "rand": 4160097443,
-    "hash": "880f6766f3d77661"
+    "rand": 3016732197,
+    "hash": "aa7d385fb036cecd"
    },
    {
     "i": 167,
@@ -3019,15 +3019,15 @@
     "depth": 7,
     "party": 3,
     "result": "lose",
-    "frames": 740,
+    "frames": 677,
     "st": {
-     "dmg": 3015,
-     "taken": 8228,
+     "dmg": 2230,
+     "taken": 8356,
      "kills": 0,
-     "crits": 7
+     "crits": 6
     },
-    "rand": 272092915,
-    "hash": "6e163d1e2d4c4724"
+    "rand": 2307304122,
+    "hash": "3419d6265ff6e844"
    },
    {
     "i": 168,
@@ -3037,15 +3037,15 @@
     "depth": 0,
     "party": 4,
     "result": "win",
-    "frames": 2350,
+    "frames": 2425,
     "st": {
-     "dmg": 19378,
-     "taken": 11451,
+     "dmg": 19381,
+     "taken": 11681,
      "kills": 3,
-     "crits": 37
+     "crits": 41
     },
-    "rand": 461361672,
-    "hash": "395a23aad8d2aaaf"
+    "rand": 1457446421,
+    "hash": "e5a4ea42ea3bd38a"
    },
    {
     "i": 169,
@@ -3055,15 +3055,15 @@
     "depth": 5,
     "party": 5,
     "result": "lose",
-    "frames": 1442,
+    "frames": 1289,
     "st": {
-     "dmg": 11269,
-     "taken": 14334,
-     "kills": 1,
-     "crits": 26
+     "dmg": 8969,
+     "taken": 14227,
+     "kills": 0,
+     "crits": 17
     },
-    "rand": 4200256305,
-    "hash": "ef180ace8809b639"
+    "rand": 3285094765,
+    "hash": "c8490839644e2fdc"
    },
    {
     "i": 170,
@@ -3075,13 +3075,13 @@
     "result": "lose",
     "frames": 287,
     "st": {
-     "dmg": 1040,
+     "dmg": 928,
      "taken": 2338,
      "kills": 0,
-     "crits": 2
+     "crits": 1
     },
-    "rand": 3986757277,
-    "hash": "697c5f1bdf74806e"
+    "rand": 899096424,
+    "hash": "b8b318e21348ac15"
    },
    {
     "i": 171,
@@ -3091,15 +3091,15 @@
     "depth": 3,
     "party": 2,
     "result": "win",
-    "frames": 635,
+    "frames": 646,
     "st": {
-     "dmg": 3822,
-     "taken": 638,
+     "dmg": 3932,
+     "taken": 630,
      "kills": 2,
-     "crits": 8
+     "crits": 9
     },
-    "rand": 627264337,
-    "hash": "dd12d4a6742b11c4"
+    "rand": 856969428,
+    "hash": "fb22a41c0794454a"
    },
    {
     "i": 172,
@@ -3109,15 +3109,15 @@
     "depth": 8,
     "party": 3,
     "result": "lose",
-    "frames": 1515,
+    "frames": 2023,
     "st": {
-     "dmg": 6008,
-     "taken": 11071,
-     "kills": 0,
-     "crits": 9
+     "dmg": 7177,
+     "taken": 12067,
+     "kills": 1,
+     "crits": 12
     },
-    "rand": 1777152434,
-    "hash": "ef823b56831f5bc0"
+    "rand": 306763555,
+    "hash": "06d1b13036c39c32"
    },
    {
     "i": 173,
@@ -3127,15 +3127,15 @@
     "depth": 1,
     "party": 4,
     "result": "win",
-    "frames": 867,
+    "frames": 847,
     "st": {
-     "dmg": 6884,
-     "taken": 8098,
+     "dmg": 6990,
+     "taken": 6185,
      "kills": 3,
-     "crits": 14
+     "crits": 13
     },
-    "rand": 332633982,
-    "hash": "bb5f0b61d91b2428"
+    "rand": 2559668780,
+    "hash": "e9cb9a7d7de77c47"
    },
    {
     "i": 174,
@@ -3145,15 +3145,15 @@
     "depth": 6,
     "party": 5,
     "result": "win",
-    "frames": 1252,
+    "frames": 1306,
     "st": {
-     "dmg": 11132,
-     "taken": 5154,
+     "dmg": 10795,
+     "taken": 5483,
      "kills": 2,
-     "crits": 17
+     "crits": 6
     },
-    "rand": 919926565,
-    "hash": "6ad00cdb77e2b95a"
+    "rand": 2337539996,
+    "hash": "7098212ac73f5e16"
    },
    {
     "i": 175,
@@ -3165,13 +3165,13 @@
     "result": "lose",
     "frames": 202,
     "st": {
-     "dmg": 323,
+     "dmg": 367,
      "taken": 2611,
      "kills": 0,
-     "crits": 0
+     "crits": 1
     },
-    "rand": 3647066545,
-    "hash": "cd93a7388effed5d"
+    "rand": 1367912353,
+    "hash": "4f2169961c1e4413"
    },
    {
     "i": 176,
@@ -3181,15 +3181,15 @@
     "depth": 4,
     "party": 2,
     "result": "win",
-    "frames": 1667,
+    "frames": 1668,
     "st": {
-     "dmg": 8155,
-     "taken": 2831,
+     "dmg": 8181,
+     "taken": 2814,
      "kills": 2,
-     "crits": 11
+     "crits": 13
     },
-    "rand": 204492957,
-    "hash": "6379d44519fe8317"
+    "rand": 595716439,
+    "hash": "60bdcdfeb1716c0d"
    },
    {
     "i": 177,
@@ -3199,15 +3199,15 @@
     "depth": 9,
     "party": 3,
     "result": "lose",
-    "frames": 1311,
+    "frames": 1099,
     "st": {
-     "dmg": 5400,
-     "taken": 12363,
+     "dmg": 3950,
+     "taken": 10535,
      "kills": 0,
-     "crits": 9
+     "crits": 11
     },
-    "rand": 3312138599,
-    "hash": "cf3f19dec0e95bd3"
+    "rand": 1520283698,
+    "hash": "664947e2559d4e0a"
    },
    {
     "i": 178,
@@ -3217,15 +3217,15 @@
     "depth": 2,
     "party": 4,
     "result": "lose",
-    "frames": 1893,
+    "frames": 2158,
     "st": {
-     "dmg": 11459,
-     "taken": 17861,
+     "dmg": 12308,
+     "taken": 18721,
      "kills": 0,
-     "crits": 20
+     "crits": 18
     },
-    "rand": 3430545913,
-    "hash": "e96ce140186e9458"
+    "rand": 2812033431,
+    "hash": "dd3f33b78827e649"
    },
    {
     "i": 179,
@@ -3235,15 +3235,15 @@
     "depth": 7,
     "party": 5,
     "result": "lose",
-    "frames": 1735,
+    "frames": 1465,
     "st": {
-     "dmg": 13181,
-     "taken": 18672,
+     "dmg": 10349,
+     "taken": 18554,
      "kills": 1,
-     "crits": 20
+     "crits": 14
     },
-    "rand": 1850758044,
-    "hash": "d9cc87d9e262885c"
+    "rand": 1961399774,
+    "hash": "31e80bb4cc78fe31"
    },
    {
     "i": 180,
@@ -3261,7 +3261,7 @@
      "crits": 1
     },
     "rand": 4233116423,
-    "hash": "dccddd4dd0bb5dd0"
+    "hash": "9a975e71ca97ae7e"
    },
    {
     "i": 181,
@@ -3271,15 +3271,15 @@
     "depth": 5,
     "party": 2,
     "result": "win",
-    "frames": 1023,
+    "frames": 1022,
     "st": {
      "dmg": 5734,
      "taken": 4086,
      "kills": 2,
      "crits": 3
     },
-    "rand": 2975191978,
-    "hash": "747f5fb717ac8a21"
+    "rand": 1143626165,
+    "hash": "c88ab4059d10c79c"
    },
    {
     "i": 182,
@@ -3289,15 +3289,15 @@
     "depth": 10,
     "party": 3,
     "result": "lose",
-    "frames": 2642,
+    "frames": 3105,
     "st": {
-     "dmg": 8790,
-     "taken": 19322,
-     "kills": 0,
+     "dmg": 9555,
+     "taken": 20742,
+     "kills": 1,
      "crits": 7
     },
-    "rand": 1973997554,
-    "hash": "2eda7f4d9be064b7"
+    "rand": 3247333258,
+    "hash": "bc080aaae4a73e22"
    },
    {
     "i": 183,
@@ -3307,15 +3307,15 @@
     "depth": 3,
     "party": 4,
     "result": "lose",
-    "frames": 1776,
+    "frames": 1770,
     "st": {
-     "dmg": 10713,
-     "taken": 11271,
+     "dmg": 11108,
+     "taken": 11486,
      "kills": 1,
-     "crits": 15
+     "crits": 14
     },
-    "rand": 2823268590,
-    "hash": "10ac1e5c6f520ae8"
+    "rand": 3075702581,
+    "hash": "f3026a6130fb55bf"
    },
    {
     "i": 184,
@@ -3325,15 +3325,15 @@
     "depth": 8,
     "party": 5,
     "result": "win",
-    "frames": 1232,
+    "frames": 1267,
     "st": {
-     "dmg": 12877,
-     "taken": 3156,
+     "dmg": 12845,
+     "taken": 4269,
      "kills": 2,
-     "crits": 30
+     "crits": 26
     },
-    "rand": 2095426493,
-    "hash": "c3cf46073d878966"
+    "rand": 1710864605,
+    "hash": "68b6aef1ff067f2b"
    },
    {
     "i": 185,
@@ -3343,15 +3343,15 @@
     "depth": 1,
     "party": 1,
     "result": "win",
-    "frames": 464,
+    "frames": 419,
     "st": {
-     "dmg": 2250,
-     "taken": 683,
+     "dmg": 2133,
+     "taken": 860,
      "kills": 1,
-     "crits": 5
+     "crits": 6
     },
-    "rand": 4294641564,
-    "hash": "7b7e50086d8146b5"
+    "rand": 2974605327,
+    "hash": "94a96f86c6c8a876"
    },
    {
     "i": 186,
@@ -3361,15 +3361,15 @@
     "depth": 6,
     "party": 2,
     "result": "lose",
-    "frames": 440,
+    "frames": 439,
     "st": {
-     "dmg": 1955,
-     "taken": 5213,
+     "dmg": 1940,
+     "taken": 4995,
      "kills": 0,
      "crits": 3
     },
-    "rand": 1409711406,
-    "hash": "6b4b5d6a7404156d"
+    "rand": 1319710512,
+    "hash": "cd6f023c47dd8ffa"
    },
    {
     "i": 187,
@@ -3379,15 +3379,15 @@
     "depth": 11,
     "party": 3,
     "result": "lose",
-    "frames": 1360,
+    "frames": 1293,
     "st": {
-     "dmg": 6685,
-     "taken": 12342,
+     "dmg": 4906,
+     "taken": 10908,
      "kills": 0,
-     "crits": 23
+     "crits": 9
     },
-    "rand": 3533352754,
-    "hash": "4da9a76743527103"
+    "rand": 1011170283,
+    "hash": "be0b74ed16fc6134"
    },
    {
     "i": 188,
@@ -3397,15 +3397,15 @@
     "depth": 4,
     "party": 4,
     "result": "lose",
-    "frames": 823,
+    "frames": 776,
     "st": {
-     "dmg": 5009,
-     "taken": 11710,
+     "dmg": 4781,
+     "taken": 11771,
      "kills": 0,
-     "crits": 8
+     "crits": 10
     },
-    "rand": 2248781933,
-    "hash": "74964c9414e59976"
+    "rand": 383580123,
+    "hash": "551a34b545c4f568"
    },
    {
     "i": 189,
@@ -3415,15 +3415,15 @@
     "depth": 9,
     "party": 5,
     "result": "win",
-    "frames": 1696,
+    "frames": 1744,
     "st": {
-     "dmg": 18169,
-     "taken": 14409,
+     "dmg": 18133,
+     "taken": 14811,
      "kills": 2,
-     "crits": 45
+     "crits": 40
     },
-    "rand": 851342568,
-    "hash": "1be1e39eadcd8104"
+    "rand": 2818367075,
+    "hash": "97207aeb3be16a4b"
    },
    {
     "i": 190,
@@ -3433,15 +3433,15 @@
     "depth": 2,
     "party": 1,
     "result": "win",
-    "frames": 1363,
+    "frames": 1392,
     "st": {
-     "dmg": 1528,
-     "taken": 641,
+     "dmg": 1653,
+     "taken": 648,
      "kills": 1,
-     "crits": 1
+     "crits": 0
     },
-    "rand": 493635188,
-    "hash": "bced342a8dbdb234"
+    "rand": 1445176843,
+    "hash": "79123e07eb6d1f05"
    },
    {
     "i": 191,
@@ -3451,15 +3451,15 @@
     "depth": 7,
     "party": 2,
     "result": "lose",
-    "frames": 1352,
+    "frames": 1273,
     "st": {
-     "dmg": 5012,
-     "taken": 8067,
+     "dmg": 4423,
+     "taken": 7905,
      "kills": 1,
-     "crits": 9
+     "crits": 4
     },
-    "rand": 4199739155,
-    "hash": "ddea58af9bd943be"
+    "rand": 2327875751,
+    "hash": "d65725c751edc668"
    },
    {
     "i": 192,
@@ -3469,15 +3469,15 @@
     "depth": 0,
     "party": 3,
     "result": "lose",
-    "frames": 1805,
+    "frames": 1765,
     "st": {
-     "dmg": 6689,
-     "taken": 11893,
+     "dmg": 6519,
+     "taken": 11990,
      "kills": 1,
      "crits": 23
     },
-    "rand": 2122590229,
-    "hash": "da21084511727cc8"
+    "rand": 588916207,
+    "hash": "49689b0b28e1a3a9"
    },
    {
     "i": 193,
@@ -3487,15 +3487,15 @@
     "depth": 5,
     "party": 4,
     "result": "win",
-    "frames": 877,
+    "frames": 884,
     "st": {
-     "dmg": 5011,
-     "taken": 11317,
+     "dmg": 5790,
+     "taken": 10860,
      "kills": 3,
-     "crits": 6
+     "crits": 7
     },
-    "rand": 515966707,
-    "hash": "f2959cade69b5959"
+    "rand": 1237803271,
+    "hash": "3487e8d75aa27dec"
    },
    {
     "i": 194,
@@ -3505,15 +3505,15 @@
     "depth": 10,
     "party": 5,
     "result": "win",
-    "frames": 1235,
+    "frames": 1228,
     "st": {
-     "dmg": 14551,
-     "taken": 5122,
+     "dmg": 14583,
+     "taken": 4758,
      "kills": 2,
-     "crits": 31
+     "crits": 30
     },
-    "rand": 1258116087,
-    "hash": "c9306cf00cbf9929"
+    "rand": 2774221418,
+    "hash": "54349c6a10cdbc0c"
    },
    {
     "i": 195,
@@ -3525,13 +3525,13 @@
     "result": "lose",
     "frames": 561,
     "st": {
-     "dmg": 2155,
-     "taken": 2369,
+     "dmg": 1879,
+     "taken": 2324,
      "kills": 0,
-     "crits": 5
+     "crits": 0
     },
-    "rand": 1621847869,
-    "hash": "7d8974dc1f122b52"
+    "rand": 411210629,
+    "hash": "373002d0ace8a8a0"
    },
    {
     "i": 196,
@@ -3549,7 +3549,7 @@
      "crits": 5
     },
     "rand": 3232786283,
-    "hash": "eacab91e48d6d86f"
+    "hash": "ba81d632951b1bd1"
    },
    {
     "i": 197,
@@ -3559,15 +3559,15 @@
     "depth": 1,
     "party": 3,
     "result": "lose",
-    "frames": 1138,
+    "frames": 1177,
     "st": {
-     "dmg": 4499,
-     "taken": 9793,
+     "dmg": 3971,
+     "taken": 9225,
      "kills": 0,
-     "crits": 20
+     "crits": 8
     },
-    "rand": 3121229854,
-    "hash": "953fa69aaafb9a7f"
+    "rand": 4211561000,
+    "hash": "5eb34662de530123"
    },
    {
     "i": 198,
@@ -3577,15 +3577,15 @@
     "depth": 6,
     "party": 4,
     "result": "lose",
-    "frames": 581,
+    "frames": 582,
     "st": {
-     "dmg": 2427,
-     "taken": 11157,
+     "dmg": 2491,
+     "taken": 11386,
      "kills": 0,
-     "crits": 4
+     "crits": 5
     },
-    "rand": 1576062063,
-    "hash": "68c6a3e4db1f65f2"
+    "rand": 1361509572,
+    "hash": "1af5596208c8b89c"
    },
    {
     "i": 199,
@@ -3595,15 +3595,15 @@
     "depth": 11,
     "party": 5,
     "result": "lose",
-    "frames": 1131,
+    "frames": 1208,
     "st": {
-     "dmg": 10245,
-     "taken": 14165,
+     "dmg": 11111,
+     "taken": 14475,
      "kills": 0,
      "crits": 24
     },
-    "rand": 3802112787,
-    "hash": "27d5bc6eb5fc287f"
+    "rand": 2837834623,
+    "hash": "c39109d2a004dabd"
    }
   ]
  },
