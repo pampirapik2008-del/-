@@ -1,0 +1,1340 @@
+{
+  "date": "2026-11-18T22:24:21.007Z",
+  "browser": "HeadlessChrome/131.0.6778.0",
+  "cpu": 4,
+  "viewport": "844×390 DPR 2, качество 0, R=1",
+  "seconds": 2,
+  "scenario": [
+    {
+      "id": "boss",
+      "label": "Босс, искусственный всплеск способностей",
+      "timing": {
+        "frames": 26,
+        "fps": 13,
+        "worst5": 4.61,
+        "updateMedian": 1.2,
+        "update95": 6.2,
+        "drawMedian": 7.8,
+        "draw95": 18.7,
+        "maxFrame": 333.3,
+        "over60": 42.31,
+        "setupMs": 8.9,
+        "screen": "fight",
+        "observed": {
+          "units": [
+            5
+          ],
+          "effectsMax": 14,
+          "activities": [
+            "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "бой: boss; баннер: Король слизней"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 333.3,
+            "update": 2.7,
+            "draw": 52,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 216.7,
+            "update": 1.2,
+            "draw": 15.5,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 63,
+            "projectiles": 1
+          },
+          {
+            "frame": 166.6,
+            "update": 6.2,
+            "draw": 12.5,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 11,
+            "particles": 57,
+            "projectiles": 2
+          },
+          {
+            "frame": 100,
+            "update": 1.6,
+            "draw": 18.7,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 32,
+            "projectiles": 2
+          },
+          {
+            "frame": 66.7,
+            "update": 0.1,
+            "draw": 7.7,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 11,
+            "particles": 59,
+            "projectiles": 2
+          },
+          {
+            "frame": 66.7,
+            "update": 1.7,
+            "draw": 8.6,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 11,
+            "particles": 62,
+            "projectiles": 2
+          },
+          {
+            "frame": 66.7,
+            "update": 0.7,
+            "draw": 7.4,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 65,
+            "projectiles": 2
+          },
+          {
+            "frame": 66.7,
+            "update": 1.1,
+            "draw": 10,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 63,
+            "projectiles": 1
+          },
+          {
+            "frame": 66.7,
+            "update": 1,
+            "draw": 8.9,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 51,
+            "projectiles": 1
+          },
+          {
+            "frame": 66.6,
+            "update": 0.9,
+            "draw": 9.3,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 57,
+            "projectiles": 1
+          },
+          {
+            "frame": 66.6,
+            "update": 3,
+            "draw": 8.3,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 43,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0.2,
+            "draw": 6.2,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 1.3,
+            "draw": 6.7,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 26,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 8.6,
+            "draw": 5.6,
+            "activity": "бой: boss; баннер: Король слизней",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 6,
+            "particles": 20,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 1.4,
+            "draw": 7.8,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 1.9,
+            "draw": 6.6,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 15,
+            "projectiles": 2
+          },
+          {
+            "frame": 50,
+            "update": 0.6,
+            "draw": 6.1,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 20,
+            "projectiles": 2
+          },
+          {
+            "frame": 50,
+            "update": 0.8,
+            "draw": 6.3,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 25,
+            "projectiles": 2
+          },
+          {
+            "frame": 50,
+            "update": 2.5,
+            "draw": 9.2,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 34,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 2.4,
+            "draw": 5.6,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 14,
+            "particles": 23,
+            "projectiles": 0
+          }
+        ],
+        "profile": null,
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 497.74,
+        "blendsPerFrame": 17.31,
+        "lighterPerFrame": 6.49
+      },
+      "profile": {
+        "sampleCount": 1662,
+        "durationMs": 2141.77,
+        "topSelf": [
+          {
+            "name": "(program)",
+            "url": "",
+            "line": 0,
+            "samples": 1167
+          },
+          {
+            "name": "drawImage",
+            "url": "",
+            "line": 0,
+            "samples": 43
+          },
+          {
+            "name": "renderSec",
+            "url": "",
+            "line": 842,
+            "samples": 33
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 21
+          },
+          {
+            "name": "drawImage",
+            "url": "",
+            "line": 0,
+            "samples": 20
+          },
+          {
+            "name": "createOscillator",
+            "url": "",
+            "line": 0,
+            "samples": 19
+          },
+          {
+            "name": "createOscillator",
+            "url": "",
+            "line": 0,
+            "samples": 17
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 15
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 13
+          },
+          {
+            "name": "drawImage",
+            "url": "",
+            "line": 0,
+            "samples": 11
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 10
+          },
+          {
+            "name": "createGain",
+            "url": "",
+            "line": 0,
+            "samples": 10
+          },
+          {
+            "name": "createGain",
+            "url": "",
+            "line": 0,
+            "samples": 9
+          },
+          {
+            "name": "createOscillator",
+            "url": "",
+            "line": 0,
+            "samples": 8
+          },
+          {
+            "name": "(anonymous)",
+            "url": "",
+            "line": 710,
+            "samples": 8
+          },
+          {
+            "name": "measureText",
+            "url": "",
+            "line": 0,
+            "samples": 7
+          },
+          {
+            "name": "connect",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "createOscillator",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "(garbage collector)",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "unitStep",
+            "url": "",
+            "line": 4700,
+            "samples": 5
+          },
+          {
+            "name": "requestAnimationFrame",
+            "url": "",
+            "line": 0,
+            "samples": 5
+          },
+          {
+            "name": "createBufferSource",
+            "url": "",
+            "line": 0,
+            "samples": 5
+          },
+          {
+            "name": "(idle)",
+            "url": "",
+            "line": 0,
+            "samples": 5
+          },
+          {
+            "name": "simStep",
+            "url": "",
+            "line": 5251,
+            "samples": 4
+          },
+          {
+            "name": "projStep",
+            "url": "",
+            "line": 5016,
+            "samples": 4
+          },
+          {
+            "name": "visTick",
+            "url": "",
+            "line": 6586,
+            "samples": 4
+          },
+          {
+            "name": "fillText",
+            "url": "",
+            "line": 0,
+            "samples": 4
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 4
+          },
+          {
+            "name": "drawImage",
+            "url": "",
+            "line": 0,
+            "samples": 4
+          },
+          {
+            "name": "createGain",
+            "url": "",
+            "line": 0,
+            "samples": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry",
+      "label": "Вход в бой и расстановку",
+      "timing": {
+        "frames": 41,
+        "fps": 20.16,
+        "worst5": 8.58,
+        "updateMedian": 0,
+        "update95": 0.8,
+        "drawMedian": 3.7,
+        "draw95": 6.5,
+        "maxFrame": 333.3,
+        "over60": 7.32,
+        "setupMs": 64.6,
+        "screen": "prep",
+        "observed": {
+          "units": [
+            8
+          ],
+          "effectsMax": 0,
+          "activities": [
+            "переход экрана; бой: norm",
+            "бой: norm"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 333.3,
+            "update": 0.2,
+            "draw": 40.6,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 183.4,
+            "update": 0,
+            "draw": 4.2,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 116.6,
+            "update": 0.6,
+            "draw": 5.3,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 4.7,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 19.1,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 6.5,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 2.4,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 2.8,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.4,
+            "draw": 3.7,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 5.2,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 49.9,
+            "update": 0,
+            "draw": 3.3,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 4.6,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 5,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.2,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 5.9,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 1.2,
+            "draw": 4.6,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.8,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 3.9,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 1.1,
+            "draw": 2.8,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          }
+        ],
+        "profile": null,
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 437.02,
+        "blendsPerFrame": 10.89,
+        "lighterPerFrame": 3.39
+      },
+      "profile": {
+        "sampleCount": 1733,
+        "durationMs": 2184.72,
+        "topSelf": [
+          {
+            "name": "(program)",
+            "url": "",
+            "line": 0,
+            "samples": 1303
+          },
+          {
+            "name": "createOscillator",
+            "url": "",
+            "line": 0,
+            "samples": 21
+          },
+          {
+            "name": "createOscillator",
+            "url": "",
+            "line": 0,
+            "samples": 19
+          },
+          {
+            "name": "(idle)",
+            "url": "",
+            "line": 0,
+            "samples": 18
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 18
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 17
+          },
+          {
+            "name": "drawImage",
+            "url": "",
+            "line": 0,
+            "samples": 16
+          },
+          {
+            "name": "measureText",
+            "url": "",
+            "line": 0,
+            "samples": 13
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 11
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 9
+          },
+          {
+            "name": "bakeFloor",
+            "url": "",
+            "line": 3436,
+            "samples": 8
+          },
+          {
+            "name": "createGain",
+            "url": "",
+            "line": 0,
+            "samples": 8
+          },
+          {
+            "name": "dFight",
+            "url": "",
+            "line": 6236,
+            "samples": 7
+          },
+          {
+            "name": "recolor",
+            "url": "",
+            "line": 1643,
+            "samples": 7
+          },
+          {
+            "name": "drawImage",
+            "url": "",
+            "line": 0,
+            "samples": 7
+          },
+          {
+            "name": "(anonymous)",
+            "url": "",
+            "line": 710,
+            "samples": 7
+          },
+          {
+            "name": "loop",
+            "url": "",
+            "line": 9632,
+            "samples": 6
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "createGain",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "createBufferSource",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "mkArena",
+            "url": "",
+            "line": 3276,
+            "samples": 5
+          },
+          {
+            "name": "fillRect",
+            "url": "",
+            "line": 0,
+            "samples": 5
+          },
+          {
+            "name": "fightGround",
+            "url": "",
+            "line": 6071,
+            "samples": 5
+          },
+          {
+            "name": "fightDepth",
+            "url": "",
+            "line": 6118,
+            "samples": 4
+          },
+          {
+            "name": "measureText",
+            "url": "",
+            "line": 0,
+            "samples": 4
+          },
+          {
+            "name": "drawImage",
+            "url": "",
+            "line": 0,
+            "samples": 4
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 4
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 4
+          },
+          {
+            "name": "buildGrid",
+            "url": "",
+            "line": 3297,
+            "samples": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "bake",
+      "label": "Новая игра и сборка карты",
+      "timing": {
+        "frames": 37,
+        "fps": 18.5,
+        "worst5": 5.45,
+        "updateMedian": 0,
+        "update95": 14.3,
+        "drawMedian": 4.5,
+        "draw95": 15.6,
+        "maxFrame": 616.7,
+        "over60": 10.81,
+        "setupMs": 14.3,
+        "screen": "pick",
+        "observed": {
+          "units": [
+            0
+          ],
+          "effectsMax": 0,
+          "activities": [
+            "сборка карты: земля",
+            "сборка карты: озёра",
+            "сборка карты: дороги",
+            "сборка карты: лес: выбор",
+            "сборка карты: лес: отрисовка",
+            "обычный кадр"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 616.7,
+            "update": 14.3,
+            "draw": 81.9,
+            "activity": "сборка карты: земля",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 183.5,
+            "update": 0.9,
+            "draw": 4.4,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 133.4,
+            "update": 9.5,
+            "draw": 7.5,
+            "activity": "сборка карты: лес: выбор",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.6,
+            "update": 10.6,
+            "draw": 15.6,
+            "activity": "сборка карты: земля",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 11.4,
+            "draw": 3.8,
+            "activity": "сборка карты: дороги",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 21.7,
+            "draw": 3.2,
+            "activity": "сборка карты: лес: выбор",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 9,
+            "draw": 5,
+            "activity": "сборка карты: земля",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 4.7,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.9,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.3,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 4.4,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 10,
+            "draw": 4.6,
+            "activity": "сборка карты: озёра",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 9.7,
+            "draw": 3.9,
+            "activity": "сборка карты: лес: отрисовка",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 3.2,
+            "draw": 4.8,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 3.8,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 5.9,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 4.3,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 4.1,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 3.7,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 4.8,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          }
+        ],
+        "profile": null,
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 2434.82,
+        "blendsPerFrame": 9.65,
+        "lighterPerFrame": 4.79
+      },
+      "profile": {
+        "sampleCount": 1705,
+        "durationMs": 2176.23,
+        "topSelf": [
+          {
+            "name": "(program)",
+            "url": "",
+            "line": 0,
+            "samples": 1176
+          },
+          {
+            "name": "fillRect",
+            "url": "",
+            "line": 0,
+            "samples": 40
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 37
+          },
+          {
+            "name": "renderSec",
+            "url": "",
+            "line": 842,
+            "samples": 36
+          },
+          {
+            "name": "bakeRow",
+            "url": "",
+            "line": 6924,
+            "samples": 27
+          },
+          {
+            "name": "(idle)",
+            "url": "",
+            "line": 0,
+            "samples": 25
+          },
+          {
+            "name": "createOscillator",
+            "url": "",
+            "line": 0,
+            "samples": 18
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 17
+          },
+          {
+            "name": "createOscillator",
+            "url": "",
+            "line": 0,
+            "samples": 15
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 13
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 12
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 12
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 11
+          },
+          {
+            "name": "fillText",
+            "url": "",
+            "line": 0,
+            "samples": 10
+          },
+          {
+            "name": "bakeForest",
+            "url": "",
+            "line": 7030,
+            "samples": 9
+          },
+          {
+            "name": "strokeText",
+            "url": "",
+            "line": 0,
+            "samples": 9
+          },
+          {
+            "name": "measureText",
+            "url": "",
+            "line": 0,
+            "samples": 9
+          },
+          {
+            "name": "createGain",
+            "url": "",
+            "line": 0,
+            "samples": 9
+          },
+          {
+            "name": "createGain",
+            "url": "",
+            "line": 0,
+            "samples": 9
+          },
+          {
+            "name": "txo",
+            "url": "",
+            "line": 2222,
+            "samples": 8
+          },
+          {
+            "name": "createBufferSource",
+            "url": "",
+            "line": 0,
+            "samples": 8
+          },
+          {
+            "name": "createBiquadFilter",
+            "url": "",
+            "line": 0,
+            "samples": 7
+          },
+          {
+            "name": "fillText",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "createOscillator",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "connect",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "(garbage collector)",
+            "url": "",
+            "line": 0,
+            "samples": 6
+          },
+          {
+            "name": "dPick",
+            "url": "",
+            "line": 9064,
+            "samples": 5
+          },
+          {
+            "name": "(anonymous)",
+            "url": "",
+            "line": 710,
+            "samples": 5
+          },
+          {
+            "name": "mapSpread",
+            "url": "",
+            "line": 6739,
+            "samples": 4
+          },
+          {
+            "name": "txo",
+            "url": "",
+            "line": 2222,
+            "samples": 4
+          }
+        ]
+      }
+    }
+  ]
+}
