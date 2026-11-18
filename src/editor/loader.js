@@ -8,7 +8,7 @@ try { LS=window.localStorage; LS.getItem('mx_storage_probe'); }
 catch(e) { STORAGE_TEMP=true; const m=new Map(); LS={getItem:k=>m.has(String(k))?m.get(String(k)):null,setItem:(k,v)=>m.set(String(k),String(v)),removeItem:k=>m.delete(String(k))}; }
 window.__mxStorage=LS;
 LS.removeItem('mx_dev'); // флаг старой схемы «доступ навсегда» больше не используется: вход действует до перезагрузки страницы
-const K={cfg:'mx_cfg',act:'mx_active',good:'mx_good',pend:'mx_pending',note:'mx_notice'};
+const K={cfg:'mx_cfg',act:'mx_active',good:'mx_good',pend:'mx_pending',note:'mx_notice',base:'mx_original_hash'};
 const ORIG=$('#game-src').textContent,PREFIX=$('#game-assets').textContent;
 let CODE=ORIG,PENDING=false;
 const cfg=Object.assign({base:'https://api.onekey-ai.lol/v1',key:'',model:'claude-sonnet-5-5',effort:'medium',maxTok:16000},JSON.parse(LS.getItem(K.cfg)||'{}'));
@@ -30,8 +30,27 @@ async function markGood(id){try{const v=await getVer(+id);if(v&&!v.good){v.good=
 function run(code){const s=document.createElement('script');s.textContent=PREFIX+code;document.body.appendChild(s)}
 function toast(m){const t=document.createElement('div');t.className='mx-t';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),9000)}
 const markBad=id=>{const b=JSON.parse(LS.getItem('mx_bad')||'[]');if(id&&!b.includes(id))b.push(id);LS.setItem('mx_bad',JSON.stringify(b))};
+// Новый файл не должен незаметно запускать код из старой версии редактора. Сами правки остаются в IndexedDB.
+async function detectNewBase(act){
+  const hash=MXCore.hash(ORIG),old=LS.getItem(K.base);
+  let changed=!!old&&old!==hash;
+  // Для уже существовавших установок нет старого хеша. Узнаём конкретно старую сборку без отчёта.
+  if(!old&&act!=='orig'&&ORIG.includes('function perfReportStart(')){
+    try{const v=await getVer(+act);changed=!!v&&typeof v.code==='string'&&!v.code.includes('function perfReportStart(')}
+    catch(e){return false} // нет доступа к базе — не теряем возможность проверить позже
+  }
+  try{LS.setItem(K.base,hash)}catch(e){} // нехватка места не должна останавливать запуск игры
+  return changed;
+}
 async function boot(){
   let act=LS.getItem(K.act)||'orig',good=LS.getItem(K.good)||'orig',notice=LS.getItem(K.note)||'';LS.removeItem(K.note);
+  if(await detectNewBase(act)){
+    if(act!=='orig'||good!=='orig'||LS.getItem(K.pend)){
+      try{LS.setItem(K.act,'orig');LS.setItem(K.good,'orig');LS.removeItem(K.pend)}catch(e){}
+      act=good='orig';
+      notice='Обновлена игра. Старая правка осталась в истории редактора; запущен новый оригинал.';
+    }
+  }
   if(LS.getItem(K.pend)){markBad(LS.getItem(K.pend));LS.removeItem(K.pend);act=good;LS.setItem(K.act,act);notice='Новая версия не запустилась — вернул предыдущую.'}
   if(/[#&]orig\b/.test(location.hash))act='orig';
   if(act!=='orig'){try{const v=await getVer(+act);if(v)CODE=v.code;else act='orig'}catch(e){act='orig'}}
