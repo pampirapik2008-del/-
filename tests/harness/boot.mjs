@@ -23,7 +23,10 @@ const FAST_PROLOGUE = "\"use strict\";\nconst " + FAST_GLOBALS.map((k) => k + " 
 // dom — готовое окружение из createDom(); по умолчанию заглушка без растеризации.
 // code — готовый код игры (ассеты + секции); по умолчанию собирается из src/ и assets/.
 // bakeMs — бюджет порции запекания карты за кадр (по умолчанию вся карта в первом кадре).
-export function boot({ quiet = true, dom = createDom(), code = null, bakeMs = null } = {}) {
+// runner — текст скрипта-запускателя (src/runner.js или загрузчик): тогда игра стартует как в браузере —
+//   запускатель читает <script id="game-assets"> и <script id="game-src"> и добавляет <script> в body;
+//   без runner код игры выполняется напрямую.
+export function boot({ quiet = true, dom = createDom(), code = null, bakeMs = null, runner = null } = {}) {
 	const { windowObj, document, rafQueue, winListeners, mainCanvas } = dom;
 	const errors = [];
 	let fatal = null;
@@ -40,7 +43,6 @@ export function boot({ quiet = true, dom = createDom(), code = null, bakeMs = nu
 		__mxBakeMs: typeof bakeMs === "number" ? bakeMs : 1e9,
 		screen: windowObj.screen,
 		location: windowObj.location,
-		localStorage: windowObj.localStorage,
 		performance: windowObj.performance,
 		requestAnimationFrame: windowObj.requestAnimationFrame,
 		cancelAnimationFrame: windowObj.cancelAnimationFrame,
@@ -96,11 +98,30 @@ export function boot({ quiet = true, dom = createDom(), code = null, bakeMs = nu
 		decodeURIComponent,
 	});
 
+	// как в браузере: обращение к localStorage может бросить исключение (защищённый просмотр) — тест задаёт такой getter на windowObj
+	Object.defineProperty(sandbox, "localStorage", { get: () => windowObj.localStorage, enumerable: true });
 	const preKeys = new Set(Object.keys(sandbox));
 	const ctx = vm.createContext(sandbox);
-	const body = (code == null ? loadAssetsJs(ROOT) + "\n" + loadGameSrc(ROOT) : code) + "\n" + DEVAPI;
-	const src = FAST_PROLOGUE + body;
-	vm.runInContext(src, ctx, { filename: "game.js" });
+	if (runner) {
+		// секции, как в собранном HTML; скрипт, добавленный запускателем в body, выполняется в том же контексте
+		const parts = code == null ? { "game-assets": loadAssetsJs(ROOT), "game-src": loadGameSrc(ROOT) } : { "game-assets": "", "game-src": code };
+		const section = (id) => Object.assign(document.createElement("script"), { id, type: "text/plain", textContent: parts[id] });
+		const byId = document.getElementById;
+		document.getElementById = (id) => (id in parts ? section(id) : byId(id));
+		document.querySelector = (sel) => (sel[0] === "#" && sel.slice(1) in parts ? section(sel.slice(1)) : byId(sel.slice(1)));
+		const append = document.body.appendChild;
+		let first = true; // пролог с константами объявляется в контексте один раз — для скрипта игры
+		document.body.appendChild = (el) => {
+			if (!(el && el.tagName === "SCRIPT" && el.textContent)) return append(el);
+			vm.runInContext((first ? FAST_PROLOGUE : '"use strict";\n') + el.textContent, ctx, { filename: "game.js" });
+			first = false;
+		};
+		vm.runInContext(runner, ctx, { filename: "runner.js" });
+		vm.runInContext('"use strict";\n' + DEVAPI, ctx, { filename: "devapi.js" });
+	} else {
+		const body = (code == null ? loadAssetsJs(ROOT) + "\n" + loadGameSrc(ROOT) : code) + "\n" + DEVAPI;
+		vm.runInContext(FAST_PROLOGUE + body, ctx, { filename: "game.js" });
+	}
 
 	let ts = 0;
 	let frames = 0;

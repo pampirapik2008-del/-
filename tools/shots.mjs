@@ -8,6 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createDom } from "../tests/harness/dom.mjs";
 import { boot, ROOT } from "../tests/harness/boot.mjs";
+import { codeFromHtml } from "./lib/assemble.mjs";
 
 const args = process.argv.slice(2);
 const opt = (f, d) => {
@@ -27,17 +28,6 @@ try {
 }
 const { createCanvas, Image, GlobalFonts } = napi;
 GlobalFonts.register(fs.readFileSync(path.join(ROOT, "assets/font.woff2")), "GameFont");
-
-// код игры из готового HTML: содержимое <script id="game-assets"> + <script id="game-src">
-function codeFromHtml(file) {
-	const html = fs.readFileSync(file, "utf8");
-	const part = (id) => {
-		const m = html.match(new RegExp('<script type="text/plain" id="' + id + '">([\\s\\S]*?)</script>'));
-		if (!m) throw new Error("в " + file + " нет секции " + id);
-		return m[1];
-	};
-	return part("game-assets") + "\n" + part("game-src");
-}
 
 fs.mkdirSync(OUT, { recursive: true });
 const dom = createDom({ dpr: 1, canvasFactory: (w, h) => createCanvas(w, h), ImageClass: Image });

@@ -27,5 +27,5 @@ npm run check && npm run lint && npm test && npm run fuzz && npm run golden
 npm run abcmd        # после правок отрисовки: поток команд холста против HEAD
 node --expose-gc tools/soak.mjs --minutes 30 --seed 7
 npm run e2e && npm run perf
-npm run build:dist   # dist/game.html + dist/SHA256SUMS.txt
+npm run build:dist   # dist/game.html + dist/game-public.html (без редактора) + dist/SHA256SUMS.txt
 ```

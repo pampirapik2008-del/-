@@ -12,6 +12,7 @@
 		"golden": "node tools/golden.mjs --check",
 		"golden:quick": "node tools/golden.mjs --check --battles 60 --maps 150",
 		"golden:record": "node tools/golden.mjs --record",
+		"release": "npm run build:dist && npm run check && node tools/golden.mjs --check --battles 60 --maps 150 --html dist/game.html && node tools/golden.mjs --check --battles 60 --maps 150 --html dist/game-public.html && node tools/e2e.mjs --html dist/game.html && node tools/e2e.mjs --html dist/game-public.html",
 		"fuzz": "node tools/fuzz-saves.mjs",
 		"soak": "node tools/soak.mjs",
 		"perf": "node tools/perf.mjs",

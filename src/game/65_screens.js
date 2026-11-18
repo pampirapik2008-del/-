@@ -1084,7 +1084,8 @@ function dSet() {
 		btn(x + 196, y + 7, 164, 40, val, f, col || (on === undefined || on ? "#2e7d32" : "#555"), { sz: 15 });
 	});
 	if (CFG.autoUlt === false) tx("Ручные ульты: нажми на портрет бойца, когда полоска энергии полная", 609, 400, 12, "#b9b3c8", "center");
-	btn(233, 414, 268, 44, window.__mxUnlocked ? "Разработчик: открыт" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
+	// в сборке без редактора (dist/game-public.html, src/runner.js) кнопки разработчика нет
+	if (!window.__mxPublic) btn(233, 414, 268, 44, window.__mxUnlocked ? "Разработчик: открыт" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
 	btn(529, 414, 160, 44, "Назад", () => {
 		delAsk = false;
 		Machine.go(SRET, "назад из настроек");

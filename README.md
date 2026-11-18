@@ -23,6 +23,7 @@ python3 -m http.server 8000   # затем http://localhost:8000/
 src/game/*.js     код игры (секции, порядок = имя файла)
 src/shell.html    HTML-оболочка с метками вставки
 src/editor/       загрузчик и встроенный ИИ-редактор
+src/runner.js     запускатель сборки «для друзей» — без редактора
 assets/           арты, атлас, шрифт
 tools/            сборка, извлечение, golden, fuzz, soak, perf, shots
 tests/            обвязка (заглушка DOM), unit-тесты, эталон поведения
@@ -37,7 +38,8 @@ docs/             архитектура, решения, формат сейв�
 ```bash
 npm run build          # собрать index.html из src/ и assets/
 npm run check          # убедиться, что index.html соответствует исходникам
-npm run build:dist     # плюс копия в dist/game.html для релиза
+npm run build:dist     # плюс dist/game.html (с редактором) и dist/game-public.html (для друзей, без редактора) + SHA256SUMS.txt
+npm run release        # build:dist + check + golden и e2e по коду игры из обоих готовых файлов
 npm test               # unit-тесты
 npm run golden         # 200 боёв и 500 карт против эталона (~1,5 мин)
 npm run golden:record  # перезаписать эталон (осознанно, см. docs/BALANCE.md)
@@ -54,6 +56,13 @@ npm run shots -- --out /tmp/shots   # 35 скриншотов всех экра�
 npm run shotdiff -- /tmp/a /tmp/b   # попиксельное сравнение двух наборов снимков
 npm run all            # сборка + lint + тесты + fuzz + golden
 ```
+
+## Сборка для друзей
+
+`dist/game-public.html` — та же игра и те же ресурсы, но без ИИ-редактора: ни его кода, ни настроек
+ИИ, ни пароля, ни кнопки «Режим разработчика» в настройках (4,06 МБ вместо 5,50). Открывается так же,
+офлайн; в защищённом просмотре (вложение в почте, мессенджере) предупреждает, что сохранения временные.
+Контрольные суммы обоих файлов — `dist/SHA256SUMS.txt`.
 
 ## Что важно знать про поведение
 

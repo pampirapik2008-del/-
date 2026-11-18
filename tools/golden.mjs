@@ -4,6 +4,7 @@
 //   node tools/golden.mjs --check             — сравнить текущий код с эталоном
 //   node tools/golden.mjs --record --battles 20 --maps 50   — быстрый прогон
 //   node tools/golden.mjs --check --battles 60 --maps 150   — быстрая проверка ПРЕФИКСА эталона (npm run golden:quick):
+//   node tools/golden.mjs --check --html dist/game-public.html   — код игры брать из готового HTML (обе сборки через эталон)
 //     сиды идут подряд, поэтому первые N записей сравнимы с полным эталоном; ворота этапа — только полный прогон
 // Эталон — это не «правильные» числа, а зафиксированное поведение: любое расхождение
 // означает, что рефакторинг изменил игру. Осознанное изменение баланса фиксируется
@@ -13,9 +14,11 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { boot, ROOT } from "../tests/harness/boot.mjs";
+import { codeFromHtml } from "./lib/assemble.mjs";
 
 const args = process.argv.slice(2);
 const has = (f) => args.includes(f);
+const HTML = args.includes("--html") ? args[args.indexOf("--html") + 1] : null;
 const val = (f, d) => {
 	const i = args.indexOf(f);
 	return i >= 0 && args[i + 1] ? Number(args[i + 1]) : d;
@@ -30,7 +33,7 @@ const hash = (s) => crypto.createHash("sha256").update(s).digest("hex").slice(0,
 const KINDS = ["fight", "fight", "boss", "arena", "swamp"];
 
 async function main() {
-	const g = boot();
+	const g = boot(HTML ? { code: codeFromHtml(path.resolve(HTML)) } : {});
 	if (!(await g.ready())) throw new Error("игра не загрузилась");
 
 	/* ---------- бои ---------- */

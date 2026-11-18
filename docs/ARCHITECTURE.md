@@ -8,6 +8,7 @@ src/shell.html        HTML-оболочка с метками @@ASSETS@@ / @@SRC
 src/editor/core.js    ядро ИИ-редактора: патчи, синтаксис, ошибки API, маскирование, версии, наблюдатель песочницы (чистые функции, тесты в Node)
 src/editor/loader.js  загрузчик + интерфейс ИИ-редактора (1,45 МБ, из них 1,4 — фоновое видео панели). Автоматика его не правит
 src/game/*.js         код игры, порядок подключения = имя файла
+src/runner.js         запускатель сборки «для друзей» (dist/game-public.html): хранилище + запуск игры, без редактора
 assets/img/*.png      арты (19 шт.), в сборке кодируются в base64
 assets/atlas.json     атлас кадров — текстом: в нём есть числа вида 46.0
 assets/font.woff2     шрифт игры
@@ -154,7 +155,7 @@ flowchart TB
 | `50_draw` | 1280 | 64 | 01_head 428, 10_core 195, 15_ui 61, 30_arena 28, 20_data 25, 12_state 13, 40_fight 11, 00_rand 7, 65_screens 1 |
 | `60_game` | 910 | 67 | 01_head 105, 20_data 31, 10_core 28, 30_arena 11, 12_state 10, 00_rand 9, 62_save 5, 40_fight 4, 15_ui 2, 65_screens 2 |
 | `62_save` | 428 | 20 | 01_head 29, 10_core 6, 60_game 5, 05_err 4, 20_data 3, 12_state 3, 40_fight 2, 15_ui 2 |
-| `65_screens` | 1292 | 77 | 01_head 356, 10_core 174, 15_ui 139, 20_data 50, 60_game 36, 12_state 29, 50_draw 28, 00_rand 10, 62_save 6, 30_arena 3, 13_input 2, 40_fight 2, 90_boot 1 |
+| `65_screens` | 1293 | 77 | 01_head 356, 10_core 174, 15_ui 139, 20_data 50, 60_game 36, 12_state 29, 50_draw 28, 00_rand 10, 62_save 6, 30_arena 3, 13_input 2, 40_fight 2, 90_boot 1 |
 | `70_audio` | 119 | 5 | 10_core 9, 01_head 8, 12_state 2 |
 | `90_boot` | 144 | 12 | 01_head 20, 10_core 11, 12_state 9, 05_err 9, 60_game 6, 65_screens 5, 20_data 3, 30_arena 2, 50_draw 2, 15_ui 2, 70_audio 2, 13_input 2, 00_rand 1 |
 <!-- modgraph:end -->
@@ -301,4 +302,13 @@ stateDiagram-v2
 
 ## Сборка
 
-`node tools/build.mjs` → `index.html`. Порядок: оболочка + ресурсы (base64 из `assets/`) + код секций (с подстановкой шрифта и хеша сборки `GAME_BUILD`) + загрузчик. Сборка детерминирована: одинаковые входы → побайтово одинаковый файл (`--check` это и проверяет).
+`node tools/build.mjs` → `index.html`. Порядок: оболочка + ресурсы (base64 из `assets/`) + код секций (с подстановкой шрифта и хеша сборки `GAME_BUILD`) + загрузчик. Сборка детерминирована: одинаковые входы → побайтово одинаковый файл (`--check` это и проверяет — для `index.html` и, если собраны, для `dist/*.html`).
+
+**Две сборки из одних исходников** (`npm run build:dist`):
+
+| файл | что в `@@LOADER@@` | размер | кому |
+|---|---|---|---|
+| `index.html` = `dist/game.html` | `src/editor/core.js` + `src/editor/loader.js`: ИИ-редактор, версии кода в IndexedDB, автооткат, пароль (`MXCore.AUTH`) | 5,50 МБ | автору |
+| `dist/game-public.html` | `src/runner.js`: `window.__mxStorage` (localStorage или память в защищённом просмотре), `window.__mxPublic = true`, запуск кода игры одним `<script>` | 4,06 МБ | друзьям |
+
+Секции `#game-assets` и `#game-src` в обеих сборках байт в байт одинаковы (`tests/unit/public.test.mjs`), поэтому golden и e2e гоняются по коду игры из любого готового HTML: `node tools/golden.mjs --check --html dist/game-public.html`, `node tools/e2e.mjs --html dist/game-public.html` (всё вместе — `npm run release`). Единственное, что игра знает о сборке, — флаг `window.__mxPublic`: с ним в настройках нет кнопки «Режим разработчика». Контрольные суммы обоих файлов — `dist/SHA256SUMS.txt` (`sha256sum -c`).

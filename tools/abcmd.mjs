@@ -14,6 +14,7 @@ import { execFileSync } from "node:child_process";
 import { createDom } from "../tests/harness/dom.mjs";
 import { recorder } from "../tests/harness/record.mjs";
 import { boot, ROOT } from "../tests/harness/boot.mjs";
+import { codeFromHtml } from "./lib/assemble.mjs";
 
 const args = process.argv.slice(2);
 const opt = (f, d) => {
@@ -23,15 +24,6 @@ const opt = (f, d) => {
 const SEED = Number(opt("--seed", 7));
 const SHORT = args.includes("--short");
 
-function codeFromHtml(file) {
-	const html = fs.readFileSync(file, "utf8");
-	const part = (id) => {
-		const m = html.match(new RegExp('<script type="text/plain" id="' + id + '">([\\s\\S]*?)</script>'));
-		if (!m) throw new Error("в " + file + " нет секции " + id);
-		return m[1];
-	};
-	return part("game-assets") + "\n" + part("game-src");
-}
 function refCode() {
 	const file = opt("--ref", null);
 	if (file) return codeFromHtml(file);
