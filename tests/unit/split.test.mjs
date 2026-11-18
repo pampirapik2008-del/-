@@ -236,21 +236,22 @@ test("bakeRoads: кайма и пунктир по пикселям вдоль �
 	assert.equal(count(empty, "fillRect") + count(empty, "ellipse"), 0, "без рёбер и узлов ничего не рисуется");
 });
 
-test("bakeForest: деревья и мелочи — детерминированно по R, снизу вверх, не на дорогах и не в озёрах", async () => {
+test("bakeForest: деревья и мелочи — детерминированно по R, порциями как целиком, снизу вверх, не на дорогах и не в озёрах", async () => {
 	const { g, rec, json } = await game();
 	g.dev.run(bakeJ + "; MAPL = [[200, 100, 80, 40]]");
-	const a = rec("bakeForest(__J.x, __J.im, __J.AM, rng32(5), __J.P, 42, () => 1e9, () => 1e9)");
-	const b = rec("bakeForest(__J.x, __J.im, __J.AM, rng32(5), __J.P, 42, () => 1e9, () => 1e9)");
-	assert.deepEqual(a, b, "одинаковый R — одинаковый лес");
+	// лес целиком за один вызов и порциями по FOREST_CHUNK (как в bakeStep) — одни и те же команды
+	const forest = (chunk) => `(() => { __J.R = rng32(5); __J.roadD = () => 1e9; __J.nodeD = () => 1e9; __J.items = []; for (let i = 0; i < FOREST_N; i += ${chunk}) bakeForest(__J, i, Math.min(FOREST_N, i + ${chunk})); bakeForestDraw(__J); })()`;
+	const a = rec(forest("FOREST_N"));
+	const b = rec(forest("FOREST_CHUNK"));
+	assert.deepEqual(a, b, "одинаковый R — одинаковый лес, нарезка не влияет");
 	const n = count(a, "drawImage");
 	assert.ok(n > 20, "лес не пустой: " + n);
 	assert.equal(count(a, "ellipse"), n, "у каждого предмета своя тень");
+	assert.equal(json("__J.items.length"), n, "в J.items — ровно отрисованные предметы");
 	// центры теней идут по возрастанию y (рисуем снизу вверх по глубине)
 	const ys = a.filter((l) => /\.ellipse\(/.test(l)).map((l) => +l.split("(")[1].split(",")[1]);
 	for (let i = 1; i < ys.length; i++) assert.ok(ys[i] >= ys[i - 1], "порядок по y");
 	// ничего внутри озера
-	const AM = json("__J.AM");
-	void AM;
 	for (const l of a.filter((l) => /\.drawImage\(/.test(l))) {
 		const p = l.split("(")[1].split(",");
 		const dx = +p[5] + +p[3] / 2,
@@ -258,8 +259,38 @@ test("bakeForest: деревья и мелочи — детерминирова�
 		assert.ok(!(dx > 194 && dx < 286 && dy > 98 && dy < 152), "предмет в озере: " + l);
 	}
 	// всё — дорога: леса нет
-	assert.equal(count(rec("bakeForest(__J.x, __J.im, __J.AM, rng32(5), __J.P, 42, () => 0, () => 1e9)"), "drawImage"), 0);
+	assert.equal(count(rec("__J.R = rng32(5); __J.roadD = () => 0; __J.items = []; bakeForest(__J, 0, FOREST_N); bakeForestDraw(__J)"), "drawImage"), 0);
 	g.dev.bakeMap(1);
+});
+
+test("bakeStep: декор идёт этапами между кадрами (озёра → дороги → лес порциями → отрисовка), прогресс растёт до 1", async () => {
+	const g = boot({ bakeMs: 0.2 });
+	assert.ok(await g.ready());
+	g.step(3);
+	g.dev.seed(99);
+	g.dev.newGame();
+	g.dev.S = "map";
+	while (g.dev.run("MAPJ && MAPJ.py < 270")) g.step(1);
+	const stages = [],
+		prog = [];
+	while (g.dev.run("!!MAPJ")) {
+		stages.push(g.dev.run("MAPJ.stage + ':' + MAPJ.fi"));
+		prog.push(g.dev.run("bakeProgress()"));
+		g.step(1);
+	}
+	assert.ok(stages.length >= 6, "декор занял " + stages.length + " кадров — должен быть разложен на несколько");
+	const seq = stages.map((s) => s.split(":").map(Number));
+	for (let i = 1; i < seq.length; i++) assert.ok(seq[i][0] > seq[i - 1][0] || (seq[i][0] === seq[i - 1][0] && seq[i][1] >= seq[i - 1][1]), "этапы и кандидаты не убывают: " + stages.join(" "));
+	const forest = seq.filter((q) => q[0] === 2).map((q) => q[1]);
+	assert.ok(forest.length >= 4, "лес шёл порциями между кадрами: " + stages.join(" "));
+	for (let i = 1; i < forest.length; i++) assert.equal(forest[i] - forest[i - 1], 150, "порция леса = FOREST_CHUNK");
+	assert.ok(seq.some((q) => q[0] === 1) && seq.some((q) => q[0] === 3), "видны этапы дорог и отрисовки леса: " + stages.join(" "));
+	assert.ok(!seq.some((q) => q[0] === 4), "после последнего этапа карта готова в том же кадре");
+	for (let i = 1; i < prog.length; i++) assert.ok(prog[i] >= prog[i - 1] && prog[i] < 1, "прогресс не убывает и < 1 до готовности");
+	assert.equal(g.dev.run("bakeProgress()"), 1);
+	assert.equal(g.dev.run("MAPK"), g.dev.run("SD + ':' + G.w"));
+	assert.equal(g.dev.run("JSON.stringify(MAPL.map((q) => q.map((v) => +v.toFixed(2))))"), "[[200.19,161.45,44,33]]", "озеро там же, где его ставила цельная сборка");
+	assert.equal(g.dev.errs().length, 0);
 });
 
 /* ---------- mkArena ---------- */

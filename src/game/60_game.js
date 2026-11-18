@@ -207,11 +207,12 @@ function segD(px, py, ax, ay, bx, by) {
 		k = clamp(((px - ax) * dx + (py - ay) * dy) / l, 0, 1);
 	return Math.hypot(px - ax - dx * k, py - ay - dy * k);
 }
-// Фон карты зависит только от сида и мира, собирается ~0,9 с (на телефоне в разы дольше).
-// Раньше это был один синхронный вызов — экран замирал при каждом входе в мир и при загрузке
-// сохранения. Теперь bakeMap только заводит работу MAPJ, а bakeStep() из цикла кадра выполняет
-// её порциями по BAKE_MS миллисекунд: игра продолжает рисовать кадры, экран карты показывает
-// полосу прогресса (dMapLoading), а по готовности MAPK = ключ и карта появляется.
+// Фон карты зависит только от сида и мира; вся сборка — десятки миллисекунд JS на ПК (на телефоне
+// в разы дольше), раньше она была одним синхронным вызовом ~0,9 с — экран замирал при каждом входе
+// в мир и при загрузке сохранения. Теперь bakeMap только заводит работу MAPJ, а bakeStep() из цикла
+// кадра выполняет её порциями по BAKE_MS миллисекунд (земля строками, декор этапами): игра продолжает
+// рисовать кадры, экран карты показывает полосу прогресса (dMapLoading), а по готовности MAPK = ключ
+// и карта появляется. Замер блокировок главного потока при входе в мир — tools/entry.mjs.
 // Результат побайтово тот же, что у синхронной версии: порядок обхода пикселей и обращений
 // к rng32 не изменился (проверяется контрольной суммой в tests/unit/map.test.mjs).
 // бюджет одной порции; обвязка тестов задаёт __mxBakeMs (по умолчанию там — всё за один кадр,
@@ -243,7 +244,9 @@ function bakeMap(seed) {
 		id: x.createImageData(609, 270),
 		cols: P.g.map(hex3),
 		py: 0, // следующая строка земли
-		stage: 0, // 0 — земля, 1 — озёра/дороги/лес
+		stage: 0, // этап декора после земли: 0 — озёра, 1 — дороги, 2 — лес (кандидаты), 3 — лес (отрисовка), 4 — готово
+		fi: 0, // следующий кандидат леса (из FOREST_N)
+		items: null, // отобранные деревья и мелочи (заполняет bakeForest)
 		t0: t, // когда начали: полоса прогресса показывается, только если сборка затянулась
 	};
 }
@@ -356,10 +359,13 @@ function bakeRoads(x, P, edges, nodes) {
 		x.fill();
 	}
 }
-// лес и мелочи: 900 проб, рощи по шуму (dn), поляны вокруг дорог/узлов/озёр; рисуются снизу вверх по y
-function bakeForest(x, im, AM, R, P, seed, roadD, nodeD) {
-	const items = [];
-	for (let i = 0; i < 900; i++) {
+// лес и мелочи: FOREST_N проб, рощи по шуму (dn), поляны вокруг дорог/узлов/озёр.
+// bakeForest отбирает кандидатов [i0, i1) в J.items (порциями между кадрами), bakeForestDraw рисует.
+const FOREST_N = 900, // кандидатов леса на карту
+	FOREST_CHUNK = 150; // кандидатов за один шаг bakeStep (~4–7 мс на ПК)
+function bakeForest(J, i0, i1) {
+	const { AM, R, P, seed, roadD, nodeD, items } = J;
+	for (let i = i0; i < i1; i++) {
 		const px = -8 + R() * 625,
 			py = 22 + R() * 252,
 			dn = vnoise(px * 0.013, py * 0.02, seed + 9),
@@ -377,6 +383,10 @@ function bakeForest(x, im, AM, R, P, seed, roadD, nodeD) {
 		if (items.some((o) => Math.abs(o.x - px) < (o.w + q[2]) * 0.36 && Math.abs(o.y - py) < 5)) continue;
 		items.push({ x: px, y: py, nm, w: q[2] });
 	}
+}
+// лес на холст: снизу вверх (ближние поверх дальних), под каждым — тень-эллипс
+function bakeForestDraw(J) {
+	const { x, im, AM, items } = J;
 	items.sort((a, b) => a.y - b.y);
 	for (const o of items) {
 		const q = AM[o.nm];
@@ -387,28 +397,52 @@ function bakeForest(x, im, AM, R, P, seed, roadD, nodeD) {
 		x.drawImage(im, q[0], q[1], q[2], q[3], Math.round(o.x - q[2] / 2), Math.round(o.y - q[3]), q[2], q[3]);
 	}
 }
-// озёра, дороги, площадки под значками, лес и мелочи — поверх готовой земли (порядок = порядок вызовов R())
-function bakeDecor(J) {
-	const { x, im, AM, R, P, seed } = J;
-	x.putImageData(J.id, 0, 0);
+// геометрия для декора: узлы и рёбра в координатах фона (1:2), расстояния до дороги и до узла
+function bakeGeom(J) {
 	const nodes = N.map((n) => [n.x / 2, n.y / 2]),
-		edges = E.map(([a, b]) => [nodes[a][0], nodes[a][1], nodes[b][0], nodes[b][1]]),
-		roadD = (px, py) => {
-			let d = 1e9;
-			for (const e of edges) d = Math.min(d, segD(px, py, e[0], e[1], e[2], e[3]));
-			return d;
-		},
-		nodeD = (px, py) => {
-			let d = 1e9;
-			for (const n of nodes) d = Math.min(d, Math.hypot(px - n[0], (py - n[1]) * 1.3));
-			return d;
-		};
-	bakeLakes(x, im, AM, R, roadD, nodeD);
-	bakeRoads(x, P, edges, nodes);
-	bakeForest(x, im, AM, R, P, seed, roadD, nodeD);
+		edges = E.map(([a, b]) => [nodes[a][0], nodes[a][1], nodes[b][0], nodes[b][1]]);
+	J.nodes = nodes;
+	J.edges = edges;
+	J.roadD = (px, py) => {
+		let d = 1e9;
+		for (const e of edges) d = Math.min(d, segD(px, py, e[0], e[1], e[2], e[3]));
+		return d;
+	};
+	J.nodeD = (px, py) => {
+		let d = 1e9;
+		for (const n of nodes) d = Math.min(d, Math.hypot(px - n[0], (py - n[1]) * 1.3));
+		return d;
+	};
+	J.items = [];
 }
-// порция работы: не дольше ms миллисекунд (земля — по строкам), затем декор одним куском.
-// Возвращает true, когда карта готова.
+// один этап декора поверх готовой земли (J.stage): 0 — земля на холст, геометрия, озёра;
+// 1 — дороги и площадки под значками; 2 — отбор леса порциями по FOREST_CHUNK кандидатов;
+// 3 — отрисовка леса. Порядок обращений к R() тот же, что был у цельной сборки, поэтому
+// карта побайтово не зависит от нарезки (tests/unit/map.test.mjs).
+function bakeDecor(J) {
+	const { x, im, AM, R, P } = J;
+	if (J.stage === 0) {
+		x.putImageData(J.id, 0, 0);
+		bakeGeom(J);
+		bakeLakes(x, im, AM, R, J.roadD, J.nodeD);
+		J.stage = 1;
+	} else if (J.stage === 1) {
+		bakeRoads(x, P, J.edges, J.nodes);
+		J.stage = 2;
+	} else if (J.stage === 2) {
+		const i1 = Math.min(FOREST_N, J.fi + FOREST_CHUNK);
+		bakeForest(J, J.fi, i1);
+		J.fi = i1;
+		if (i1 >= FOREST_N) J.stage = 3;
+	} else {
+		bakeForestDraw(J);
+		J.stage = 4;
+	}
+}
+// порция работы: не дольше ms миллисекунд — земля по 6 строк, затем декор по этапам (bakeDecor);
+// бюджет проверяется после каждого куска, самый крупный кусок — порция леса (~4–7 мс на ПК).
+// Возвращает true, когда карта готова. Раньше весь декор шёл одним куском в последнем кадре
+// (30–40 мс на ПК, на телефоне — за 100): замер tools/entry.mjs.
 function bakeStep(ms) {
 	const J = MAPJ;
 	if (!J) return true;
@@ -419,14 +453,16 @@ function bakeStep(ms) {
 		J.py = y1;
 		if (performance.now() - t0 >= ms) return false;
 	}
-	J.stage = 1;
-	bakeDecor(J);
+	while (J.stage < 4) {
+		bakeDecor(J);
+		if (J.stage < 4 && performance.now() - t0 >= ms) return false;
+	}
 	MAPK = J.key;
 	MAPJ = null;
 	return true;
 }
-// доля готовности для полосы прогресса (декор — последние ~7 %)
-const bakeProgress = () => (MAPJ ? Math.min(0.93, (MAPJ.py / 270) * 0.93) : 1);
+// доля готовности для полосы прогресса: земля — первые 75 %, декор — остальное
+const bakeProgress = () => (MAPJ ? Math.min(0.99, (MAPJ.py / 270) * 0.75 + ((MAPJ.stage + (MAPJ.stage === 2 ? MAPJ.fi / FOREST_N : 0)) / 4) * 0.25) : 1);
 // дождаться готовности синхронно (тесты, снимки, экспорт)
 function bakeNow() {
 	while (MAPJ) bakeStep(1e9);

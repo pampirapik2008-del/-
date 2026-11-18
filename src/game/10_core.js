@@ -343,60 +343,73 @@ function frSil(img, f, col, x, y, fx = 1, sc = AP, sy = 1) {
 		ctx.restore();
 	} else ctx.drawImage(c, x - f[4] * sc, y - f[5] * sc * sy, w, h);
 }
-// перекраска атласа по правилам HSV: {h:[lo,hi], to, sat, val} — диапазон тона; {gray:1, to, sat, val} — тонировка серого
+// перекраска атласа по правилам HSV: {h:[lo,hi], to, sat, val} — диапазон тона; {gray:1, to, sat, val} — тонировка серого.
+// Результат пикселя зависит только от его RGB, а в атласах всего 400–1 200 разных цветов на 50–90 тыс.
+// пикселей, поэтому пересчёт идёт через словарь «цвет → цвет»: 17–21 мс на атлас монстров стало ~3
+// (замер tools/entry.mjs; байты те же — tests/unit/recolor.test.mjs).
 function recolor(img, rules) {
 	const c = mkC(img.width, img.height),
 		x = c.getContext("2d");
 	x.drawImage(img, 0, 0);
 	const d = x.getImageData(0, 0, c.width, c.height),
-		p = d.data;
+		p = d.data,
+		memo = new Map(); // упакованный RGB → упакованный результат, −1 — ни одно правило не подошло
 	for (let i = 0; i < p.length; i += 4) {
 		if (!p[i + 3]) continue;
-		const r = p[i] / 255,
-			g = p[i + 1] / 255,
-			b = p[i + 2] / 255,
-			mx = Math.max(r, g, b),
-			mn = Math.min(r, g, b),
-			df = mx - mn;
-		let h = 0;
-		if (df > 1e-5) h = mx === r ? ((g - b) / df + 6) % 6 : mx === g ? (b - r) / df + 2 : (r - g) / df + 4;
-		h *= 60;
-		let s = mx > 0 ? df / mx : 0,
-			v = mx,
-			hit = false;
-		for (const q of rules) {
-			if (q.gray) {
-				if (s > 0.26 || v < 0.16) continue;
-				h = q.to;
-				s = q.sat;
-				v = Math.min(1, v * (q.val || 1));
-			} else {
-				if (s < 0.14) continue;
-				const lo = q.h[0],
-					hi = q.h[1];
-				if (lo <= hi ? h < lo || h > hi : h < lo && h > hi) continue;
-				h = q.to;
-				s = Math.min(1, s * (q.sat || 1));
-				v = Math.min(1, v * (q.val || 1));
-			}
-			hit = true;
-			break;
-		}
-		if (!hit) continue;
-		const cc = v * s,
-			hh = (h % 360) / 60,
-			xx = cc * (1 - Math.abs((hh % 2) - 1)),
-			m = v - cc,
-			k = hh | 0;
-		const R1 = k === 0 || k === 5 ? cc : k === 1 || k === 4 ? xx : 0,
-			G1 = k === 1 || k === 2 ? cc : k === 0 || k === 3 ? xx : 0,
-			B1 = k === 3 || k === 4 ? cc : k === 2 || k === 5 ? xx : 0;
-		p[i] = (R1 + m) * 255;
-		p[i + 1] = (G1 + m) * 255;
-		p[i + 2] = (B1 + m) * 255;
+		const key = (p[i] << 16) | (p[i + 1] << 8) | p[i + 2];
+		let o = memo.get(key);
+		if (o === undefined) memo.set(key, (o = recolorPx(p[i], p[i + 1], p[i + 2], rules)));
+		if (o < 0) continue;
+		p[i] = o >> 16;
+		p[i + 1] = (o >> 8) & 255;
+		p[i + 2] = o & 255;
 	}
 	x.putImageData(d, 0, 0);
 	return c;
+}
+const RPX = new Uint8ClampedArray(3); // запись float → байт с тем же округлением, что у ImageData
+// один цвет по правилам: упакованный RGB результата или −1
+function recolorPx(r8, g8, b8, rules) {
+	const r = r8 / 255,
+		g = g8 / 255,
+		b = b8 / 255,
+		mx = Math.max(r, g, b),
+		mn = Math.min(r, g, b),
+		df = mx - mn;
+	let h = 0;
+	if (df > 1e-5) h = mx === r ? ((g - b) / df + 6) % 6 : mx === g ? (b - r) / df + 2 : (r - g) / df + 4;
+	h *= 60;
+	let s = mx > 0 ? df / mx : 0,
+		v = mx,
+		hit = false;
+	for (const q of rules) {
+		if (q.gray) {
+			if (s > 0.26 || v < 0.16) continue;
+			h = q.to;
+			s = q.sat;
+			v = Math.min(1, v * (q.val || 1));
+		} else {
+			if (s < 0.14) continue;
+			const lo = q.h[0],
+				hi = q.h[1];
+			if (lo <= hi ? h < lo || h > hi : h < lo && h > hi) continue;
+			h = q.to;
+			s = Math.min(1, s * (q.sat || 1));
+			v = Math.min(1, v * (q.val || 1));
+		}
+		hit = true;
+		break;
+	}
+	if (!hit) return -1;
+	const cc = v * s,
+		hh = (h % 360) / 60,
+		xx = cc * (1 - Math.abs((hh % 2) - 1)),
+		m = v - cc,
+		k = hh | 0;
+	RPX[0] = ((k === 0 || k === 5 ? cc : k === 1 || k === 4 ? xx : 0) + m) * 255;
+	RPX[1] = ((k === 1 || k === 2 ? cc : k === 0 || k === 3 ? xx : 0) + m) * 255;
+	RPX[2] = ((k === 3 || k === 4 ? cc : k === 2 || k === 5 ? xx : 0) + m) * 255;
+	return (RPX[0] << 16) | (RPX[1] << 8) | RPX[2];
 }
 function glowSpr(col) {
 	if (!GLOWC[col]) {

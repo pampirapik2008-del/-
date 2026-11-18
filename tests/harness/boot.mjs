@@ -12,6 +12,14 @@ const DEVAPI = fs.readFileSync(path.join(ROOT, "tests/harness/devapi.js"), "utf8
 
 const FRAME_MS = 1000 / 60;
 
+// Внутри vm-контекста каждое обращение к глобальному имени (Math, document, JSON…) идёт через
+// перехватчик песочницы и стоит ~0,3 мкс — в сотни раз дороже, чем в браузере (vnoise: 4 мс против
+// 400 мс на 100 тыс. вызовов). Поэтому неизменяемые встроенные объекты один раз копируются в
+// лексические константы скрипта: те же объекты, поведение то же, обращение в разы дешевле.
+// Изменяемые глобалы (innerWidth, …) не трогаем — тесты им присваивают.
+const FAST_GLOBALS = ["Math", "JSON", "Date", "Promise", "Map", "Set", "WeakMap", "Symbol", "Reflect", "Error", "TypeError", "RangeError", "Object", "Array", "String", "Number", "Boolean", "Intl", "Uint8ClampedArray", "Uint8Array", "Int16Array", "Int32Array", "Float32Array", "ArrayBuffer", "isFinite", "isNaN", "parseInt", "parseFloat", "encodeURIComponent", "decodeURIComponent", "performance", "document", "console"];
+const FAST_PROLOGUE = "\"use strict\";\nconst " + FAST_GLOBALS.map((k) => k + " = this." + k).join(", ") + ";\n"; // this = глобальный объект контекста (не windowObj)
+
 // dom — готовое окружение из createDom(); по умолчанию заглушка без растеризации.
 // code — готовый код игры (ассеты + секции); по умолчанию собирается из src/ и assets/.
 // bakeMs — бюджет порции запекания карты за кадр (по умолчанию вся карта в первом кадре).
@@ -90,7 +98,8 @@ export function boot({ quiet = true, dom = createDom(), code = null, bakeMs = nu
 
 	const preKeys = new Set(Object.keys(sandbox));
 	const ctx = vm.createContext(sandbox);
-	const src = (code == null ? loadAssetsJs(ROOT) + "\n" + loadGameSrc(ROOT) : code) + "\n" + DEVAPI;
+	const body = (code == null ? loadAssetsJs(ROOT) + "\n" + loadGameSrc(ROOT) : code) + "\n" + DEVAPI;
+	const src = FAST_PROLOGUE + body;
 	vm.runInContext(src, ctx, { filename: "game.js" });
 
 	let ts = 0;
