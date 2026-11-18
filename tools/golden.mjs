@@ -3,6 +3,8 @@
 //   node tools/golden.mjs --record            — записать эталон в tests/golden/
 //   node tools/golden.mjs --check             — сравнить текущий код с эталоном
 //   node tools/golden.mjs --record --battles 20 --maps 50   — быстрый прогон
+//   node tools/golden.mjs --check --battles 60 --maps 150   — быстрая проверка ПРЕФИКСА эталона (npm run golden:quick):
+//     сиды идут подряд, поэтому первые N записей сравнимы с полным эталоном; ворота этапа — только полный прогон
 // Эталон — это не «правильные» числа, а зафиксированное поведение: любое расхождение
 // означает, что рефакторинг изменил игру. Осознанное изменение баланса фиксируется
 // перезаписью эталона и записью в docs/BALANCE.md.
@@ -20,8 +22,8 @@ const val = (f, d) => {
 };
 const record = has("--record");
 const check = has("--check") || !record;
-const NB = val("--battles", 200);
-const NM = val("--maps", 500);
+const NB = val("--battles", 500);
+const NM = val("--maps", 1000);
 const GDIR = path.join(ROOT, "tests/golden");
 const hash = (s) => crypto.createHash("sha256").update(s).digest("hex").slice(0, 16);
 
@@ -130,10 +132,12 @@ async function main() {
 		return 2;
 	}
 	const ref = JSON.parse(fs.readFileSync(file, "utf8"));
-	if (ref.battles.count !== battles.length || ref.maps.count !== maps.length) {
-		console.error(`размер набора не совпадает с эталоном: боёв ${battles.length}/${ref.battles.count}, карт ${maps.length}/${ref.maps.count}`);
+	if (ref.battles.count < battles.length || ref.maps.count < maps.length) {
+		console.error(`набор больше эталона: боёв ${battles.length}/${ref.battles.count}, карт ${maps.length}/${ref.maps.count} — уменьшите --battles/--maps или перезапишите эталон`);
 		return 2;
 	}
+	const subset = ref.battles.count !== battles.length || ref.maps.count !== maps.length;
+	if (subset) console.log(`ВНИМАНИЕ: проверяется префикс эталона (боёв ${battles.length} из ${ref.battles.count}, карт ${maps.length} из ${ref.maps.count}); ворота этапа — полный прогон npm run golden`);
 	let bad = 0;
 	for (let i = 0; i < battles.length; i++) {
 		if (ref.battles.items[i].hash !== battles[i].hash) {

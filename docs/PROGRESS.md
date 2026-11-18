@@ -8,7 +8,7 @@
 | Этап | Статус | Доказательство / что осталось |
 |---|---|---|
 | **A. База** | сделано | `npm run check` → «сборка совпадает с index.html, sha256 63984148828872a2»; `npm run build:dist` пишет `dist/game.html` + `dist/SHA256SUMS.txt` (`sha256sum -c` → OK); сборка детерминирована (`tools/build.mjs`, D1) |
-| **B. Эталоны** | частично | `Math.random` в `src/game`: 0 (`npm run lint`, запрет в `tools/lint.mjs`); golden сейчас **200 боёв / 500 карт** — нужно 500 / 1 000 (расширение набора сидов отдельным коммитом с записью в DECISIONS) |
+| **B. Эталоны** | сделано | `Math.random` в `src/game`: 0 (`npm run lint`, запрет в `tools/lint.mjs`); golden **500 боёв / 1 000 карт** (`a18cd5f165e71a48` / `be4d4ed26db14e5c`), старый набор — префикс нового без расхождений (D23); повторный `npm run golden` → 500/500 и 1000/1000 |
 | **C. Каркас ядра** | сделано | `Loop` с шагом 1/60 (`tests/unit/core.test.mjs`: «Loop.feed: 60 Гц → 1 шаг…»), `ERR_MAX = 200` (`05_err.js`), аварийное окно `crashScreen`, `Events`, `Timers`, `num()`; `tests/unit/resilience.test.mjs` (4 теста: сбой в draw/update не останавливает цикл, три сбоя → окно); golden совпадает |
 | **D. Сохранения v3** | сделано | `tests/unit/save.test.mjs` (6: конверт v3 + FNV-1a, резерв `.bak`, v2 → v3, мусор в слоте, delSave, экспорт/импорт текстом); `npm run fuzz` → «1000 сохранений, исключений 0, „мёртвых“ экранов 0» |
 | **E. Данные** | сделано | таблица `BAL` (`20_data.js`), `tests/unit/data.test.mjs` сверяет значения со старыми; golden бит-в-бит (D6) |
@@ -36,7 +36,7 @@
 |---|---|---|
 | unit-тесты | 55 (`grep -c "^test(" tests/unit/*.test.mjs`) | ≥ 150 |
 | модулей в `src/` | 19 (`src/game` 17 + `src/editor` 2) | ≥ 12 ✓ |
-| golden | 200 боёв / 500 карт | 500 / 1 000 |
+| golden | 500 боёв / 1 000 карт ✓ | 500 / 1 000 |
 | fuzz сохранений | 1 000 | ≥ 1 000 ✓, в этапе S — 5 000 |
 | функции > 80 строк в `src/game` | 5 | 0 |
 | `S === "…"` вне State | 52 | 0 |
