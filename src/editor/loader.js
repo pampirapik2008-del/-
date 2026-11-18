@@ -7,6 +7,7 @@ let LS, STORAGE_TEMP=false;
 try { LS=window.localStorage; LS.getItem('mx_storage_probe'); }
 catch(e) { STORAGE_TEMP=true; const m=new Map(); LS={getItem:k=>m.has(String(k))?m.get(String(k)):null,setItem:(k,v)=>m.set(String(k),String(v)),removeItem:k=>m.delete(String(k))}; }
 window.__mxStorage=LS;
+LS.removeItem('mx_dev'); // флаг старой схемы «доступ навсегда» больше не используется: вход действует до перезагрузки страницы
 const K={cfg:'mx_cfg',act:'mx_active',good:'mx_good',pend:'mx_pending',note:'mx_notice'};
 const ORIG=$('#game-src').textContent,PREFIX=$('#game-assets').textContent;
 let CODE=ORIG,PENDING=false;
@@ -22,7 +23,8 @@ const getVer=id=>dbDo('readonly',s=>s.get(id));
 const putVer=v=>dbDo('readwrite',s=>s.put(v));
 const delVer=id=>dbDo('readwrite',s=>s.delete(id));
 const allVers=async()=>((await dbDo('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.id-a.id);
-async function prune(){const v=await allVers();for(const x of v.slice(15)){const id=String(x.id);if(id!==LS.getItem(K.good)&&id!==LS.getItem(K.act))await delVer(x.id)}}
+async function prune(){const v=await allVers();for(const id of MXCore.pruneList(v,LS.getItem(K.good),LS.getItem(K.act),15))await delVer(id)}
+async function markGood(id){try{const v=await getVer(+id);if(v&&!v.good){v.good=true;await putVer(v)}}catch(e){}}
 
 /* ---------- запуск игры + автооткат ---------- */
 function run(code){const s=document.createElement('script');s.textContent=PREFIX+code;document.body.appendChild(s)}
@@ -35,22 +37,32 @@ async function boot(){
   if(act!=='orig'){try{const v=await getVer(+act);if(v)CODE=v.code;else act='orig'}catch(e){act='orig'}}
   if(act!=='orig'&&act!==good){
     LS.setItem(K.pend,act);PENDING=true;
-    setTimeout(()=>{if(PENDING){PENDING=false;LS.removeItem(K.pend);LS.setItem(K.good,act)}},6000);
+    // наблюдение: 6 с без исключений окна и без сбоев кадра в журнале игры → версия good
+    const iv=setInterval(()=>{if(!PENDING)return clearInterval(iv);const bad=gameFrameErrors();if(bad){clearInterval(iv);rollback('Версия даёт сбои в игре ('+MXCore.maskSecrets(bad,cfg.key).slice(0,120)+') — вернул предыдущую.')}},500);
+    setTimeout(()=>{clearInterval(iv);if(PENDING){PENDING=false;LS.removeItem(K.pend);LS.setItem(K.good,act);markGood(act)}},6000);
   }
   run(CODE);
   if(notice)toast(notice);
 }
+// сбои кадра из журнала игры (ERRS объявлен кодом игры в общей области видимости; до загрузки игры его нет)
+function gameFrameErrors(){try{const r=ERRS.find(x=>/^(update|draw|window\.error|promise|event:)/.test(x.kind));return r?r.kind+': '+r.msg:''}catch(e){return ''}}
+function rollback(note){PENDING=false;markBad(LS.getItem(K.act));LS.removeItem(K.pend);LS.setItem(K.act,LS.getItem(K.good)||'orig');LS.setItem(K.note,note);location.reload()}
 addEventListener('error',e=>{
-  if(!PENDING)return;PENDING=false;markBad(LS.getItem(K.act));LS.removeItem(K.pend);
-  LS.setItem(K.act,LS.getItem(K.good)||'orig');
-  LS.setItem(K.note,'Версия не запустилась ('+String(e.message||'ошибка').slice(0,120)+') — вернул предыдущую.');
-  location.reload();
+  if(!PENDING)return;
+  rollback('Версия не запустилась ('+MXCore.maskSecrets(String(e.message||'ошибка'),cfg.key).slice(0,120)+') — вернул предыдущую.');
 });
+addEventListener('unhandledrejection',e=>{
+  if(!PENDING)return;
+  rollback('Версия не запустилась (promise: '+MXCore.maskSecrets(String(e.reason&&e.reason.message||e.reason||'ошибка'),cfg.key).slice(0,120)+') — вернул предыдущую.');
+});
+/* ---------- аварийный доступ к панели: 5 касаний левого верхнего угла за 2,5 с, даже если игра сломана ---------- */
+(()=>{let taps=[];addEventListener('pointerdown',e=>{if(e.clientX>56||e.clientY>56)return;const now=Date.now();taps=taps.filter(t=>now-t<2500);taps.push(now);if(taps.length>=5){taps=[];try{window.mxUnlock&&window.mxUnlock(true)}catch(_){}}},true)})();
 
 /* ---------- API (формат Responses, как в MY AI STUDIO) ---------- */
-function extractText(p){const o=[];(p.output||[]).forEach(it=>{if(it.type==='message')(it.content||[]).forEach(c=>{if(typeof c.text==='string')o.push(c.text)})});
+// текст ответа в обоих форматах (Responses и chat completions); чужие формы полей — не исключение, а пустой текст
+function extractText(p){const o=[],arr=x=>Array.isArray(x)?x:[];arr(p.output).forEach(it=>{if(it&&it.type==='message')arr(it.content).forEach(c=>{if(c&&typeof c.text==='string')o.push(c.text)})});
   if(!o.length&&typeof p.output_text==='string')o.push(p.output_text);
-  const m=p.choices&&p.choices[0]&&p.choices[0].message;if(!o.length&&m&&typeof m.content==='string')o.push(m.content);return o.join('').trim()}
+  const ch=arr(p.choices)[0],m=ch&&ch.message;if(!o.length&&m&&typeof m.content==='string')o.push(m.content);return o.join('').trim()}
 let NOEFF=false;const SPENT={i:0,o:0};
 async function ask(msgs,system,opt){
   opt=opt||{};
@@ -59,26 +71,35 @@ async function ask(msgs,system,opt){
   system=system+effHint;
   let b=cfg.base.trim().replace(/\/+$/,'');if(!/\/responses$/.test(b))b+=(/\/v1$/.test(b)?'':'/v1')+'/responses';
   const eff=opt.effort||cfg.effort;
-  for(const withEff of(NOEFF||!eff)?[false]:[true,false]){
+  // повторы: сервер не знает reasoning (400) → без него; пустой/оборванный ответ → удвоить лимит, пока он меньше 64k.
+  // Раньше цикл шёл по паре [с reasoning, без] — после двух пустых ответов функция молча возвращала undefined.
+  for(let n=0;n<10;n++){
+    const withEff=!NOEFF&&!!eff;
     const body={model:cfg.model,stream:false,max_output_tokens:opt.max||cfg.maxTok,instructions:system,
       input:msgs.map(m=>({role:m.role,content:[{type:m.role==='assistant'?'output_text':'input_text',text:m.text}]}))};
     if(withEff)body.reasoning={effort:eff};
     const c=new AbortController(),t=setTimeout(()=>c.abort(),240000);
     try{
-      const r=await fetch(b,{method:'POST',signal:c.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+cfg.key.trim()},body:JSON.stringify(body)});
+      let r;
+      try{r=await fetch(b,{method:'POST',signal:c.signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+cfg.key.trim()},body:JSON.stringify(body)})}
+      catch(e){throw new Error(MXCore.apiError({error:e}))}
       const txt=await r.text();
-      if(!r.ok){if(withEff&&r.status===400){NOEFF=true;continue}throw new Error('API '+r.status+': '+txt.slice(0,200))}
-      const j=JSON.parse(txt),u=j.usage||{};
+      if(!r.ok){if(withEff&&r.status===400){NOEFF=true;continue}throw new Error(MXCore.apiError({status:r.status,body:MXCore.maskSecrets(txt,cfg.key)}))}
+      if(txt.length>4e6)throw new Error(MXCore.apiError({tooLarge:true,size:txt.length}));
+      let j;try{j=JSON.parse(txt)}catch(e){throw new Error(MXCore.apiError({badJson:true}))}
+      if(!j||typeof j!=='object')throw new Error(MXCore.apiError({badJson:true}));
+      const u=j.usage||{};
       SPENT.i+=u.input_tokens||u.prompt_tokens||0;SPENT.o+=u.output_tokens||u.completion_tokens||0;
       const out=extractText(j);
-      if(!out){
+      if(!out||MXCore.isTruncated(j)){
         const curMax=opt.max||cfg.maxTok;
         if(curMax<64000){opt.max=curMax*2;continue}
-        throw new Error('Пустой ответ модели (лимит ответа исчерпан — увеличьте лимит в панели)');
+        throw new Error(MXCore.apiError(out?{truncated:true}:{empty:true}));
       }
       return out;
-    }catch(e){throw e.name==='AbortError'?new Error('Таймаут ответа модели'):e}finally{clearTimeout(t)}
+    }catch(e){throw e.name==='AbortError'?new Error(MXCore.apiError({timeout:true})):new Error(MXCore.maskSecrets(e.message,cfg.key))}finally{clearTimeout(t)}
   }
+  throw new Error(MXCore.apiError({empty:true}));
 }
 
 /* ---------- оглавление кода, патчи ---------- */
@@ -89,11 +110,7 @@ function outline(code){
   return{L,B,text:B.map(b=>b.id+' ['+(b.en-b.st)+'] '+L[b.st].trim().slice(0,60)).join('\n')};
 }
 const blockText=(o,ids)=>ids.map(id=>o.B.find(b=>b.id===id)).filter(Boolean).map(b=>'// ===== '+b.id+' =====\n'+o.L.slice(b.st,b.en).join('\n')).join('\n\n');
-const unfence=s=>s.replace(/^```[^\n]*\n/,'').replace(/\n```\s*$/,'');
-function parsePatches(t){const P=[],re=/@@@FIND\r?\n([\s\S]*?)\r?\n@@@REPLACE\r?\n([\s\S]*?)\r?\n?@@@END/g;let m;while((m=re.exec(t)))P.push({f:unfence(m[1]),r:unfence(m[2])});return P}
-function applyPatches(code,P){const bad=[];let out=code;
-  P.forEach((p,i)=>{const n=p.f?out.split(p.f).length-1:0;if(n!==1)bad.push('патч '+(i+1)+': find найден '+n+' раз, нужен ровно 1');else out=out.replace(p.f,()=>p.r)});
-  return{out,bad}}
+const parsePatches=MXCore.parsePatches,applyPatches=MXCore.applyPatches;
 
 const SYS_PICK='Ты помогаешь править код HTML5-игры «Пробуждение монстров» (один JS-файл, canvas 1218x540). Ниже оглавление кода: id блока, [число строк], начало блока. Выбери до 15 блоков, которые нужно прочитать, чтобы выполнить запрос. Выбирай с запасом: бери не только прямые функции, но и связанные (вызовы, данные, отрисовку, сохранения). Если в запросе есть координаты области бага (x=, y=) — учитывай, где на экране эта область и какие функции её рисуют. Ответ — одна строка, например: PICK: L12, L340';
 const SYS_EDIT='Ты разработчик HTML5-игры «Пробуждение монстров» (один JS-файл, canvas, без библиотек). Тебе дают запрос и блоки кода (// ===== L<номер> =====). Ответь коротким описанием (1–3 предложения по-русски), затем патчи строго в формате:\n@@@FIND\n<точная копия фрагмента из кода, встречается ровно один раз, с теми же отступами>\n@@@REPLACE\n<новый фрагмент>\n@@@END\nПравила: делай минимальные правки; find — 2–8 строк, уникальных; не переписывай блоки целиком; не добавляй внешних библиотек и сетевых запросов; не меняй формат сохранений игрока; не трогай ASSET и ATLAS напрямую; новых героев добавляй ТОЛЬКО через regHero(def) (функция есть в коде: def={k,n,rows,pal,hp,atk,aspd,arm,rng,spd,heal,role,crit,el,ab:{n,cd,d},ult:{n,d},rar,desc,sc}; rows — пиксельная карта idle строками, точка — прозрачно, остальные символы — цвета из pal; el — одна из: phys,nature,fire,ice,poison,bolt,dark,holy,prism,chaos; rar 0-6; пример: regHero({k:"frost2",n:"Ледяной рыцарь",rows:[...],pal:{...},hp:3000,atk:70,aspd:0.8,arm:25,rng:50,spd:6,role:"Воин",crit:0.07,el:"ice",ab:{n:"Удар",cd:6,d:"..."},ult:{n:"Штурм",d:"..."},rar:2,desc:"..."});). Перед правкой проверь связанные системы: если меняешь героя — проверь HEROES, KIT, CAST, uSet/uPort/uFrame; если баг на экране — проверь отрисовку (dUnit/dProp/dCodex) и анимации; если визуал — проверь ATLAS/ASSET и размеры. Делай правку сразу полностью, не оставляй TODO. Если в показанных блоках не хватает кода, ответь только строкой NEED: L12, L340 (номера из оглавления).';
@@ -130,7 +147,7 @@ async function improve(req,log){
       const{out,bad}=applyPatches(CODE,P);
       if(bad.length)problem=bad.join('; ');
       else{
-        try{new Function(out)}catch(e){problem='синтаксическая ошибка после правки: '+e.message}
+        const syn=MXCore.checkSyntax(out);if(!syn.ok)problem='синтаксическая ошибка после правки: '+syn.error;
         if(!problem)return{code:out,summary:ans.split('@@@FIND')[0].trim(),n:P.length,tok:{i:SPENT.i,o:SPENT.o},diff:P.map(p=>({f:p.f.slice(0,700),r:p.r.slice(0,700)}))};
       }
     }
@@ -140,8 +157,31 @@ async function improve(req,log){
     ans=await ask(msgs,SYS_EDIT);
   }
 }
-async function applyNew(r,req){
-  const id=Date.now(),seq=(+LS.getItem('mx_seq')||0)+1;LS.setItem('mx_seq',seq);await putVer({id,ts:id,seq,note:req.slice(0,160),sum:r.summary,n:r.n,tok:r.tok,diff:r.diff,code:r.code});
+/* ---------- пробный запуск в песочнице ----------
+   Новый код запускается в отдельном sandbox-iframe (без доступа к хранилищу и странице):
+   игра должна загрузиться, дойти до меню и прожить 2,5 с кадров без единой ошибки в журнале.
+   Только после этого версия записывается и становится активной. */
+function trial(code,ms){
+  return new Promise(res=>{
+    let done=false;const fr=document.createElement('iframe');
+    fr.setAttribute('sandbox','allow-scripts');fr.title='Проверка правки';
+    fr.style.cssText='position:fixed;right:8px;bottom:8px;width:122px;height:54px;border:1px solid #ff3b3b;border-radius:6px;background:#000;z-index:99997;opacity:.9;pointer-events:none';
+    const finish=v=>{if(done)return;done=true;removeEventListener('message',onMsg);clearTimeout(tm);try{fr.remove()}catch(_){}res(v)};
+    const onMsg=e=>{if(e.source===fr.contentWindow&&e.data&&e.data.mx==='trial')finish(e.data)};
+    addEventListener('message',onMsg);
+    const tm=setTimeout(()=>finish({ok:false,why:'песочница не ответила за '+Math.round((ms*3+16000)/1000)+' с (вкладка свёрнута?)'}),ms*3+16000);
+    const doc='<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000;overflow:hidden}canvas{width:100%;height:100%}</style></head><body><canvas id="c"></canvas>'+
+      '<script>'+MXCore.trialScript(ms)+'<\/script><script>'+(PREFIX+code).replace(/<\/script/gi,'<\\/script')+'<\/script></body></html>';
+    document.body.appendChild(fr);fr.srcdoc=doc;
+  });
+}
+async function applyNew(r,req,log){
+  log('Пробный запуск правки в песочнице…');
+  const t=await trial(r.code,2500);
+  if(!t.ok)throw new Error('Правка не прошла пробный запуск: '+MXCore.maskSecrets(t.why,cfg.key)+'. Игра не изменена.');
+  log('Пробный запуск пройден (кадров: '+((t.state&&t.state.frame)|0)+'). Записываю версию и перезапускаю игру…');
+  const id=Date.now(),seq=(+LS.getItem('mx_seq')||0)+1;LS.setItem('mx_seq',seq);
+  await putVer({id,ts:id,seq,note:req.slice(0,160),sum:r.summary,n:r.n,tok:r.tok,diff:r.diff,code:r.code,hash:MXCore.hash(r.code),good:false,trial:{frames:(t.state&&t.state.frame)|0}});
   LS.setItem(K.act,String(id));await prune();location.reload();
 }
 
@@ -190,11 +230,12 @@ const diffHTML=d=>(d||[]).map(p=>'<div>'+p.f.split('\n').map(l=>'<span class="m"
 const fmt=n=>Number(n||0).toLocaleString('ru-RU');
 async function renderV(){
   const v=await allVers().catch(()=>[]),act=LS.getItem(K.act)||'orig',BAD=JSON.parse(LS.getItem('mx_bad')||'[]');
-  const cards=v.map(x=>({id:String(x.id),title:'v'+(x.seq||'·'),ts:x.ts,q:x.note,s:x.sum,n:x.n,d:x.diff,t:x.tok}));
+  const good=LS.getItem(K.good)||'orig';
+  const cards=v.map(x=>({id:String(x.id),title:'v'+(x.seq||'·'),ts:x.ts,q:x.note,s:x.sum,n:x.n,d:x.diff,t:x.tok,h:x.hash||MXCore.hash(x.code||''),g:!!x.good||String(x.id)===good}));
   cards.push({id:'orig',title:'Оригинал',ts:0,q:'Игра как была загружена',s:'',n:0});
   $('#mx-cnt').textContent=v.length?v.length+' правок':'правок пока нет';
   $('#mx-v').innerHTML=cards.map(x=>{const on=x.id===act;
-    return`<div class="mx-v${on?' on':''}"><div class="mx-vh"><b>${esc(x.title)}</b>${on?'<span class="mx-chip">сейчас</span>':''}${BAD.includes(x.id)?'<span class="mx-chip mx-bad">не запустилась</span>':''}<small>${x.ts?new Date(x.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</small></div>
+    return`<div class="mx-v${on?' on':''}"><div class="mx-vh"><b>${esc(x.title)}</b>${on?'<span class="mx-chip">сейчас</span>':''}${x.g&&x.id!=='orig'?'<span class="mx-chip" style="background:#2e7d32">проверена</span>':''}${BAD.includes(x.id)?'<span class="mx-chip mx-bad">не запустилась</span>':''}${x.h?'<span class="mx-tok" title="хеш кода">#'+esc(x.h)+'</span>':''}<small>${x.ts?new Date(x.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</small></div>
 <div class="mx-vq">${esc(x.q||'')}</div>${x.s?`<div class="mx-vs">${esc(x.s)}</div>`:''}
 ${x.t&&(x.t.i||x.t.o)?`<div class="mx-tok">Токены: вход ${fmt(x.t.i)} · выход ${fmt(x.t.o)}</div>`:''}
 ${x.d&&x.d.length?`<details><summary>Что изменено в коде (${x.n})</summary><div class="mx-d">${diffHTML(x.d)}</div></details>`:''}
@@ -253,7 +294,8 @@ function ui(){
 <section data-s="hist" hidden><div class="mx-s"><span>История правок</span><span id="mx-cnt"></span></div><div id="mx-v"></div></section>
 <section data-s="api" hidden>
 <label>Base URL<input id="mx-base" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-<label>API-ключ<input id="mx-key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+<label>API-ключ<span style="display:flex;gap:6px"><input id="mx-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" style="flex:1"><button type="button" id="mx-key-eye" title="Показать ключ">👁</button></span></label>
+<div class="mx-hint">Ключ хранится только в этом браузере и никогда не попадает в журнал, отчёты и историю правок.</div>
 <label>Модель<input id="mx-model" list="mx-ml" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
 <datalist id="mx-ml"><option>claude-sonnet-5-5</option><option>claude-opus-5-5</option><option>claude-fable-5-2</option><option>gpt-6-astra</option><option>deepseek-v4-pro</option></datalist>
 
@@ -267,6 +309,7 @@ function ui(){
   ['pointerdown','pointerup','touchstart','touchmove','touchend','mousedown','mouseup','click','keydown','keyup','keypress','wheel'].forEach(ev=>{
     b.addEventListener(ev,e=>e.stopPropagation());p.addEventListener(ev,e=>e.stopPropagation())});
   $('#mx-base').value=cfg.base;$('#mx-key').value=cfg.key;$('#mx-model').value=cfg.model;
+  $('#mx-key-eye').onclick=()=>{const k=$('#mx-key');k.type=k.type==='password'?'text':'password'};
   const sync=()=>{cfg.base=$('#mx-base').value;cfg.key=$('#mx-key').value;cfg.model=$('#mx-model').value;saveCfg()};
   ['mx-base','mx-key','mx-model','mx-q'].forEach(i=>{const el=$('#'+i);if(i!=='mx-q'){el.addEventListener('change',sync);el.addEventListener('input',sync)}el.addEventListener('focus',()=>{p.classList.add('mx-typing');p.style.maxHeight=(window.visualViewport?window.visualViewport.height:innerHeight)+'px';setTimeout(()=>el.scrollIntoView({block:'center'}),350)});el.addEventListener('blur',()=>{p.classList.remove('mx-typing');p.style.maxHeight=''})});
   const paint=()=>{p.querySelectorAll('#mx-eff button').forEach(x=>x.classList.toggle('on',x.dataset.e===cfg.effort));
@@ -283,9 +326,40 @@ function ui(){
   hd.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const r=p.getBoundingClientRect();dr={dx:e.clientX-r.left,dy:e.clientY-r.top};hd.setPointerCapture(e.pointerId)});
   hd.addEventListener('pointermove',e=>{if(dr)place(e.clientX-dr.dx,e.clientY-dr.dy)});
   hd.addEventListener('pointerup',()=>{if(dr){dr=null;LS.setItem('mx_pos',JSON.stringify([parseInt(p.style.left),parseInt(p.style.top)]))}});
-  /* скин убран */
-  b.style.display=LS.getItem('mx_dev')==='1'?'block':'none';
-  window.mxUnlock=()=>{LS.setItem('mx_dev','1');b.style.display='block'};
+  /* ---------- вход в редактор: один пароль на все устройства, в коде только соль и хеш (MXCore.AUTH) ----------
+     Доступ держится в памяти до перезагрузки страницы, в хранилище ничего не пишется. Окно запроса — DOM,
+     поэтому работает и при сломанной игре (аварийный жест). */
+  let UNLOCKED=false;b.style.display='none';window.__mxUnlocked=false;
+  const openPanel=()=>{if(!p.classList.contains('on'))b.onclick()};
+  const gate=(open)=>{
+    if(UNLOCKED){if(open)openPanel();return}
+    if(document.getElementById('mx-dev-ov'))return;
+    const ov=document.createElement('div');ov.id='mx-dev-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(5,3,8,.75);display:flex;align-items:center;justify-content:center';
+    ov.innerHTML='<div style="background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:22px 24px;color:#fff;font:14px system-ui;text-align:center;min-width:280px;max-width:92vw"><div style="font-weight:800;margin-bottom:12px">Режим разработчика</div>'+
+      '<input id="mx-dev-in" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Пароль" style="width:100%;box-sizing:border-box;padding:10px;border-radius:9px;border:1px solid #6a4a8a;background:#0f0a16;color:#fff;font:15px system-ui;outline:0">'+
+      '<div id="mx-dev-err" style="color:#ff8a8a;font-size:12px;min-height:16px;margin:8px 0"></div>'+
+      '<div style="display:flex;gap:8px;justify-content:center"><button id="mx-dev-ok" style="font:14px system-ui;padding:9px 18px;border-radius:9px;border:0;background:#8e24aa;color:#fff">Войти</button><button id="mx-dev-no" style="font:14px system-ui;padding:9px 18px;border-radius:9px;border:1px solid #555;background:#222;color:#ddd">Отмена</button></div>'+
+      '<div style="color:#9a8aa8;font-size:11px;margin-top:10px">Доступ действует до перезагрузки страницы</div></div>';
+    document.body.appendChild(ov);
+    ['pointerdown','pointerup','touchstart','touchmove','touchend','mousedown','mouseup','click','keydown','keyup','keypress','wheel'].forEach(ev=>ov.addEventListener(ev,e=>e.stopPropagation()));
+    const inp=ov.querySelector('#mx-dev-in'),err=ov.querySelector('#mx-dev-err'),okb=ov.querySelector('#mx-dev-ok');
+    const close=()=>ov.remove();
+    let busy=false;
+    const ok=async()=>{
+      if(busy)return;busy=true;okb.disabled=true;err.textContent='Проверяю…';
+      let good=false,why='';
+      try{good=await MXCore.verifyPassword(inp.value)}catch(e){why=String(e&&e.message||e)}
+      busy=false;okb.disabled=false;
+      if(good){UNLOCKED=true;window.__mxUnlocked=true;b.style.display='block';close();toast('Редактор открыт до перезагрузки страницы');if(open)openPanel();return}
+      err.textContent=why||'Неверный пароль';inp.value='';inp.focus();
+    };
+    okb.onclick=e=>{e.stopPropagation();ok()};
+    ov.querySelector('#mx-dev-no').onclick=e=>{e.stopPropagation();close()};
+    inp.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')ok();if(e.key==='Escape')close()};
+    inp.focus();
+  };
+  window.mxGate=gate;window.mxUnlock=gate;
   let picked=null;
   const pickBtn=$('#mx-pick'),pickedEl=$('#mx-picked');
   pickBtn.onclick=()=>{
@@ -310,14 +384,14 @@ function ui(){
       cancel();
     };
   };
-  b.onclick=()=>{p.classList.toggle('on');const on=p.classList.contains('on');window.__mxOpen=on;if(on){place(parseInt(p.style.left),parseInt(p.style.top));renderV();bg.play().catch(()=>{})}else bg.pause()};$('#mx-x').onclick=()=>{p.classList.remove('on');window.__mxOpen=false;bg.pause()};
+  b.onclick=()=>{if(!UNLOCKED)return gate(true);p.classList.toggle('on');const on=p.classList.contains('on');window.__mxOpen=on;if(on){place(parseInt(p.style.left),parseInt(p.style.top));renderV();bg.play().catch(()=>{})}else bg.pause()};$('#mx-x').onclick=()=>{p.classList.remove('on');window.__mxOpen=false;bg.pause()};
   $('#mx-go').onclick=async()=>{
     let req=$('#mx-q').value.trim();if(!req)return;sync();
     if(picked){let ctx='';try{ctx=' Экран игры: '+S+'.';if(G&&G.slots){const near=G.slots.filter(u=>u&&Math.hypot(u.x-picked.x,u.y-picked.y)<90).map(u=>u.n||u.k);if(near.length)ctx+=' В этой точке находится: '+near.join(', ')+'.';}}catch(e){}const zx=picked.x<406?'слева':picked.x<812?'в центре':'справа';const zy=picked.y<180?'сверху':picked.y<360?'в середине':'снизу';req='Область бага на экране игры: x='+picked.x+', y='+picked.y+' (экран 1218×540, начало координат слева сверху; область: '+zx+' '+zy+').'+ctx+' Определи, какой объект игры в этой точке (герой, враг, декорация, элемент интерфейса), и ищи баг в функциях, которые его рисуют и обновляют. '+req;}
-    const go=$('#mx-go'),L=$('#mx-log'),log=m=>{L.textContent=m};go.disabled=true;L.classList.add('busy');
+    const go=$('#mx-go'),L=$('#mx-log'),log=m=>{L.textContent=MXCore.maskSecrets(m,cfg.key)};go.disabled=true;L.classList.add('busy');
     try{const r=await improve(req,log);L.classList.remove('busy');
       log('Готово, правок: '+r.n+'.\n'+r.summary+'\nПотрачено токенов: вход '+fmt(r.tok.i)+', выход '+fmt(r.tok.o)+'\nПерезапускаю игру…');
-      await new Promise(z=>setTimeout(z,1800));await applyNew(r,req)}
+      await new Promise(z=>setTimeout(z,1200));await applyNew(r,req,log)}
     catch(e){L.classList.remove('busy');log('Ошибка: '+e.message)}finally{go.disabled=false}
   };
 }

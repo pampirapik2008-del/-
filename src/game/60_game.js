@@ -5,17 +5,33 @@ let EV = null, // текущее событие (награда, находка,
 	MAPC = null, // запечённый фон карты
 	MAPK = null, // ключ запечённого фона: сид+мир
 	MAPL = [], // озёра на карте (для бликов)
+	MAPJ = null, // незавершённая запечка фона карты (см. bakeMap/bakeStep)
 	TIPN = null;
 const cmul = () => 1 + 0.5 * (G.w || 0); // доход растёт с номером мира
 const luck = () => (G.w || 0) * 0.7;
 
 // ---------- карта мира ----------
+// ---------- карта: слои узлов → рёбра → раздвижка → типы узлов → смежность ----------
+// Порядок вызовов Rand.next() сохранён в точности (эталон 500 карт).
 function genMap() {
 	const R = Rand.next,
 		L = 6 + ((R() * 3) | 0),
 		sx = 84 + R() * 30,
 		ex = 1118,
 		gp = (ex - sx) / (L + 1);
+	const ly = mapLayers(R, L, sx, ex, gp);
+	mapEdges(R, ly);
+	mapSpread();
+	E.forEach((e) => (e[2] = 0));
+	mapKinds(R);
+	ADJ = N.map(() => []);
+	E.forEach(([a, b]) => {
+		ADJ[a].push(b);
+		ADJ[b].push(a);
+	});
+}
+// узлы по слоям: старт, L промежуточных слоёв по 1–4 узла, босс
+function mapLayers(R, L, sx, ex, gp) {
 	N = [{ x: sx, y: 200 + R() * 110, ly: 0 }];
 	E = [];
 	const ly = [[0]];
@@ -31,6 +47,10 @@ function genMap() {
 	}
 	N.push({ x: ex, y: 200 + R() * 100, k: "boss", ly: L + 1 });
 	ly.push([N.length - 1]);
+	return ly;
+}
+// рёбра: каждый узел связан с ближайшим по высоте соседом, плюс случайная развилка
+function mapEdges(R, ly) {
 	for (let l = 0; l < ly.length - 1; l++) {
 		const A = ly[l],
 			Bl = ly[l + 1];
@@ -50,7 +70,9 @@ function genMap() {
 			if (b !== undefined && !E.some((e) => e[0] === a && e[1] === b)) E.push([a, b]);
 		}
 	}
-	// значки не налезают друг на друга: раздвигаем по вертикали
+}
+// значки не налезают друг на друга: раздвигаем по вертикали
+function mapSpread() {
 	for (let it = 0; it < 40; it++)
 		for (let i = 1; i < N.length; i++)
 			for (let j = i + 1; j < N.length; j++) {
@@ -66,7 +88,9 @@ function genMap() {
 					b.y = clamp(b.y + s * p, 126, 386);
 				}
 			}
-	E.forEach((e) => (e[2] = 0));
+}
+// типы узлов: события и элитные бои раскладываются по свободным узлам
+function mapKinds(R) {
 	const free = N.map((_, i) => i)
 			.filter((i) => i > 0 && N[i].k !== "boss")
 			.sort(() => R() - 0.5),
@@ -83,11 +107,6 @@ function genMap() {
 		const c = N.filter((n) => n.ly > 0 && n.ly <= 2 && !n.k);
 		(c[0] || N.find((n) => n.ly === 1)).k = "tribe";
 	}
-	ADJ = N.map(() => []);
-	E.forEach(([a, b]) => {
-		ADJ[a].push(b);
-		ADJ[b].push(a);
-	});
 }
 // палитры карты для каждого мира: земля, дорога, доля леса, перекраска деревьев и воды
 const MAPT = {
@@ -179,7 +198,7 @@ const hex3 = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), p
 function mapImg(w) {
 	const P = MAPT[w.id];
 	if (!P.tint) return IMG.map;
-	return TINTC["map" + w.i] || (TINTC["map" + w.i] = recolor(IMG.map, P.tint));
+	return TINTC.get("map" + w.i) || TINTC.set("map" + w.i, recolor(IMG.map, P.tint));
 }
 function segD(px, py, ax, ay, bx, by) {
 	const dx = bx - ax,
@@ -188,58 +207,116 @@ function segD(px, py, ax, ay, bx, by) {
 		k = clamp(((px - ax) * dx + (py - ay) * dy) / l, 0, 1);
 	return Math.hypot(px - ax - dx * k, py - ay - dy * k);
 }
+// Фон карты зависит только от сида и мира; вся сборка — десятки миллисекунд JS на ПК (на телефоне
+// в разы дольше), раньше она была одним синхронным вызовом ~0,9 с — экран замирал при каждом входе
+// в мир и при загрузке сохранения. Теперь bakeMap только заводит работу MAPJ, а bakeStep() из цикла
+// кадра выполняет её порциями по BAKE_MS миллисекунд (земля строками, декор этапами): игра продолжает
+// рисовать кадры, экран карты показывает полосу прогресса (dMapLoading), а по готовности MAPK = ключ
+// и карта появляется. Замер блокировок главного потока при входе в мир — tools/entry.mjs.
+// Результат побайтово тот же, что у синхронной версии: порядок обхода пикселей и обращений
+// к rng32 не изменился (проверяется контрольной суммой в tests/unit/map.test.mjs).
+// бюджет одной порции; обвязка тестов задаёт __mxBakeMs (по умолчанию там — всё за один кадр,
+// чтобы снимки и golden не зависели от скорости машины)
+const BAKE_MS = typeof __mxBakeMs === "number" ? __mxBakeMs : 9;
 function bakeMap(seed) {
-	// Фон карты зависит только от сида и мира. Пока ключ совпадает — пересборка не нужна
-	// (каждая занимает ~0.9 c и заметно подвешивает загрузку сохранения).
 	const wi = G ? G.w || 0 : 0,
 		key = seed + ":" + wi;
-	if (MAPC && MAPK === key) {
-		SD = seed;
-		return;
-	}
 	SD = seed;
-	const w = WORLDS[G ? G.w || 0 : 0],
+	if (MAPC && MAPK === key && !MAPJ) return; // уже готово
+	if (MAPJ && MAPJ.key === key) return; // уже собирается
+	const w = WORLDS[wi],
 		P = MAPT[w.id],
-		R = rng32(seed),
 		c = MAPC || (MAPC = mkC(609, 270)),
-		x = c.getContext("2d"),
-		im = mapImg(w),
-		AM = ATL.map;
+		x = c.getContext("2d");
 	x.imageSmoothingEnabled = false;
-	// земля: пятна трёх тонов по шуму, границы — шахматным дизерингом
-	const id = x.createImageData(609, 270),
-		p = id.data,
-		cols = P.g.map(hex3),
-		R2 = rng32(seed + 5);
-	for (let py = 0; py < 270; py++)
-		for (let px = 0; px < 609; px++) {
-			const n = vnoise(px * 0.021, py * 0.034, seed) * 0.7 + vnoise(px * 0.08, py * 0.11, seed + 1) * 0.3;
-			let tn = n < 0.46 ? 0 : n < 0.6 ? 1 : 2;
-			if ((n > 0.44 && n < 0.46) || (n > 0.58 && n < 0.6)) tn = (px + py) & 1 ? tn : n < 0.5 ? 1 : 2;
-			let cc = cols[tn];
-			const sp = R2();
-			if (sp < 0.014) cc = cols[(tn + 1) % 3];
-			const i = (py * 609 + px) * 4,
-				sh = sp > 0.985 ? 0.9 : 1;
-			p[i] = cc[0] * sh;
-			p[i + 1] = cc[1] * sh;
-			p[i + 2] = cc[2] * sh;
-			p[i + 3] = 255;
+	MAPK = null;
+	MAPL = [];
+	MAPJ = {
+		seed,
+		key,
+		w,
+		P,
+		x,
+		im: mapImg(w),
+		AM: ATL.map,
+		R: rng32(seed),
+		R2: rng32(seed + 5),
+		id: x.createImageData(609, 270),
+		cols: P.g.map(hex3),
+		py: 0, // следующая строка земли
+		stage: 0, // этап декора после земли: 0 — озёра, 1 — дороги, 2 — лес (кандидаты), 3 — лес (отрисовка), 4 — готово
+		fi: 0, // следующий кандидат леса (из FOREST_N)
+		items: null, // отобранные деревья и мелочи (заполняет bakeForest)
+		t0: t, // когда начали: полоса прогресса показывается, только если сборка затянулась
+	};
+}
+// земля: пятна трёх тонов по шуму, границы — шахматным дизерингом; строки [y0, y1).
+// Шум — тот же vnoise (две октавы), но развёрнутый вручную: углы решётки считаются один раз
+// на участок строки, а не на каждый пиксель (в 5 раз быстрее). Формулы и порядок операций с
+// плавающей точкой повторяют vnoise дословно, поэтому пиксели совпадают бит-в-бит
+// (контрольные суммы — в tests/unit/map.test.mjs).
+// Строки [y0, y1) — bakeGround, одна строка — bakeRow.
+// одна строка земли py: углы решётки обеих октав пересчитываются только при смене клетки
+function bakeRow(J, py) {
+	const p = J.id.data,
+		cols = J.cols,
+		R2 = J.R2,
+		s1 = J.seed,
+		s2 = J.seed + 1,
+		ya = py * 0.034,
+		yi1 = Math.floor(ya),
+		fy1 = ya - yi1,
+		v1 = fy1 * fy1 * (3 - 2 * fy1),
+		yb = py * 0.11,
+		yi2 = Math.floor(yb),
+		fy2 = yb - yi2,
+		v2 = fy2 * fy2 * (3 - 2 * fy2);
+	// текущая клетка (cx) и четыре угла решётки (a, b, c, d) для каждой октавы
+	let cx1 = -1, a1 = 0, b1 = 0, c1 = 0, d1 = 0, cx2 = -1, a2 = 0, b2 = 0, c2 = 0, d2 = 0;
+	for (let px = 0; px < 609; px++) {
+		const xa = px * 0.021,
+			xi1 = Math.floor(xa),
+			fx1 = xa - xi1;
+		if (xi1 !== cx1) {
+			cx1 = xi1;
+			a1 = vhash(xi1, yi1, s1);
+			b1 = vhash(xi1 + 1, yi1, s1);
+			c1 = vhash(xi1, yi1 + 1, s1);
+			d1 = vhash(xi1 + 1, yi1 + 1, s1);
 		}
-	x.putImageData(id, 0, 0);
-	const nodes = N.map((n) => [n.x / 2, n.y / 2]),
-		edges = E.map(([a, b]) => [nodes[a][0], nodes[a][1], nodes[b][0], nodes[b][1]]),
-		roadD = (px, py) => {
-			let d = 1e9;
-			for (const e of edges) d = Math.min(d, segD(px, py, e[0], e[1], e[2], e[3]));
-			return d;
-		},
-		nodeD = (px, py) => {
-			let d = 1e9;
-			for (const n of nodes) d = Math.min(d, Math.hypot(px - n[0], (py - n[1]) * 1.3));
-			return d;
-		};
-	// озёра
+		const u1 = fx1 * fx1 * (3 - 2 * fx1),
+			n1 = a1 + (b1 - a1) * u1 + (c1 - a1) * v1 + (a1 - b1 - c1 + d1) * u1 * v1,
+			xb = px * 0.08,
+			xi2 = Math.floor(xb),
+			fx2 = xb - xi2;
+		if (xi2 !== cx2) {
+			cx2 = xi2;
+			a2 = vhash(xi2, yi2, s2);
+			b2 = vhash(xi2 + 1, yi2, s2);
+			c2 = vhash(xi2, yi2 + 1, s2);
+			d2 = vhash(xi2 + 1, yi2 + 1, s2);
+		}
+		const u2 = fx2 * fx2 * (3 - 2 * fx2),
+			n2 = a2 + (b2 - a2) * u2 + (c2 - a2) * v2 + (a2 - b2 - c2 + d2) * u2 * v2,
+			n = n1 * 0.7 + n2 * 0.3;
+		let tn = n < 0.46 ? 0 : n < 0.6 ? 1 : 2;
+		if ((n > 0.44 && n < 0.46) || (n > 0.58 && n < 0.6)) tn = (px + py) & 1 ? tn : n < 0.5 ? 1 : 2;
+		let cc = cols[tn];
+		const sp = R2();
+		if (sp < 0.014) cc = cols[(tn + 1) % 3];
+		const i = (py * 609 + px) * 4,
+			sh = sp > 0.985 ? 0.9 : 1;
+		p[i] = cc[0] * sh;
+		p[i + 1] = cc[1] * sh;
+		p[i + 2] = cc[2] * sh;
+		p[i + 3] = 255;
+	}
+}
+function bakeGround(J, y0, y1) {
+	for (let py = y0; py < y1; py++) bakeRow(J, py);
+}
+// озёра: 1–2 штуки, не ближе 9 px к дороге и 18 к узлу, не вплотную друг к другу; список — в MAPL (для бликов)
+function bakeLakes(x, im, AM, R, roadD, nodeD) {
 	MAPL = [];
 	const nl = 1 + ((R() * 2) | 0);
 	for (let i = 0, tr = 0; i < nl && tr < 60; tr++) {
@@ -255,7 +332,9 @@ function bakeMap(seed) {
 		MAPL.push([lx, ly2, r[2], r[3]]);
 		i++;
 	}
-	// дороги: тёмная кайма + светлая середина, по пикселям
+}
+// дороги (тёмная кайма + светлая пунктирная середина, по пикселям) и площадки под значками узлов
+function bakeRoads(x, P, edges, nodes) {
 	for (let pass = 0; pass < 2; pass++) {
 		x.fillStyle = P.road[pass ? 0 : 1];
 		for (const e of edges) {
@@ -269,7 +348,6 @@ function bakeMap(seed) {
 			}
 		}
 	}
-	// площадки под значками
 	for (const n of nodes) {
 		x.fillStyle = P.road[1];
 		x.beginPath();
@@ -280,9 +358,14 @@ function bakeMap(seed) {
 		x.ellipse(n[0], n[1] + 3, 13, 7, 0, 0, TAU);
 		x.fill();
 	}
-	// лес и мелочи: рощи по шуму, поляны вокруг дорог
-	const items = [];
-	for (let i = 0; i < 900; i++) {
+}
+// лес и мелочи: FOREST_N проб, рощи по шуму (dn), поляны вокруг дорог/узлов/озёр.
+// bakeForest отбирает кандидатов [i0, i1) в J.items (порциями между кадрами), bakeForestDraw рисует.
+const FOREST_N = 900, // кандидатов леса на карту
+	FOREST_CHUNK = 150; // кандидатов за один шаг bakeStep (~4–7 мс на ПК)
+function bakeForest(J, i0, i1) {
+	const { AM, R, P, seed, roadD, nodeD, items } = J;
+	for (let i = i0; i < i1; i++) {
 		const px = -8 + R() * 625,
 			py = 22 + R() * 252,
 			dn = vnoise(px * 0.013, py * 0.02, seed + 9),
@@ -300,6 +383,10 @@ function bakeMap(seed) {
 		if (items.some((o) => Math.abs(o.x - px) < (o.w + q[2]) * 0.36 && Math.abs(o.y - py) < 5)) continue;
 		items.push({ x: px, y: py, nm, w: q[2] });
 	}
+}
+// лес на холст: снизу вверх (ближние поверх дальних), под каждым — тень-эллипс
+function bakeForestDraw(J) {
+	const { x, im, AM, items } = J;
 	items.sort((a, b) => a.y - b.y);
 	for (const o of items) {
 		const q = AM[o.nm];
@@ -309,7 +396,76 @@ function bakeMap(seed) {
 		x.fill();
 		x.drawImage(im, q[0], q[1], q[2], q[3], Math.round(o.x - q[2] / 2), Math.round(o.y - q[3]), q[2], q[3]);
 	}
-	MAPK = key;
+}
+// геометрия для декора: узлы и рёбра в координатах фона (1:2), расстояния до дороги и до узла
+function bakeGeom(J) {
+	const nodes = N.map((n) => [n.x / 2, n.y / 2]),
+		edges = E.map(([a, b]) => [nodes[a][0], nodes[a][1], nodes[b][0], nodes[b][1]]);
+	J.nodes = nodes;
+	J.edges = edges;
+	J.roadD = (px, py) => {
+		let d = 1e9;
+		for (const e of edges) d = Math.min(d, segD(px, py, e[0], e[1], e[2], e[3]));
+		return d;
+	};
+	J.nodeD = (px, py) => {
+		let d = 1e9;
+		for (const n of nodes) d = Math.min(d, Math.hypot(px - n[0], (py - n[1]) * 1.3));
+		return d;
+	};
+	J.items = [];
+}
+// один этап декора поверх готовой земли (J.stage): 0 — земля на холст, геометрия, озёра;
+// 1 — дороги и площадки под значками; 2 — отбор леса порциями по FOREST_CHUNK кандидатов;
+// 3 — отрисовка леса. Порядок обращений к R() тот же, что был у цельной сборки, поэтому
+// карта побайтово не зависит от нарезки (tests/unit/map.test.mjs).
+function bakeDecor(J) {
+	const { x, im, AM, R, P } = J;
+	if (J.stage === 0) {
+		x.putImageData(J.id, 0, 0);
+		bakeGeom(J);
+		bakeLakes(x, im, AM, R, J.roadD, J.nodeD);
+		J.stage = 1;
+	} else if (J.stage === 1) {
+		bakeRoads(x, P, J.edges, J.nodes);
+		J.stage = 2;
+	} else if (J.stage === 2) {
+		const i1 = Math.min(FOREST_N, J.fi + FOREST_CHUNK);
+		bakeForest(J, J.fi, i1);
+		J.fi = i1;
+		if (i1 >= FOREST_N) J.stage = 3;
+	} else {
+		bakeForestDraw(J);
+		J.stage = 4;
+	}
+}
+// порция работы: не дольше ms миллисекунд — земля по 6 строк, затем декор по этапам (bakeDecor);
+// бюджет проверяется после каждого куска, самый крупный кусок — порция леса (~4–7 мс на ПК).
+// Возвращает true, когда карта готова. Раньше весь декор шёл одним куском в последнем кадре
+// (30–40 мс на ПК, на телефоне — за 100): замер tools/entry.mjs.
+function bakeStep(ms) {
+	const J = MAPJ;
+	if (!J) return true;
+	const t0 = performance.now();
+	while (J.py < 270) {
+		const y1 = Math.min(270, J.py + 6);
+		bakeGround(J, J.py, y1);
+		J.py = y1;
+		if (performance.now() - t0 >= ms) return false;
+	}
+	while (J.stage < 4) {
+		bakeDecor(J);
+		if (J.stage < 4 && performance.now() - t0 >= ms) return false;
+	}
+	MAPK = J.key;
+	MAPJ = null;
+	return true;
+}
+// доля готовности для полосы прогресса: земля — первые 75 %, декор — остальное
+const bakeProgress = () => (MAPJ ? Math.min(0.99, (MAPJ.py / 270) * 0.75 + ((MAPJ.stage + (MAPJ.stage === 2 ? MAPJ.fi / FOREST_N : 0)) / 4) * 0.25) : 1);
+// дождаться готовности синхронно (тесты, снимки, экспорт)
+function bakeNow() {
+	while (MAPJ) bakeStep(1e9);
 }
 function avail() {
 	const a = ADJ[G.cur].filter((n) => !G.vis.has(n) && N[n].x > N[G.cur].x);
@@ -322,7 +478,7 @@ function walkTo(n) {
 	sfx("step");
 }
 function flowTick() {
-	if (MV && State.is("map") && t - MV.t0 >= MV.d) {
+	if (MV && Machine.is("map") && t - MV.t0 >= MV.d) {
 		const b = MV.b;
 		MV = null;
 		go(b);
@@ -376,13 +532,13 @@ function toMenu() {
 	EV = null;
 	MV = null;
 	Seq.clear();
-	State.go("menu");
+	Machine.go("menu");
 }
 
 // ---------- события ----------
 function ev(o) {
 	EV = Object.assign({ t0: t, cards: [], sel: -1, open: o.chest === undefined ? 1 : 0, rv: [] }, o);
-	State.go("msg");
+	Machine.go("msg");
 	pop = null;
 	TIPN = null;
 }
@@ -419,7 +575,7 @@ function evClose() {
 	EV = null;
 	if (e.next) e.next();
 	else {
-		State.go("map");
+		Machine.go("map");
 		autosave();
 	}
 }
@@ -513,6 +669,7 @@ function enter(kind) {
 	snap = ser();
 	autosave();
 }
+// ---------- победа: общая часть, затем ветка арены / босса / обычного боя ----------
 function win() {
 	const kind = F.kind,
 		rb = relBonus(),
@@ -525,7 +682,7 @@ function win() {
 	G.slots.forEach((u) => {
 		if (u) {
 			u.placed = false;
-			u.hp = Math.min(u.max, Math.max(u.hp, Math.ceil(u.max * 0.25)) + Math.round(u.max * 0.2));
+			u.hp = Math.min(u.max, Math.max(u.hp, Math.ceil(u.max * BAL.win.healFloor)) + Math.round(u.max * BAL.win.healBonus));
 			resetU(u);
 		}
 	});
@@ -533,87 +690,94 @@ function win() {
 	BGA = F.A;
 	F = null;
 	pop = null;
-	if (G.arena) {
-		const c = 8 + 2 * G.wave + rb.coin,
-			m = 1 + (G.wave % 3 === 0 ? 1 : 0),
-			cards = [
-				{ t: "res", ic: "coin", n: c },
-				{ t: "res", ic: "meat", n: m },
-			];
-		G.coin += c;
-		G.meat += m;
-		if (G.wave > (CFG.arenaBest || 0)) {
-			CFG.arenaBest = G.wave;
-			saveCfg();
-		}
-		const after = () => {
-			G.shop = true;
-			G.stock = null;
-			State.go("shop");
-			SS.sel = -1;
-		};
-		ev({
-			bg: 1,
-			title: "Волна " + G.wave + " пройдена",
-			sub: kind === "boss" ? "Босс повержен!" : "Арена ликует",
-			stats,
-			cards,
-			next:
-				G.wave % 2 === 0
-					? () => {
-							const f = G.slots.indexOf(null);
-							if (G.wave % 4 === 0 && f >= 0) {
-								const u = recruit(rnd(HEROES), rollRar(G.wave * 0.25));
-								G.slots[f] = u;
-								ev({ title: "Новобранец", sub: "Толпа выдвинула своего бойца", cards: [{ t: "hero", u, r: u.r }], next: after });
-							} else ev({ title: "Трофей арены", sub: "Выбери одну реликвию", pick: 1, chest: 1, cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(G.wave * 0.3) })), next: after });
-						}
-					: after,
-		});
-		return;
+	Events.emit("fight:won", kind, st);
+	if (G.arena) winArena(kind, rb, stats);
+	else if (kind === "boss") winBoss(rb, stats);
+	else winFight(kind, rb, stats);
+}
+// арена: монеты и мясо за волну, каждую вторую волну — трофей или новобранец, затем лавка
+function winArena(kind, rb, stats) {
+	const c = BAL.win.arenaCoin + BAL.win.arenaCoinWave * G.wave + rb.coin,
+		m = 1 + (G.wave % 3 === 0 ? 1 : 0),
+		cards = [
+			{ t: "res", ic: "coin", n: c },
+			{ t: "res", ic: "meat", n: m },
+		];
+	G.coin += c;
+	G.meat += m;
+	if (G.wave > (CFG.arenaBest || 0)) {
+		CFG.arenaBest = G.wave;
+		saveCfg();
 	}
-	if (kind === "boss") {
-		const c = Math.round(20 * cmul()) + rb.coin,
-			m = 3 + (G.w || 0);
-		G.coin += c;
-		G.meat += m;
-		G.slots.forEach((u) => u && (u.hp = u.max));
-		if ((G.w || 0) + 1 > (CFG.best || 0)) {
-			CFG.best = (G.w || 0) + 1;
-			saveCfg();
-		}
-		ev({
-			bg: 1,
-			title: WORLDS[G.w].boss.n + " повержен!",
-			sub: "Трофеи босса",
-			stats,
-			cards: [
-				{ t: "res", ic: "coin", n: c },
-				{ t: "res", ic: "meat", n: m },
-			],
-			next: () =>
-				ev({
-					title: "Сокровищница босса",
-					sub: "Выбери одну реликвию",
-					pick: 1,
-					chest: 2,
-					cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(luck() + 1, 2) })),
-					next: () => {
-						if (G.w + 1 >= worldCount()) {
-							delSave();
-							State.go("win");
-							sfx("fanfare");
-						} else {
-							State.go("world");
-							WT0 = t;
-							autosave();
-						}
-					},
-				}),
-		});
-		return;
+	const after = () => {
+		G.shop = true;
+		G.stock = null;
+		Machine.go("shop");
+		SS.sel = -1;
+	};
+	ev({
+		bg: 1,
+		title: "Волна " + G.wave + " пройдена",
+		sub: kind === "boss" ? "Босс повержен!" : "Арена ликует",
+		stats,
+		cards,
+		next:
+			G.wave % 2 === 0
+				? () => {
+						const f = G.slots.indexOf(null);
+						if (G.wave % 4 === 0 && f >= 0) {
+							const u = recruit(rnd(HEROES), rollRar(G.wave * 0.25));
+							G.slots[f] = u;
+							ev({ title: "Новобранец", sub: "Толпа выдвинула своего бойца", cards: [{ t: "hero", u, r: u.r }], next: after });
+						} else ev({ title: "Трофей арены", sub: "Выбери одну реликвию", pick: 1, chest: 1, cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(G.wave * 0.3) })), next: after });
+					}
+				: after,
+	});
+}
+// босс: трофеи, полное лечение, сокровищница, затем следующий мир или финал
+function winBoss(rb, stats) {
+	const c = Math.round(BAL.win.bossCoin * cmul()) + rb.coin,
+		m = BAL.win.bossMeat + (G.w || 0);
+	G.coin += c;
+	G.meat += m;
+	G.slots.forEach((u) => u && (u.hp = u.max));
+	if ((G.w || 0) + 1 > (CFG.best || 0)) {
+		CFG.best = (G.w || 0) + 1;
+		saveCfg();
 	}
-	const c = Math.round((kind === "arena" ? 10 : 6 + G.depth) * cmul()) + rb.coin,
+	ev({
+		bg: 1,
+		title: WORLDS[G.w].boss.n + " повержен!",
+		sub: "Трофеи босса",
+		stats,
+		cards: [
+			{ t: "res", ic: "coin", n: c },
+			{ t: "res", ic: "meat", n: m },
+		],
+		next: () =>
+			ev({
+				title: "Сокровищница босса",
+				sub: "Выбери одну реликвию",
+				pick: 1,
+				chest: 2,
+				cards: [0, 1, 2].map(() => ({ t: "relic", ...rollRelic(luck() + 1, 2) })),
+				next: () => {
+					if (G.w + 1 >= worldCount()) {
+						delSave();
+						Machine.go("win");
+						sfx("fanfare");
+					} else {
+						Machine.go("world");
+						WT0 = t;
+						autosave();
+					}
+				},
+			}),
+	});
+}
+// обычный бой / узел арены / логово: награда, шанс реликвии, открывается лавка
+function winFight(kind, rb, stats) {
+	const c = Math.round((kind === "arena" ? BAL.win.arenaNodeCoin : BAL.win.fightCoin + G.depth) * cmul()) + rb.coin,
 		m = (kind === "arena" ? 2 : 1) + ((G.w || 0) >> 1),
 		cards = [
 			{ t: "res", ic: "coin", n: c },
@@ -621,7 +785,7 @@ function win() {
 		];
 	G.coin += c;
 	G.meat += m;
-	if (kind === "arena" || Rand.next() < (kind === "swamp" ? 0.4 : 0.14)) {
+	if (kind === "arena" || Rand.next() < (kind === "swamp" ? BAL.win.swampRelicChance : BAL.win.relicChance)) {
 		const q = rollRelic(luck() + (kind === "arena" ? 0.8 : 0), kind === "arena" ? 1 : 0);
 		grantRelic(q);
 		cards.push({ t: "relic", id: q.id, r: q.r });
@@ -641,7 +805,7 @@ function nextWorld() {
 	G.slots.forEach((u) => u && (u.hp = u.max));
 	genMap();
 	bakeMap(1 + ((Rand.next() * 2147483000) | 0));
-	State.go("map");
+	Machine.go("map");
 	Parts.clear();
 	autosave();
 }
@@ -652,14 +816,14 @@ function lose() {
 	}
 	if (!G.arena) delSave();
 	if (F) BGA = F.A;
-	State.go("lose");
+	Machine.go("lose");
 	pop = null;
 	sfx("lose");
 }
 
 // ---------- магазин ----------
 function shopStock() {
-	if (!G.stock) G.stock = { rel: rollRelics(3, luck() + (G.arena ? G.wave * 0.2 : 0)), rr: 0 };
+	if (!G.stock) G.stock = { rel: rollRelics(BAL.shop.stock, luck() + (G.arena ? G.wave * 0.2 : 0)), rr: 0 };
 	return G.stock;
 }
 function openShop() {
@@ -673,10 +837,10 @@ function openShop() {
 	G.sm = "";
 	G.rm = G.sk = false;
 	pop = null;
-	State.go("shop");
+	Machine.go("shop");
 	sfx("chest");
 }
-const rrPrice = () => 3 + 2 * G.stock.rr;
+const rrPrice = () => BAL.shop.rrBase + BAL.shop.rrStep * G.stock.rr;
 function buyRelic(i) {
 	const q = G.stock.rel[i],
 		p = relPrice(q.r, G.w);
@@ -703,7 +867,7 @@ function reroll() {
 	G.coin -= p;
 	G.stock.rr++;
 	const keep = G.stock.rel.filter((q) => q.sold),
-		fresh = rollRelics(3 - keep.length, luck() + (G.arena ? G.wave * 0.2 : 0));
+		fresh = rollRelics(BAL.shop.stock - keep.length, luck() + (G.arena ? G.wave * 0.2 : 0));
 	fresh.forEach((q) => (q.nw = t));
 	G.stock.rel = [...keep, ...fresh];
 	G.sm = "Товар обновлён";

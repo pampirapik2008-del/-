@@ -167,7 +167,7 @@ function applySave(d, v) {
 	MV = null;
 	Seq.clear();
 	Parts.clear();
-	State.go("map");
+	Machine.go("map");
 	if (G.pend) {
 		fight(G.pend);
 		snap = JSON.stringify(d);
@@ -177,7 +177,9 @@ function applySave(d, v) {
 function saveGame() {
 	if (!G || G.arena) return false;
 	try {
-		const q = State.is("prep") || State.is("fight") ? snap : State.is("lose") || State.is("win") ? null : ser();
+		// что писать — свойство экрана (таблица экранов): prep/fight — снимок до боя, win/lose — ничего, прочие — состояние
+		const mode = Machine.flag("save"),
+			q = mode === "snap" ? snap : mode === "none" ? null : ser();
 		if (!q) return false;
 		const inner = saveInner(q);
 		if (!inner) return false;
@@ -246,8 +248,169 @@ function loadGame() {
 	return false;
 }
 
+// ---------- перенос сохранения файлом ----------
+// Запасной путь, когда хранилище браузера недоступно или игру открывают на другом устройстве:
+// текст сохранения (конверт v3) можно скачать файлом / скопировать и затем вставить обратно.
+const SAVE_WHY = {
+	"пусто": "текст пустой",
+	json: "это не JSON сохранения",
+	"не объект": "это не сохранение игры",
+	checksum: "контрольная сумма не совпала — файл повреждён или изменён",
+	inner: "содержимое сохранения повреждено",
+	migrate: "не удалось поднять старый формат",
+	version: "неизвестная версия сохранения",
+	"поля": "в сохранении не хватает данных отряда или карты",
+};
+function exportSaveText() {
+	try {
+		const raw = window.__mxStorage.getItem(SAVEK);
+		return raw && unpackSave(raw).ok ? raw : null;
+	} catch (e) {
+		return null;
+	}
+}
+// проверка и атомарная запись: прошлое валидное сохранение уходит в резерв, новое пишется в формате v3
+function importSaveText(text) {
+	const raw = String(text == null ? "" : text).trim();
+	const u = unpackSave(raw);
+	if (!u.ok) return { ok: false, why: SAVE_WHY[u.why] || u.why };
+	const v = validateSave(u.data);
+	if (!v) return { ok: false, why: SAVE_WHY["поля"] };
+	try {
+		const prev = window.__mxStorage.getItem(SAVEK);
+		if (prev && prev !== raw && unpackSave(prev).ok) window.__mxStorage.setItem(SAVEK_B, prev);
+		window.__mxStorage.setItem(SAVEK, packSave(u.data));
+	} catch (e) {
+		logErr("save", e);
+		return { ok: false, why: "хранилище недоступно: " + (e && e.message ? e.message : e) };
+	}
+	SAVED = true;
+	SAVE_WARN = "";
+	return { ok: true, ver: u.ver };
+}
+// разметка окна: заголовок, пояснение, выбор файла (импорт), текстовое поле, строка сообщения, кнопки
+function saveDialogHtml(exp) {
+	const bt = (id, label, bg) => '<button id="' + id + '" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:' + bg + ';color:#fff;font-weight:700;cursor:pointer">' + label + "</button>";
+	return (
+		'<div style="font-weight:800;font-size:17px;margin-bottom:6px">' + (exp ? "Экспорт сохранения" : "Импорт сохранения") + "</div>" +
+		'<div style="color:#b9b3c8;margin-bottom:10px">' +
+		(exp ? "Скачайте файл или скопируйте текст — его можно загрузить через «Импорт» на другом устройстве или в другом браузере." : "Выберите файл сохранения или вставьте его текст. Текущее сохранение уйдёт в резерв.") +
+		"</div>" +
+		(exp ? "" : '<input id="mx-save-file" type="file" accept=".json,.txt,application/json,text/plain" style="display:block;margin-bottom:10px;color:#eee">') +
+		'<textarea id="mx-save-text" ' + (exp ? "readonly " : "") + 'spellcheck="false" style="width:100%;height:120px;box-sizing:border-box;background:#120e19;color:#d9d2e8;border:1px solid #3a2f4d;border-radius:8px;padding:8px;font:12px/1.4 ui-monospace,monospace;resize:vertical"></textarea>' +
+		'<div id="mx-save-msg" style="min-height:20px;margin:8px 0;color:#ffb3b3"></div>' +
+		'<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+		(exp ? bt("mx-save-dl", "Скачать файл", "#2e7d32") + bt("mx-save-copy", "Копировать", "#455a64") : bt("mx-save-load", "Загрузить", "#2e7d32")) +
+		bt("mx-save-close", "Закрыть", "#8e24aa") +
+		"</div>"
+	);
+}
+// экспорт: текст сохранения в поле, кнопки «Скачать файл» (Blob + ссылка) и «Копировать» (clipboard → execCommand → вручную)
+function saveDialogExport($, say) {
+	const text = exportSaveText();
+	$("mx-save-text").value = text || "";
+	if (!text) say("Сохранения пока нет — нечего экспортировать.");
+	$("mx-save-dl").onclick = () => {
+		if (!text) return;
+		try {
+			const a = document.createElement("a");
+			a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+			a.download = "probuzhdenie-monstrov-save-" + new Date().toISOString().slice(0, 10) + ".json";
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(() => {
+				URL.revokeObjectURL(a.href);
+				a.remove();
+			}, 2000);
+			say("Файл скачан.", true);
+		} catch (e) {
+			say("Браузер не дал скачать файл — скопируйте текст вручную.");
+		}
+	};
+	$("mx-save-copy").onclick = () => {
+		if (!text) return;
+		const ta = $("mx-save-text");
+		try {
+			ta.focus();
+			ta.select();
+		} catch (_) {}
+		const done = () => say("Скопировано.", true);
+		try {
+			if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => say("Выделите текст и скопируйте вручную."));
+			else if (document.execCommand && document.execCommand("copy")) done();
+			else say("Выделите текст и скопируйте вручную.");
+		} catch (e) {
+			say("Выделите текст и скопируйте вручную.");
+		}
+	};
+}
+// импорт: файл (≤ 2 МБ) читается в поле, «Загрузить» проверяет и применяет текст через importSaveText
+function saveDialogImport($, say) {
+	const fileEl = $("mx-save-file");
+	if (fileEl)
+		fileEl.onchange = () => {
+			const f = fileEl.files && fileEl.files[0];
+			if (!f) return;
+			if (f.size > 2000000) return say("Файл слишком большой для сохранения игры.");
+			const rd = new FileReader();
+			rd.onload = () => {
+				$("mx-save-text").value = String(rd.result || "");
+				say("Файл прочитан — нажмите «Загрузить».", true);
+			};
+			rd.onerror = () => say("Не удалось прочитать файл.");
+			rd.readAsText(f);
+		};
+	$("mx-save-load").onclick = () => {
+		const r = importSaveText($("mx-save-text").value);
+		if (!r.ok) return say("Не загружено: " + r.why);
+		say("Сохранение загружено" + (r.ver !== SAVE_VER ? " (старый формат v" + r.ver + " поднят до v" + SAVE_VER + ")" : "") + ". Нажмите «Продолжить» в меню.", true);
+		try {
+			toast("Сохранение загружено");
+		} catch (_) {}
+	};
+}
+// окно экспорта/импорта — на DOM (как аварийное окно, см. DECISIONS D7): нужны настоящие
+// текстовое поле, кнопка скачивания и выбор файла, которых у холста нет
+function saveDialog(mode) {
+	try {
+		const old = document.getElementById("mx-save");
+		if (old) old.remove();
+	} catch (_) {}
+	const wrap = document.createElement("div");
+	wrap.id = "mx-save";
+	wrap.style.cssText =
+		"position:fixed;inset:0;z-index:99998;background:rgba(6,4,10,.8);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif;color:#eee;padding:16px";
+	const box = document.createElement("div");
+	box.style.cssText = "max-width:560px;width:100%;background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:18px 20px";
+	const exp = mode === "export";
+	box.innerHTML = saveDialogHtml(exp);
+	wrap.appendChild(box);
+	try {
+		document.body.appendChild(wrap);
+	} catch (_) {
+		return null;
+	}
+	const $ = (id) => box.querySelector("#" + id);
+	const say = (m, ok) => {
+		try {
+			$("mx-save-msg").textContent = m;
+			$("mx-save-msg").style.color = ok ? "#9be7a4" : "#ffb3b3";
+		} catch (_) {}
+	};
+	try {
+		$("mx-save-close").onclick = () => {
+			try {
+				wrap.remove();
+			} catch (_) {}
+		};
+		if (exp) saveDialogExport($, say);
+		else saveDialogImport($, say);
+	} catch (_) {}
+	return wrap;
+}
+
 function autosave() {
-	if (G && !G.arena && (State.is("map") || State.is("prep") || State.is("world"))) saveGame();
+	if (G && !G.arena && Machine.flag("autosave")) saveGame();
 }
 
 // автосохранение при уходе со страницы и сворачивании вкладки

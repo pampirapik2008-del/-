@@ -47,6 +47,22 @@
 		get hits() {
 			return hits;
 		},
+		// подписи кнопок: после включения каждый hit от btn() получает поле label,
+		// и по экрану можно ходить по тексту кнопки, а не по индексу
+		labelButtons() {
+			if (this._labeled) return;
+			this._labeled = true;
+			const orig = btn;
+			btn = function (x, y, w, h, s) {
+				const n = hits.length,
+					r = orig.apply(this, arguments);
+				if (hits.length > n) hits[hits.length - 1].label = String(s);
+				return r;
+			};
+		},
+		findHit(label) {
+			return (hits || []).find((h) => h.label && h.label.indexOf(label) >= 0) || null;
+		},
 		get paused() {
 			return paused;
 		},
@@ -74,22 +90,28 @@
 		seed(v) {
 			Rand.seed(v);
 		},
+		// выполнить выражение в глобальной области игры (только для тестов)
+		run(code) {
+			return (0, eval)(code);
+		},
 		get randState() {
 			return Rand.state;
 		},
 		snapshot: snap,
 		// размеры внутренних кэшей и пулов — для контроля утечек
 		mem() {
-			const cnt = (o) => (o && typeof o === "object" ? Object.keys(o).length : 0);
+			const cs = typeof cacheStats === "function" ? cacheStats() : { glow: 0, sil: 0, tint: 0, floors: 0, mb: 0 };
 			return {
-				glow: cnt(typeof GLOWC !== "undefined" ? GLOWC : null),
-				sil: typeof SILC !== "undefined" && SILC ? SILC.size : 0,
-				tint: cnt(typeof TINTC !== "undefined" ? TINTC : null),
+				glow: cs.glow,
+				sil: cs.sil,
+				tint: cs.tint,
+				floors: cs.floors,
+				cacheMb: cs.mb,
 				recol: typeof RECOL !== "undefined" && RECOL && RECOL.size ? RECOL.size : 0,
 				fx: F && F.fx ? F.fx.length : 0,
 				nums: F && F.nums ? F.nums.length : 0,
 				proj: F && F.proj ? F.proj.length : 0,
-				parts: typeof Parts !== "undefined" && Parts && Parts.list ? Parts.list.length : -1,
+				parts: typeof Parts !== "undefined" && Parts && Parts.a ? Parts.a.length : -1,
 				errs: ERRS.length,
 			};
 		},
@@ -100,12 +122,14 @@
 			this._wrapped = true;
 			const ACC = this._timers,
 				now = __hrnow,
-				u = upd,
+				mu = Machine.update,
 				d = draw;
-			upd = function () {
+			// симуляцию зовёт Machine.update (экран fight держит ссылку на upd с момента регистрации,
+			// поэтому подмена самой переменной upd до цикла не дотянулась бы)
+			Machine.update = function () {
 				const t0 = now();
 				try {
-					return u.apply(this, arguments);
+					return mu.apply(Machine, arguments);
 				} finally {
 					ACC.upd += now() - t0;
 				}
@@ -124,7 +148,7 @@
 			return this._timers;
 		},
 		// журнал ошибок и аварийный режим
-		errs: () => ERRS.map((r) => ({ kind: r.kind, msg: r.msg, frame: r.frame, screen: r.screen })),
+		errs: () => ERRS.map((r) => ({ kind: r.kind, msg: r.msg, frame: r.frame, screen: r.screen, stack: r.stack })),
 		crash: () => ERR_CRASH,
 		makeDrawThrow(n = 1) {
 			const orig = draw;
@@ -137,8 +161,9 @@
 			};
 		},
 		makeUpdateThrow(n = 1) {
-			const orig = upd;
-			upd = function () {
+			// цикл кадра зовёт Machine.update → хук update текущего экрана
+			const orig = Machine.update;
+			Machine.update = function () {
 				if (n > 0) {
 					n--;
 					throw new Error("тестовая ошибка update");
@@ -149,6 +174,7 @@
 		newGame,
 		genMap,
 		bakeMap,
+		bakeNow: () => (typeof bakeNow === "function" ? bakeNow() : undefined),
 		startRun,
 		fight,
 		startFight,

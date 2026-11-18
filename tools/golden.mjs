@@ -3,6 +3,9 @@
 //   node tools/golden.mjs --record            — записать эталон в tests/golden/
 //   node tools/golden.mjs --check             — сравнить текущий код с эталоном
 //   node tools/golden.mjs --record --battles 20 --maps 50   — быстрый прогон
+//   node tools/golden.mjs --check --battles 60 --maps 150   — быстрая проверка ПРЕФИКСА эталона (npm run golden:quick):
+//   node tools/golden.mjs --check --html dist/game-public.html   — код игры брать из готового HTML (обе сборки через эталон)
+//     сиды идут подряд, поэтому первые N записей сравнимы с полным эталоном; ворота этапа — только полный прогон
 // Эталон — это не «правильные» числа, а зафиксированное поведение: любое расхождение
 // означает, что рефакторинг изменил игру. Осознанное изменение баланса фиксируется
 // перезаписью эталона и записью в docs/BALANCE.md.
@@ -11,24 +14,26 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { boot, ROOT } from "../tests/harness/boot.mjs";
+import { codeFromHtml } from "./lib/assemble.mjs";
 
 const args = process.argv.slice(2);
 const has = (f) => args.includes(f);
+const HTML = args.includes("--html") ? args[args.indexOf("--html") + 1] : null;
 const val = (f, d) => {
 	const i = args.indexOf(f);
 	return i >= 0 && args[i + 1] ? Number(args[i + 1]) : d;
 };
 const record = has("--record");
 const check = has("--check") || !record;
-const NB = val("--battles", 200);
-const NM = val("--maps", 500);
+const NB = val("--battles", 500);
+const NM = val("--maps", 1000);
 const GDIR = path.join(ROOT, "tests/golden");
 const hash = (s) => crypto.createHash("sha256").update(s).digest("hex").slice(0, 16);
 
 const KINDS = ["fight", "fight", "boss", "arena", "swamp"];
 
 async function main() {
-	const g = boot();
+	const g = boot(HTML ? { code: codeFromHtml(path.resolve(HTML)) } : {});
 	if (!(await g.ready())) throw new Error("игра не загрузилась");
 
 	/* ---------- бои ---------- */
@@ -47,6 +52,9 @@ async function main() {
 			depth = (i * 5) % 12,
 			kind = KINDS[i % KINDS.length];
 		g.dev.setWorld(w, depth);
+		// предыдущий бой обрывается на F.out, экран ещё «fight»: таблица переходов запрещает
+		// fight → prep, поэтому, как и сама игра, сначала возвращаемся в меню (на Rand не влияет)
+		g.dev.S = "menu";
 		g.dev.fight(kind);
 		g.dev.startFight();
 		// крутим кадры до развязки: F.out появляется за полсекунды до смены экрана,
@@ -127,10 +135,12 @@ async function main() {
 		return 2;
 	}
 	const ref = JSON.parse(fs.readFileSync(file, "utf8"));
-	if (ref.battles.count !== battles.length || ref.maps.count !== maps.length) {
-		console.error(`размер набора не совпадает с эталоном: боёв ${battles.length}/${ref.battles.count}, карт ${maps.length}/${ref.maps.count}`);
+	if (ref.battles.count < battles.length || ref.maps.count < maps.length) {
+		console.error(`набор больше эталона: боёв ${battles.length}/${ref.battles.count}, карт ${maps.length}/${ref.maps.count} — уменьшите --battles/--maps или перезапишите эталон`);
 		return 2;
 	}
+	const subset = ref.battles.count !== battles.length || ref.maps.count !== maps.length;
+	if (subset) console.log(`ВНИМАНИЕ: проверяется префикс эталона (боёв ${battles.length} из ${ref.battles.count}, карт ${maps.length} из ${ref.maps.count}); ворота этапа — полный прогон npm run golden`);
 	let bad = 0;
 	for (let i = 0; i < battles.length; i++) {
 		if (ref.battles.items[i].hash !== battles[i].hash) {

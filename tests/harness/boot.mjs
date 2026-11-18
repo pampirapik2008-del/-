@@ -12,8 +12,21 @@ const DEVAPI = fs.readFileSync(path.join(ROOT, "tests/harness/devapi.js"), "utf8
 
 const FRAME_MS = 1000 / 60;
 
-export function boot({ quiet = true } = {}) {
-	const dom = createDom();
+// Внутри vm-контекста каждое обращение к глобальному имени (Math, document, JSON…) идёт через
+// перехватчик песочницы и стоит ~0,3 мкс — в сотни раз дороже, чем в браузере (vnoise: 4 мс против
+// 400 мс на 100 тыс. вызовов). Поэтому неизменяемые встроенные объекты один раз копируются в
+// лексические константы скрипта: те же объекты, поведение то же, обращение в разы дешевле.
+// Изменяемые глобалы (innerWidth, …) не трогаем — тесты им присваивают.
+const FAST_GLOBALS = ["Math", "JSON", "Date", "Promise", "Map", "Set", "WeakMap", "Symbol", "Reflect", "Error", "TypeError", "RangeError", "Object", "Array", "String", "Number", "Boolean", "Intl", "Uint8ClampedArray", "Uint8Array", "Int16Array", "Int32Array", "Float32Array", "ArrayBuffer", "isFinite", "isNaN", "parseInt", "parseFloat", "encodeURIComponent", "decodeURIComponent", "performance", "document", "console"];
+const FAST_PROLOGUE = "\"use strict\";\nconst " + FAST_GLOBALS.map((k) => k + " = this." + k).join(", ") + ";\n"; // this = глобальный объект контекста (не windowObj)
+
+// dom — готовое окружение из createDom(); по умолчанию заглушка без растеризации.
+// code — готовый код игры (ассеты + секции); по умолчанию собирается из src/ и assets/.
+// bakeMs — бюджет порции запекания карты за кадр (по умолчанию вся карта в первом кадре).
+// runner — текст скрипта-запускателя (src/runner.js или загрузчик): тогда игра стартует как в браузере —
+//   запускатель читает <script id="game-assets"> и <script id="game-src"> и добавляет <script> в body;
+//   без runner код игры выполняется напрямую.
+export function boot({ quiet = true, dom = createDom(), code = null, bakeMs = null, runner = null } = {}) {
 	const { windowObj, document, rafQueue, winListeners, mainCanvas } = dom;
 	const errors = [];
 	let fatal = null;
@@ -25,9 +38,11 @@ export function boot({ quiet = true } = {}) {
 		document,
 		navigator: windowObj.navigator,
 		__hrnow: () => Number(process.hrtime.bigint()) / 1e6,
+		// бюджет порции запекания карты: по умолчанию вся карта за один кадр (детерминированные снимки);
+		// тесты нарезки передают маленькое значение
+		__mxBakeMs: typeof bakeMs === "number" ? bakeMs : 1e9,
 		screen: windowObj.screen,
 		location: windowObj.location,
-		localStorage: windowObj.localStorage,
 		performance: windowObj.performance,
 		requestAnimationFrame: windowObj.requestAnimationFrame,
 		cancelAnimationFrame: windowObj.cancelAnimationFrame,
@@ -46,7 +61,7 @@ export function boot({ quiet = true } = {}) {
 		FontFace: windowObj.FontFace,
 		innerWidth: windowObj.innerWidth,
 		innerHeight: windowObj.innerHeight,
-		devicePixelRatio: 2,
+		devicePixelRatio: windowObj.devicePixelRatio,
 		addEventListener: windowObj.addEventListener,
 		removeEventListener: windowObj.removeEventListener,
 		matchMedia: windowObj.matchMedia,
@@ -83,9 +98,30 @@ export function boot({ quiet = true } = {}) {
 		decodeURIComponent,
 	});
 
+	// как в браузере: обращение к localStorage может бросить исключение (защищённый просмотр) — тест задаёт такой getter на windowObj
+	Object.defineProperty(sandbox, "localStorage", { get: () => windowObj.localStorage, enumerable: true });
+	const preKeys = new Set(Object.keys(sandbox));
 	const ctx = vm.createContext(sandbox);
-	const code = loadAssetsJs(ROOT) + "\n" + loadGameSrc(ROOT) + "\n" + DEVAPI;
-	vm.runInContext(code, ctx, { filename: "game.js" });
+	if (runner) {
+		// секции, как в собранном HTML; скрипт, добавленный запускателем в body, выполняется в том же контексте
+		const parts = code == null ? { "game-assets": loadAssetsJs(ROOT), "game-src": loadGameSrc(ROOT) } : { "game-assets": "", "game-src": code };
+		const section = (id) => Object.assign(document.createElement("script"), { id, type: "text/plain", textContent: parts[id] });
+		const byId = document.getElementById;
+		document.getElementById = (id) => (id in parts ? section(id) : byId(id));
+		document.querySelector = (sel) => (sel[0] === "#" && sel.slice(1) in parts ? section(sel.slice(1)) : byId(sel.slice(1)));
+		const append = document.body.appendChild;
+		let first = true; // пролог с константами объявляется в контексте один раз — для скрипта игры
+		document.body.appendChild = (el) => {
+			if (!(el && el.tagName === "SCRIPT" && el.textContent)) return append(el);
+			vm.runInContext((first ? FAST_PROLOGUE : '"use strict";\n') + el.textContent, ctx, { filename: "game.js" });
+			first = false;
+		};
+		vm.runInContext(runner, ctx, { filename: "runner.js" });
+		vm.runInContext('"use strict";\n' + DEVAPI, ctx, { filename: "devapi.js" });
+	} else {
+		const body = (code == null ? loadAssetsJs(ROOT) + "\n" + loadGameSrc(ROOT) : code) + "\n" + DEVAPI;
+		vm.runInContext(FAST_PROLOGUE + body, ctx, { filename: "game.js" });
+	}
 
 	let ts = 0;
 	let frames = 0;
@@ -116,6 +152,10 @@ export function boot({ quiet = true } = {}) {
 		dev,
 		errors,
 		storage,
+		// имена, появившиеся в глобальной области после запуска (для проверки неявных глобалов)
+		newGlobals() {
+			return Object.keys(sandbox).filter((k) => !preKeys.has(k));
+		},
 		setStorage(k, v) {
 			storage.setItem(k, String(v));
 		},
@@ -145,6 +185,11 @@ export function boot({ quiet = true } = {}) {
 		},
 		step(n = 1) {
 			for (let i = 0; i < n; i++) if (!flush()) break;
+			return this;
+		},
+		// «пропавшее» время без кадров (свёрнутая вкладка, заблокированный экран): следующий кадр увидит большой dt
+		jump(ms) {
+			ts += ms;
 			return this;
 		},
 		key(k) {

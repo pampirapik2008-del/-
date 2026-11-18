@@ -3,10 +3,46 @@
 // Вся графика нарисована на сетке 609x270 «арт-пикселей»; 1 арт-пиксель = AP логических px холста 1218x540.
 const AP = 2,
 	TAU = 6.2832;
+// Кэши холстов ограничены (D21): силуэты — по кадру атласа, очередь FIFO на SIL_MAX записей;
+// свечение — по цвету (радужный тон квантован до 6°, см. rfx); перекраски атласов — LRU в 30_arena.js.
 const IMG = {},
 	ATL = ATLAS,
-	SILC = new Map(),
+	SILC = new Map(), // img → Map(ключ кадра → {цвет: холст-силуэт кадра})
+	SILQ = [], // порядок создания силуэтов парами [{цвет: холст}, цвет] — вытесняется самый старый
+	SIL_MAX = 512,
 	GLOWC = {};
+let GLOWN = 0; // сколько холстов свечения в кэше (предохранитель от динамических цветов)
+// кэш с лимитом записей: обращение делает запись «свежей», переполнение вытесняет самую старую
+// (Map помнит порядок вставки); onEvict(v, k) — освободить связанное с записью
+function lru(max, onEvict) {
+	const m = new Map();
+	return {
+		get size() {
+			return m.size;
+		},
+		get(k) {
+			const v = m.get(k);
+			if (v !== undefined) {
+				m.delete(k);
+				m.set(k, v);
+			}
+			return v;
+		},
+		set(k, v) {
+			if (m.has(k)) m.delete(k);
+			else if (m.size >= max) {
+				const ok = m.keys().next().value,
+					ov = m.get(ok);
+				m.delete(ok);
+				if (onEvict) onEvict(ov, ok);
+			}
+			m.set(k, v);
+			return v;
+		},
+		values: () => m.values(),
+		keys: () => m.keys(),
+	};
+}
 let READY = false,
 	LOADP = 0,
 	TSC = 1; // масштаб времени боя (слоумо)
@@ -42,6 +78,142 @@ const fmt = (n) => {
 	return a >= 1e9 ? (n / 1e9).toFixed(1) + "B" : a >= 1e6 ? (n / 1e6).toFixed(1) + "M" : a >= 1e4 ? (n / 1e3).toFixed(1) + "K" : "" + n;
 };
 const pct = (v) => Math.round(v * 100) + "%";
+// Санитайз чисел: любое внешнее значение (сейв, формула, параметр способности) проходит сюда.
+// NaN/Infinity/не-число → fallback; затем зажим в [min, max]. В логике боя NaN появиться не должен.
+function num(v, fallback = 0, min = -Infinity, max = Infinity) {
+	const n = typeof v === "number" ? v : v == null || v === "" ? NaN : +v;
+	const r = Number.isFinite(n) ? n : fallback;
+	return r < min ? min : r > max ? max : r;
+}
+
+// Сжатие массива на месте (без аллокации нового): оставляет элементы, для которых keep(v) истинно.
+// Порядок сохраняется — результат тот же, что у filter, но в горячем цикле нет мусора.
+function compact(a, keep) {
+	let j = 0;
+	for (let i = 0; i < a.length; i++) {
+		const v = a[i];
+		if (keep(v)) a[j++] = v;
+	}
+	a.length = j;
+	return a;
+}
+
+// ---------- шина событий ----------
+// Логика сообщает «что случилось», а звук, частицы и статистика подписываются.
+// Обработчики вызываются синхронно в порядке подписки; сбой одного не трогает остальных.
+const Events = {
+	h: Object.create(null),
+	on(ev, fn) {
+		(this.h[ev] || (this.h[ev] = [])).push(fn);
+		return fn;
+	},
+	off(ev, fn) {
+		const a = this.h[ev];
+		if (!a) return;
+		const i = a.indexOf(fn);
+		if (i >= 0) a.splice(i, 1);
+	},
+	emit(ev, a, b, c) {
+		const l = this.h[ev];
+		if (!l) return 0;
+		for (let i = 0; i < l.length; i++) {
+			try {
+				l[i](a, b, c);
+			} catch (e) {
+				if (typeof logErr === "function") logErr("event:" + ev, e);
+			}
+		}
+		return l.length;
+	},
+};
+
+// ---------- менеджер таймеров и слушателей ----------
+// Всё, что ставится через setTimeout/setInterval/addEventListener, регистрируется здесь
+// с меткой владельца (экран или подсистема) и снимается одним вызовом при выходе.
+const Timers = {
+	list: [],
+	seq: 0,
+	after(ms, fn, owner = "app") {
+		const rec = { id: ++this.seq, owner, kind: "t" };
+		rec.h = setTimeout(() => {
+			this.drop(rec);
+			fn();
+		}, ms);
+		this.list.push(rec);
+		return rec.id;
+	},
+	every(ms, fn, owner = "app") {
+		const rec = { id: ++this.seq, owner, kind: "i", h: setInterval(fn, ms) };
+		this.list.push(rec);
+		return rec.id;
+	},
+	on(target, ev, fn, opts, owner = "app") {
+		target.addEventListener(ev, fn, opts);
+		const rec = { id: ++this.seq, owner, kind: "l", target, ev, fn, opts };
+		this.list.push(rec);
+		return rec.id;
+	},
+	drop(rec) {
+		const i = this.list.indexOf(rec);
+		if (i >= 0) this.list.splice(i, 1);
+	},
+	clear(id) {
+		const rec = this.list.find((r) => r.id === id);
+		if (rec) this.kill(rec);
+	},
+	kill(rec) {
+		if (rec.kind === "t") clearTimeout(rec.h);
+		else if (rec.kind === "i") clearInterval(rec.h);
+		else
+			try {
+				rec.target.removeEventListener(rec.ev, rec.fn, rec.opts);
+			} catch (_) {}
+		this.drop(rec);
+	},
+	// снять всё, что принадлежит владельцу (например, экрану при выходе)
+	clearOwner(owner) {
+		for (const rec of this.list.filter((r) => r.owner === owner)) this.kill(rec);
+	},
+	count(owner) {
+		return owner ? this.list.filter((r) => r.owner === owner).length : this.list.length;
+	},
+};
+
+// ---------- цикл: фиксированный шаг симуляции ----------
+// Симуляция идёт шагами ровно 1/60 с через накопитель: не более MAX шагов за кадр
+// (защита от «спирали смерти» после сворачивания вкладки или долгого кадра).
+// Кадры с периодом, близким к k/60 с (60, 30, 20 Гц ± 8 %), привязываются к сетке,
+// чтобы на обычных экранах каждый кадр давал ровно k шагов без дрожания.
+// alpha — доля шага, не вошедшая в симуляцию; отрисовка боя дотягивает позиции на alpha
+// (экстраполяция по последнему смещению), поэтому на 90/120 Гц движение остаётся плавным.
+const Loop = {
+	STEP: 1 / 60,
+	MAX: 5,
+	acc: 0,
+	alpha: 0,
+	steps: 0,
+	// разложить реальное время кадра на число шагов; возвращает число шагов
+	feed(sec) {
+		const st = this.STEP;
+		if (!(sec > 0)) sec = 0;
+		for (let k = 1; k <= 3; k++) if (Math.abs(sec - k * st) < st * 0.08) sec = k * st;
+		this.acc = Math.min(this.acc + sec, st * this.MAX);
+		let n = 0;
+		while (this.acc >= st - 1e-7 && n < this.MAX) {
+			this.acc -= st;
+			n++;
+		}
+		if (this.acc < 1e-7) this.acc = 0;
+		this.alpha = this.acc / st;
+		this.steps = n;
+		return n;
+	},
+	reset() {
+		this.acc = 0;
+		this.alpha = 0;
+		this.steps = 0;
+	},
+};
 
 // ---------- загрузка ----------
 function loadAll() {
@@ -52,9 +224,14 @@ function loadAll() {
 			new Promise((res) => {
 				const i = new Image();
 				i.onload = () => {
-					IMG[k] = i;
-					LOADP = ++n / names.length;
-					res();
+					const done = () => {
+						IMG[k] = i;
+						LOADP = ++n / names.length;
+						res();
+					};
+					// декодируем заранее: первый drawImage большого атласа не должен фризить кадр
+					if (typeof i.decode === "function") i.decode().then(done, done);
+					else done();
 				};
 				i.onerror = () => {
 					n++;
@@ -125,78 +302,123 @@ function n9(n, x, y, w, h, cs, sc = AP, c2 = ctx, hollow = false) {
 			if (dw > 0 && dh > 0 && !(hollow && i === 1 && j === 1)) c2.drawImage(im, r[0] + xs[i], r[1] + ys[j], xs[i + 1] - xs[i], ys[j + 1] - ys[j], xd[i], yd[j], dw, dh);
 		}
 }
-// одноцветный силуэт атласа (тень, белая вспышка попадания)
-function silOf(img, col) {
-	let m = SILC.get(img);
-	if (!m) SILC.set(img, (m = {}));
-	if (!m[col]) {
-		const c = mkC(img.width, img.height),
-			x = c.getContext("2d");
-		x.drawImage(img, 0, 0);
+// одноцветный силуэт кадра f атласа img (тень, белая вспышка попадания, статусы). Раньше силуэт
+// делался копией всего атласа на каждый цвет (heroes3 — 11 МБ за цвет); теперь — холст размером
+// с кадр, и только для кадров, которые реально рисовались. Ключ кадра — его прямоугольник в атласе
+// (координаты < 4096, размеры < 512).
+function silFr(img, f, col) {
+	let fm = SILC.get(img);
+	if (!fm) SILC.set(img, (fm = new Map()));
+	const k = ((f[0] * 4096 + f[1]) * 512 + f[2]) * 512 + f[3];
+	let m = fm.get(k);
+	if (!m) fm.set(k, (m = {}));
+	let c = m[col];
+	if (!c) {
+		c = mkC(f[2], f[3]);
+		const x = c.getContext("2d");
+		x.drawImage(img, f[0], f[1], f[2], f[3], 0, 0, f[2], f[3]);
 		x.globalCompositeOperation = "source-in";
 		x.fillStyle = col;
-		x.fillRect(0, 0, c.width, c.height);
+		x.fillRect(0, 0, f[2], f[3]);
 		m[col] = c;
+		SILQ.push(m, col);
+		if (SILQ.length > SIL_MAX * 2) {
+			const om = SILQ.shift(),
+				oc = SILQ.shift();
+			delete om[oc];
+		}
 	}
-	return m[col];
+	return c;
 }
-// перекраска атласа по правилам HSV: {h:[lo,hi], to, sat, val} — диапазон тона; {gray:1, to, sat, val} — тонировка серого
+// силуэт кадра там же, где fr() нарисовал бы сам кадр
+function frSil(img, f, col, x, y, fx = 1, sc = AP, sy = 1) {
+	const c = silFr(img, f, col),
+		w = f[2] * sc,
+		h = f[3] * sc * sy;
+	if (fx < 0) {
+		ctx.save();
+		ctx.translate(x, y);
+		ctx.scale(-1, 1);
+		ctx.drawImage(c, -f[4] * sc, -f[5] * sc * sy, w, h);
+		ctx.restore();
+	} else ctx.drawImage(c, x - f[4] * sc, y - f[5] * sc * sy, w, h);
+}
+// перекраска атласа по правилам HSV: {h:[lo,hi], to, sat, val} — диапазон тона; {gray:1, to, sat, val} — тонировка серого.
+// Результат пикселя зависит только от его RGB, а в атласах всего 400–1 200 разных цветов на 50–90 тыс.
+// пикселей, поэтому пересчёт идёт через словарь «цвет → цвет»: 17–21 мс на атлас монстров стало ~3
+// (замер tools/entry.mjs; байты те же — tests/unit/recolor.test.mjs).
 function recolor(img, rules) {
 	const c = mkC(img.width, img.height),
 		x = c.getContext("2d");
 	x.drawImage(img, 0, 0);
 	const d = x.getImageData(0, 0, c.width, c.height),
-		p = d.data;
+		p = d.data,
+		memo = new Map(); // упакованный RGB → упакованный результат, −1 — ни одно правило не подошло
 	for (let i = 0; i < p.length; i += 4) {
 		if (!p[i + 3]) continue;
-		const r = p[i] / 255,
-			g = p[i + 1] / 255,
-			b = p[i + 2] / 255,
-			mx = Math.max(r, g, b),
-			mn = Math.min(r, g, b),
-			df = mx - mn;
-		let h = 0;
-		if (df > 1e-5) h = mx === r ? ((g - b) / df + 6) % 6 : mx === g ? (b - r) / df + 2 : (r - g) / df + 4;
-		h *= 60;
-		let s = mx > 0 ? df / mx : 0,
-			v = mx,
-			hit = false;
-		for (const q of rules) {
-			if (q.gray) {
-				if (s > 0.26 || v < 0.16) continue;
-				h = q.to;
-				s = q.sat;
-				v = Math.min(1, v * (q.val || 1));
-			} else {
-				if (s < 0.14) continue;
-				const lo = q.h[0],
-					hi = q.h[1];
-				if (lo <= hi ? h < lo || h > hi : h < lo && h > hi) continue;
-				h = q.to;
-				s = Math.min(1, s * (q.sat || 1));
-				v = Math.min(1, v * (q.val || 1));
-			}
-			hit = true;
-			break;
-		}
-		if (!hit) continue;
-		const cc = v * s,
-			hh = (h % 360) / 60,
-			xx = cc * (1 - Math.abs((hh % 2) - 1)),
-			m = v - cc,
-			k = hh | 0;
-		const R1 = k === 0 || k === 5 ? cc : k === 1 || k === 4 ? xx : 0,
-			G1 = k === 1 || k === 2 ? cc : k === 0 || k === 3 ? xx : 0,
-			B1 = k === 3 || k === 4 ? cc : k === 2 || k === 5 ? xx : 0;
-		p[i] = (R1 + m) * 255;
-		p[i + 1] = (G1 + m) * 255;
-		p[i + 2] = (B1 + m) * 255;
+		const key = (p[i] << 16) | (p[i + 1] << 8) | p[i + 2];
+		let o = memo.get(key);
+		if (o === undefined) memo.set(key, (o = recolorPx(p[i], p[i + 1], p[i + 2], rules)));
+		if (o < 0) continue;
+		p[i] = o >> 16;
+		p[i + 1] = (o >> 8) & 255;
+		p[i + 2] = o & 255;
 	}
 	x.putImageData(d, 0, 0);
 	return c;
 }
+const RPX = new Uint8ClampedArray(3); // запись float → байт с тем же округлением, что у ImageData
+// один цвет по правилам: упакованный RGB результата или −1
+function recolorPx(r8, g8, b8, rules) {
+	const r = r8 / 255,
+		g = g8 / 255,
+		b = b8 / 255,
+		mx = Math.max(r, g, b),
+		mn = Math.min(r, g, b),
+		df = mx - mn;
+	let h = 0;
+	if (df > 1e-5) h = mx === r ? ((g - b) / df + 6) % 6 : mx === g ? (b - r) / df + 2 : (r - g) / df + 4;
+	h *= 60;
+	let s = mx > 0 ? df / mx : 0,
+		v = mx,
+		hit = false;
+	for (const q of rules) {
+		if (q.gray) {
+			if (s > 0.26 || v < 0.16) continue;
+			h = q.to;
+			s = q.sat;
+			v = Math.min(1, v * (q.val || 1));
+		} else {
+			if (s < 0.14) continue;
+			const lo = q.h[0],
+				hi = q.h[1];
+			if (lo <= hi ? h < lo || h > hi : h < lo && h > hi) continue;
+			h = q.to;
+			s = Math.min(1, s * (q.sat || 1));
+			v = Math.min(1, v * (q.val || 1));
+		}
+		hit = true;
+		break;
+	}
+	if (!hit) return -1;
+	const cc = v * s,
+		hh = (h % 360) / 60,
+		xx = cc * (1 - Math.abs((hh % 2) - 1)),
+		m = v - cc,
+		k = hh | 0;
+	RPX[0] = ((k === 0 || k === 5 ? cc : k === 1 || k === 4 ? xx : 0) + m) * 255;
+	RPX[1] = ((k === 1 || k === 2 ? cc : k === 0 || k === 3 ? xx : 0) + m) * 255;
+	RPX[2] = ((k === 3 || k === 4 ? cc : k === 2 || k === 5 ? xx : 0) + m) * 255;
+	return (RPX[0] << 16) | (RPX[1] << 8) | RPX[2];
+}
 function glowSpr(col) {
 	if (!GLOWC[col]) {
+		// предохранитель: если цветов-ключей стало слишком много (динамический цвет), кэш сбрасывается,
+		// а не растёт без предела — спрайт 48×48 дешевле утечки
+		if (++GLOWN > 512) {
+			for (const k in GLOWC) delete GLOWC[k];
+			GLOWN = 1;
+		}
 		const c = mkC(48, 48),
 			x = c.getContext("2d"),
 			g = x.createRadialGradient(24, 24, 0, 24, 24, 24);
@@ -229,7 +451,8 @@ function glow(x, y, r, col, a = 1) {
 }
 
 // ---------- качество графики ----------
-const QL = { lv: 2, auto: true, bad: 0, ft: 16 };
+// lv: 0 низкое, 1 среднее, 2 высокое; ft — сглаженное время кадра; bad/good — накопители гистерезиса
+const QL = { lv: 2, auto: true, bad: 0, good: 0, ft: 16, upWait: 20000, max: 2 };
 function guessQ() {
 	const m = navigator.deviceMemory || 4,
 		c = navigator.hardwareConcurrency || 4;
@@ -238,20 +461,36 @@ function guessQ() {
 function setQ(v) {
 	QL.auto = v === "auto" || v === undefined || v === null;
 	QL.lv = QL.auto ? guessQ() : v;
+	QL.max = 2;
+	QL.upWait = 20000;
 	CFG.q = QL.auto ? "auto" : v;
 	applyQ();
 }
 function applyQ() {
 	Parts.cap = [130, 300, 620][QL.lv];
 	QL.bad = 0;
+	QL.good = 0;
 }
-// авто-режим: если кадр стабильно дольше 26 мс — снижаем уровень (частицы, свет, тени, разрешение)
+// авто-режим с гистерезисом: вниз — быстро (3 с кадров дольше 26 мс), вверх — только после
+// QL.upWait мс стабильно быстрых кадров (< 15 мс); каждое понижение удваивает время ожидания,
+// чтобы качество не «мигало» на устройстве, которое держит уровень на грани.
 function perfTick(ms) {
 	QL.ft += (ms - QL.ft) * 0.05;
-	if (!QL.auto || QL.lv === 0) return;
-	QL.bad = QL.ft > 26 ? QL.bad + ms : Math.max(0, QL.bad - ms * 2);
-	if (QL.bad > 3000) {
+	if (!QL.auto) return;
+	if (QL.ft > 26) {
+		QL.bad += ms;
+		QL.good = 0;
+	} else {
+		QL.bad = Math.max(0, QL.bad - ms * 2);
+		QL.good = QL.ft < 15 ? QL.good + ms : 0;
+	}
+	if (QL.bad > 3000 && QL.lv > 0) {
 		QL.lv--;
+		QL.upWait = Math.min(QL.upWait * 2, 160000);
+		applyQ();
+		if (typeof hiDpi === "function") hiDpi();
+	} else if (QL.good > QL.upWait && QL.lv < QL.max) {
+		QL.lv++;
 		applyQ();
 		if (typeof hiDpi === "function") hiDpi();
 	}
@@ -267,12 +506,15 @@ const Parts = {
 			if (!o.imp) return;
 			this.a.shift();
 		}
-		o.t = 0;
-		if (o.l === undefined) o.l = 1;
-		if (o.k === undefined) o.k = 0;
-		if (o.vx === undefined) o.vx = 0;
-		if (o.vy === undefined) o.vy = 0;
-		this.a.push(o);
+		// в пул кладётся копия единой формы: у источников частиц два десятка разных наборов полей,
+		// и с ними каждый p.x/p.t в upd/draw шёл через общий (мегаморфный) кэш свойств — вдвое медленнее.
+		// Отсутствующие поля остаются undefined, как и раньше: проверки вида p.fl !== undefined не меняются.
+		this.a.push({
+			t: 0, x: o.x, y: o.y, vx: o.vx === undefined ? 0 : o.vx, vy: o.vy === undefined ? 0 : o.vy,
+			life: o.life, c: o.c, s: o.s, k: o.k === undefined ? 0 : o.k, l: o.l === undefined ? 1 : o.l,
+			g: o.g, dr: o.dr, e: o.e, a: o.a, fade: o.fade, fi: o.fi, add: o.add, len: o.len,
+			fl: o.fl, bn: o.bn, wob: o.wob, wf: o.wf, ph: o.ph, r0: o.r0, r1: o.r1, w: o.w, fy: o.fy, vr: o.vr,
+		});
 	},
 	upd(dt) {
 		const a = this.a;

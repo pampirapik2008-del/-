@@ -39,11 +39,26 @@ export function loadGameSrc(root) {
 	return raw.split(FONT_PLACEHOLDER).join(font).split("@@BUILD@@").join(build);
 }
 
-export function buildHtml(root) {
+// public — сборка «для друзей»: вместо ядра и загрузчика редактора в @@LOADER@@ встаёт src/runner.js
+// (запуск игры, хранилище, ничего от редактора: ни интерфейса, ни настроек ИИ, ни пароля, ни версий кода)
+export function buildHtml(root, { public: pub = false } = {}) {
 	const shell = readText(root, "src/shell.html");
-	const loader = readText(root, "src/editor/loader.js");
+	// ядро редактора (чистые функции, тестируются в Node) + загрузчик с интерфейсом — вне #game-src,
+	// поэтому ИИ-правки их не касаются
+	const loader = pub ? readText(root, "src/runner.js") : readText(root, "src/editor/core.js") + "\n" + readText(root, "src/editor/loader.js");
 	return shell
 		.replace("@@ASSETS@@", () => loadAssetsJs(root))
 		.replace("@@SRC@@", () => loadGameSrc(root))
 		.replace("@@LOADER@@", () => loader);
+}
+
+// код игры из готового HTML (index.html, dist/*.html): содержимое <script id="game-assets"> + <script id="game-src">
+export function codeFromHtml(file) {
+	const html = fs.readFileSync(file, "utf8");
+	const part = (id) => {
+		const m = html.match(new RegExp('<script type="text/plain" id="' + id + '">([\\s\\S]*?)</script>'));
+		if (!m) throw new Error("в " + file + " нет секции " + id);
+		return m[1];
+	};
+	return part("game-assets") + "\n" + part("game-src");
 }

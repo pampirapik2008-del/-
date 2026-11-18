@@ -89,7 +89,8 @@ function uPort(u, cx, by, sc = AP, dim = false) {
 	const f = is3 ? ATL.heroes3[u.k].port[0] : is2 ? ATL.heroes2[u.k].port[0] : ATL.heroes[u.k].port[0];
 	const img = is3 ? IMG.heroes3 : is2 ? (IMG["gen_" + u.k] || IMG.heroes2) : IMG.heroes;
 	const sc2 = (is3 || is2) ? (sc * 34) / f[2] : sc;
-	fr(dim ? silOf(img, "#2a2436") : img, f, cx, by, 1, sc2);
+	if (dim) frSil(img, f, "#2a2436", cx, by, 1, sc2);
+	else fr(img, f, cx, by, 1, sc2);
 }
 // фигура бойца «в полный рост» для экранов вне боя
 function uIdle(u, x, y, sc = AP, face = 1, wi = 0, an = "idle") {
@@ -116,6 +117,45 @@ function spriteTransition(u, img, frame, now) {
 	if (!q.prev || mix >= 1) { q.prev = null; return [null, 1]; }
 	return [q.prev, 0.25 + 0.75 * mix];
 }
+// обводка силуэтом в четыре стороны: жёлтая — выбранный боец, мигающая светлая — неуязвимый
+function uOutline(u, o, img, f, x, y, fx, sc, sy) {
+	if (o.sel) {
+		for (const [ox, oy] of [
+			[-2, 0],
+			[2, 0],
+			[0, -2],
+			[0, 2],
+		])
+			frSil(img, f, "#ffe27a", x + ox, y + oy, fx, sc, sy);
+	} else if (u.inv > 0) {
+		ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 16);
+		for (const [ox, oy] of [
+			[-2, 0],
+			[2, 0],
+			[0, -2],
+			[0, 2],
+		])
+			frSil(img, f, "#fff3b0", x + ox, y + oy, fx, sc, sy);
+		ctx.globalAlpha = 1;
+	}
+}
+// подкраска силуэтом по состояниям (лёд, холод, яд, горение, проклятие, ярость) и белая вспышка удара
+function uTints(u, o, img, f, x, y, fx, sc, sy) {
+	const s = u.st || {},
+		tint = (c, a) => {
+			ctx.globalAlpha = a * (o.a === undefined ? 1 : o.a);
+			frSil(img, f, c, x, y, fx, sc, sy);
+		};
+	if (s.stun && s.stun.ice) tint("#bff0ff", 0.62);
+	else if (s.chill) tint("#6fd0ff", 0.36);
+	if (s.poison) tint("#7be04e", 0.22 + 0.08 * Math.sin(t * 6));
+	if (s.burn) tint("#ff7a2c", 0.22 + 0.12 * Math.sin(t * 14));
+	if (s.curse) tint("#8a4fd8", 0.3);
+	if (s.rage) tint("#ff3a2a", 0.2 + 0.14 * Math.sin(t * 9));
+	if (u.hitT > 0) tint("#ffffff", Math.min(0.92, u.hitT / 0.12));
+	ctx.globalAlpha = 1;
+}
+// юнит: появление (born), выпад при ударе, дыхание/шаг, дрожь от удара и оглушения, обводка, кадр (с плавной сменой набора), подкраска
 function dUnit(u, wi, o = {}) {
 	const bk = u.born !== undefined ? (t - u.born) / 0.32 : 1;
 	if (bk <= 0) return;
@@ -141,27 +181,7 @@ function dUnit(u, wi, o = {}) {
 	x = Math.round(x);
 	y = Math.round(y);
 	const fx = u.face;
-	if (o.sel) {
-		const s = silOf(img, "#ffe27a");
-		for (const [ox, oy] of [
-			[-2, 0],
-			[2, 0],
-			[0, -2],
-			[0, 2],
-		])
-			fr(s, f, x + ox, y + oy, fx, sc, sy);
-	} else if (u.inv > 0) {
-		const s = silOf(img, "#fff3b0");
-		ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 16);
-		for (const [ox, oy] of [
-			[-2, 0],
-			[2, 0],
-			[0, -2],
-			[0, 2],
-		])
-			fr(s, f, x + ox, y + oy, fx, sc, sy);
-		ctx.globalAlpha = 1;
-	}
+	uOutline(u, o, img, f, x, y, fx, sc, sy);
 	const baseAlpha = o.a === undefined ? 1 : o.a;
 	const [previous, mix] = !u.team && img === IMG.heroes3 ? spriteTransition(u, img, f, t) : [null, 1];
 	if (previous) {
@@ -171,19 +191,7 @@ function dUnit(u, wi, o = {}) {
 	ctx.globalAlpha = baseAlpha * mix;
 	fr(img, f, x, y, fx, sc, sy);
 	ctx.globalAlpha = baseAlpha;
-	const s = u.st || {},
-		tint = (c, a) => {
-			ctx.globalAlpha = a * (o.a === undefined ? 1 : o.a);
-			fr(silOf(img, c), f, x, y, fx, sc, sy);
-		};
-	if (s.stun && s.stun.ice) tint("#bff0ff", 0.62);
-	else if (s.chill) tint("#6fd0ff", 0.36);
-	if (s.poison) tint("#7be04e", 0.22 + 0.08 * Math.sin(t * 6));
-	if (s.burn) tint("#ff7a2c", 0.22 + 0.12 * Math.sin(t * 14));
-	if (s.curse) tint("#8a4fd8", 0.3);
-	if (s.rage) tint("#ff3a2a", 0.2 + 0.14 * Math.sin(t * 9));
-	if (u.hitT > 0) tint("#ffffff", Math.min(0.92, u.hitT / 0.12));
-	ctx.globalAlpha = 1;
+	uTints(u, o, img, f, x, y, fx, sc, sy);
 }
 // ---------- полосы здоровья и статусы ----------
 function uBar(u, fight) {
@@ -260,65 +268,74 @@ function jag(x0, y0, x1, y1, amp, seed) {
 	ctx.lineTo(x1, y1);
 	ctx.stroke();
 }
+// метка-полоса под углом q.a: заливка, заполнение по готовности k, края
+function teleLine(q, k, pu) {
+	const wd = q.wd || 14;
+	ctx.save();
+	ctx.translate(q.x, q.y);
+	ctx.scale(1, 0.62);
+	ctx.rotate(Math.atan2(Math.sin(q.a) / 0.62, Math.cos(q.a)));
+	ctx.globalAlpha = 0.16 + 0.1 * pu;
+	ctx.fillRect(0, -wd, q.len, wd * 2);
+	ctx.globalAlpha = 0.5;
+	ctx.fillRect(0, -wd, q.len * k, wd * 2);
+	ctx.globalAlpha = 0.9;
+	ctx.fillRect(0, -wd - 2, q.len, 2);
+	ctx.fillRect(0, wd, q.len, 2);
+	ctx.restore();
+}
+// метка-лента во всю ширину поля: заполняется справа налево, стрелки показывают направление удара
+function teleBand(q, k, pu) {
+	const y = q.y - q.h / 2;
+	ctx.globalAlpha = 0.14 + 0.1 * pu;
+	ctx.fillRect(FLD.x0 - 40, y, FLD.x1 - FLD.x0 + 80, q.h);
+	ctx.globalAlpha = 0.45;
+	const w = (FLD.x1 - FLD.x0 + 80) * k;
+	ctx.fillRect(FLD.x1 + 40 - w, y, w, q.h);
+	ctx.globalAlpha = 0.9;
+	ctx.fillRect(FLD.x0 - 40, y - 2, FLD.x1 - FLD.x0 + 80, 2);
+	ctx.fillRect(FLD.x0 - 40, y + q.h, FLD.x1 - FLD.x0 + 80, 2);
+	for (let i = 0; i < 9; i++) {
+		// стрелки направления удара
+		const ax = FLD.x1 - ((t * 240 + i * 130) % (FLD.x1 - FLD.x0));
+		ctx.beginPath();
+		ctx.moveTo(ax, q.y - 10);
+		ctx.lineTo(ax - 14, q.y);
+		ctx.lineTo(ax, q.y + 10);
+		ctx.lineWidth = 4;
+		ctx.stroke();
+	}
+}
+// метка-круг (эллипс в перспективе): заливка, растущее заполнение, бегущий пунктир по краю
+function teleRing(q, k, pu) {
+	const rx = q.r,
+		ry = q.r / 1.6;
+	ctx.globalAlpha = 0.16 + 0.1 * pu;
+	ctx.beginPath();
+	ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
+	ctx.fill();
+	ctx.globalAlpha = 0.5;
+	ctx.beginPath();
+	ctx.ellipse(q.x, q.y, rx * k, ry * k, 0, 0, TAU);
+	ctx.fill();
+	ctx.globalAlpha = 0.95;
+	ctx.lineWidth = 4;
+	ctx.setLineDash([14, 8]);
+	ctx.lineDashOffset = -t * 60;
+	ctx.beginPath();
+	ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
+	ctx.stroke();
+	ctx.setLineDash([]);
+}
+// метки приёмов на земле: пульсируют тем чаще, чем ближе срабатывание (k — готовность 0..1)
 function dTele(A) {
 	for (const q of F.tele) {
 		const k = Math.min(1, q.t / q.d),
 			pu = 0.55 + 0.45 * Math.sin(t * 22 * (0.5 + k));
 		ctx.fillStyle = ctx.strokeStyle = q.c;
-		if (q.shape === "line") {
-			const wd = q.wd || 14;
-			ctx.save();
-			ctx.translate(q.x, q.y);
-			ctx.scale(1, 0.62);
-			ctx.rotate(Math.atan2(Math.sin(q.a) / 0.62, Math.cos(q.a)));
-			ctx.globalAlpha = 0.16 + 0.1 * pu;
-			ctx.fillRect(0, -wd, q.len, wd * 2);
-			ctx.globalAlpha = 0.5;
-			ctx.fillRect(0, -wd, q.len * k, wd * 2);
-			ctx.globalAlpha = 0.9;
-			ctx.fillRect(0, -wd - 2, q.len, 2);
-			ctx.fillRect(0, wd, q.len, 2);
-			ctx.restore();
-		} else if (q.shape === "band") {
-			const y = q.y - q.h / 2;
-			ctx.globalAlpha = 0.14 + 0.1 * pu;
-			ctx.fillRect(FLD.x0 - 40, y, FLD.x1 - FLD.x0 + 80, q.h);
-			ctx.globalAlpha = 0.45;
-			const w = (FLD.x1 - FLD.x0 + 80) * k;
-			ctx.fillRect(FLD.x1 + 40 - w, y, w, q.h);
-			ctx.globalAlpha = 0.9;
-			ctx.fillRect(FLD.x0 - 40, y - 2, FLD.x1 - FLD.x0 + 80, 2);
-			ctx.fillRect(FLD.x0 - 40, y + q.h, FLD.x1 - FLD.x0 + 80, 2);
-			for (let i = 0; i < 9; i++) {
-				// стрелки направления удара
-				const ax = FLD.x1 - ((t * 240 + i * 130) % (FLD.x1 - FLD.x0));
-				ctx.beginPath();
-				ctx.moveTo(ax, q.y - 10);
-				ctx.lineTo(ax - 14, q.y);
-				ctx.lineTo(ax, q.y + 10);
-				ctx.lineWidth = 4;
-				ctx.stroke();
-			}
-		} else {
-			const rx = q.r,
-				ry = q.r / 1.6;
-			ctx.globalAlpha = 0.16 + 0.1 * pu;
-			ctx.beginPath();
-			ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
-			ctx.fill();
-			ctx.globalAlpha = 0.5;
-			ctx.beginPath();
-			ctx.ellipse(q.x, q.y, rx * k, ry * k, 0, 0, TAU);
-			ctx.fill();
-			ctx.globalAlpha = 0.95;
-			ctx.lineWidth = 4;
-			ctx.setLineDash([14, 8]);
-			ctx.lineDashOffset = -t * 60;
-			ctx.beginPath();
-			ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
-			ctx.stroke();
-			ctx.setLineDash([]);
-		}
+		if (q.shape === "line") teleLine(q, k, pu);
+		else if (q.shape === "band") teleBand(q, k, pu);
+		else teleRing(q, k, pu);
 		ctx.globalAlpha = 1;
 	}
 }
@@ -388,130 +405,144 @@ function dProj() {
 		ctx.restore();
 	}
 }
+// отрисовка сценических эффектов по виду (f.k); k — доля прожитого времени 0…1.
+// Каждый рисовальщик сам выставляет globalAlpha, dFx сбрасывает её после (тела перенесены из прежней цепочки if/else без изменений).
+const FXDRAW = {
+	slash(f, k) {
+		ctx.save();
+		ctx.translate(f.x, f.y);
+		ctx.scale(f.f, 1);
+		ctx.rotate(f.rot || 0);
+		ctx.lineCap = "round";
+		const a1 = -1.25 + 2.5 * ez.o3(k),
+			a0 = a1 - 1.9 * (1 - k * 0.5);
+		ctx.globalAlpha = 1 - k * k;
+		ctx.strokeStyle = f.c;
+		ctx.lineWidth = f.w * (1 - k * 0.5);
+		ctx.beginPath();
+		ctx.arc(-f.r * 0.35, 0, f.r, Math.max(-1.25, a0), a1);
+		ctx.stroke();
+		ctx.strokeStyle = "#ffffff";
+		ctx.lineWidth = Math.max(2, f.w * 0.35 * (1 - k));
+		ctx.beginPath();
+		ctx.arc(-f.r * 0.35, 0, f.r, Math.max(-1.25, a1 - 0.7), a1);
+		ctx.stroke();
+		ctx.restore();
+	},
+	beam(f, k) {
+		ctx.globalAlpha = 1 - k;
+		ctx.strokeStyle = f.c;
+		ctx.lineWidth = (f.w || 4) * (1 + k);
+		ctx.beginPath();
+		ctx.moveTo(f.x0, f.y0);
+		ctx.lineTo(f.x1, f.y1);
+		ctx.stroke();
+		ctx.strokeStyle = "#fff";
+		ctx.lineWidth = Math.max(2, (f.w || 4) * 0.4);
+		ctx.stroke();
+	},
+	bolt(f, k) {
+		ctx.globalAlpha = 1 - k * k;
+		ctx.strokeStyle = f.c;
+		ctx.lineWidth = (f.w || 3) + 3;
+		const sd = ((f.x0 * 13 + f.y1 * 7) | 0) + ((f.t * 24) | 0);
+		jag(f.x0, f.y0, f.x1, f.y1, 34, sd);
+		ctx.strokeStyle = "#fff";
+		ctx.lineWidth = Math.max(2, (f.w || 3) - 1);
+		jag(f.x0, f.y0, f.x1, f.y1, 34, sd);
+	},
+	pillar(f, k) {
+		const w = f.w * (k < 0.2 ? k / 0.2 : 1 - (k - 0.2) * 0.9);
+		ctx.globalAlpha = 0.75 * (1 - k);
+		ctx.fillStyle = f.c;
+		ctx.fillRect(f.x - w / 2, -20, w, f.y + 20);
+		ctx.globalAlpha = 0.95 * (1 - k);
+		ctx.fillStyle = "#ffffff";
+		ctx.fillRect(f.x - w / 5, -20, w / 2.5, f.y + 20);
+		ctx.globalAlpha = 0.8 * (1 - k);
+		ctx.fillStyle = f.c;
+		ctx.beginPath();
+		ctx.ellipse(f.x, f.y, f.w * (0.6 + k), f.w * (0.6 + k) * 0.36, 0, 0, TAU);
+		ctx.fill();
+	},
+	bubble(f, k) {
+		const u = f.u;
+		if (u.hp > 0) {
+			const r = u.boss ? 104 : 34,
+				cy = u.y - (u.boss ? 80 : 30) - (u.z || 0);
+			ctx.globalAlpha = (1 - k) * 0.9;
+			ctx.strokeStyle = f.c;
+			ctx.lineWidth = 4;
+			ctx.beginPath();
+			ctx.ellipse(u.x, cy, r * (0.8 + 0.25 * ez.o(Math.min(1, k * 4))), r * 1.15 * (0.8 + 0.25 * ez.o(Math.min(1, k * 4))), 0, 0, TAU);
+			ctx.stroke();
+			ctx.globalAlpha = (1 - k) * 0.18;
+			ctx.fillStyle = f.c;
+			ctx.fill();
+		}
+	},
+	ghost(f, k, wi) {
+		const [A, img] = uSet(f.u, wi);
+		ctx.globalAlpha = 0.6 * (1 - k);
+		frSil(img, A.idle[0], "#c9a0ff", f.x, f.y, f.f, AP);
+	},
+	vines(f, k) {
+		const u = f.u,
+			g = Math.min(1, k * 5),
+			a = k > 0.85 ? (1 - k) / 0.15 : 1;
+		ctx.globalAlpha = a;
+		ctx.lineWidth = 5;
+		for (let i = 0; i < 4; i++) {
+			const bx = u.x + (i - 1.5) * 13;
+			ctx.strokeStyle = i & 1 ? "#3a7a2a" : "#5aa03c";
+			ctx.beginPath();
+			ctx.moveTo(bx, u.y + 2);
+			for (let j = 1; j <= 5; j++) ctx.lineTo(bx + Math.sin(j * 1.9 + i) * 9, u.y + 2 - j * 11 * g);
+			ctx.stroke();
+			ctx.fillStyle = "#b8ff8a";
+			ctx.fillRect(bx + Math.sin(5 * 1.9 + i) * 9 - 3, u.y - 55 * g - 2, 6, 6);
+		}
+	},
+	wave(f, k) {
+		ctx.strokeStyle = f.c;
+		for (let i = 0; i < 3; i++) {
+			const q = clamp(k * 1.4 - i * 0.2, 0, 1);
+			if (q <= 0 || q >= 1) continue;
+			ctx.globalAlpha = 1 - q;
+			ctx.lineWidth = 8 * (1 - q) + 2;
+			ctx.beginPath();
+			ctx.ellipse(f.x, f.y, 520 * ez.o(q), 200 * ez.o(q), 0, 0, TAU);
+			ctx.stroke();
+		}
+	},
+	star(f, k) {
+		const r = 46 * (0.4 + ez.o(k));
+		ctx.globalAlpha = 1 - k;
+		ctx.fillStyle = f.c;
+		ctx.beginPath();
+		for (let i = 0; i < 8; i++) {
+			const a = (i / 8) * TAU + 0.4,
+				rr2 = i & 1 ? r * 0.22 : r;
+			ctx.lineTo(f.x + Math.cos(a) * rr2, f.y + Math.sin(a) * rr2);
+		}
+		ctx.fill();
+	},
+	sweep(f, k) {
+		const x = f.x0 - (f.x0 - FLD.x0 + 80) * ez.o(k);
+		ctx.globalAlpha = 0.85 * (1 - k * k);
+		ctx.fillStyle = f.c;
+		ctx.fillRect(x, f.y - f.h / 2, 90 + 80 * k, f.h);
+		ctx.fillStyle = "#fff";
+		ctx.fillRect(x, f.y - f.h / 2, 16, f.h);
+		ctx.globalAlpha = 0.35 * (1 - k);
+		ctx.fillStyle = f.c;
+		ctx.fillRect(x, f.y - f.h / 2, f.x0 - x, f.h);
+	},
+};
 function dFx(wi) {
 	for (const f of F.fx) {
-		const k = Math.min(1, f.t / f.d);
-		if (f.k === "slash") {
-			ctx.save();
-			ctx.translate(f.x, f.y);
-			ctx.scale(f.f, 1);
-			ctx.rotate(f.rot || 0);
-			ctx.lineCap = "round";
-			const a1 = -1.25 + 2.5 * ez.o3(k),
-				a0 = a1 - 1.9 * (1 - k * 0.5);
-			ctx.globalAlpha = 1 - k * k;
-			ctx.strokeStyle = f.c;
-			ctx.lineWidth = f.w * (1 - k * 0.5);
-			ctx.beginPath();
-			ctx.arc(-f.r * 0.35, 0, f.r, Math.max(-1.25, a0), a1);
-			ctx.stroke();
-			ctx.strokeStyle = "#ffffff";
-			ctx.lineWidth = Math.max(2, f.w * 0.35 * (1 - k));
-			ctx.beginPath();
-			ctx.arc(-f.r * 0.35, 0, f.r, Math.max(-1.25, a1 - 0.7), a1);
-			ctx.stroke();
-			ctx.restore();
-		} else if (f.k === "beam") {
-			ctx.globalAlpha = 1 - k;
-			ctx.strokeStyle = f.c;
-			ctx.lineWidth = (f.w || 4) * (1 + k);
-			ctx.beginPath();
-			ctx.moveTo(f.x0, f.y0);
-			ctx.lineTo(f.x1, f.y1);
-			ctx.stroke();
-			ctx.strokeStyle = "#fff";
-			ctx.lineWidth = Math.max(2, (f.w || 4) * 0.4);
-			ctx.stroke();
-		} else if (f.k === "bolt") {
-			ctx.globalAlpha = 1 - k * k;
-			ctx.strokeStyle = f.c;
-			ctx.lineWidth = (f.w || 3) + 3;
-			const sd = ((f.x0 * 13 + f.y1 * 7) | 0) + ((f.t * 24) | 0);
-			jag(f.x0, f.y0, f.x1, f.y1, 34, sd);
-			ctx.strokeStyle = "#fff";
-			ctx.lineWidth = Math.max(2, (f.w || 3) - 1);
-			jag(f.x0, f.y0, f.x1, f.y1, 34, sd);
-		} else if (f.k === "pillar") {
-			const w = f.w * (k < 0.2 ? k / 0.2 : 1 - (k - 0.2) * 0.9);
-			ctx.globalAlpha = 0.75 * (1 - k);
-			ctx.fillStyle = f.c;
-			ctx.fillRect(f.x - w / 2, -20, w, f.y + 20);
-			ctx.globalAlpha = 0.95 * (1 - k);
-			ctx.fillStyle = "#ffffff";
-			ctx.fillRect(f.x - w / 5, -20, w / 2.5, f.y + 20);
-			ctx.globalAlpha = 0.8 * (1 - k);
-			ctx.fillStyle = f.c;
-			ctx.beginPath();
-			ctx.ellipse(f.x, f.y, f.w * (0.6 + k), f.w * (0.6 + k) * 0.36, 0, 0, TAU);
-			ctx.fill();
-		} else if (f.k === "bubble") {
-			const u = f.u;
-			if (u.hp > 0) {
-				const r = u.boss ? 104 : 34,
-					cy = u.y - (u.boss ? 80 : 30) - (u.z || 0);
-				ctx.globalAlpha = (1 - k) * 0.9;
-				ctx.strokeStyle = f.c;
-				ctx.lineWidth = 4;
-				ctx.beginPath();
-				ctx.ellipse(u.x, cy, r * (0.8 + 0.25 * ez.o(Math.min(1, k * 4))), r * 1.15 * (0.8 + 0.25 * ez.o(Math.min(1, k * 4))), 0, 0, TAU);
-				ctx.stroke();
-				ctx.globalAlpha = (1 - k) * 0.18;
-				ctx.fillStyle = f.c;
-				ctx.fill();
-			}
-		} else if (f.k === "ghost") {
-			const [A, img] = uSet(f.u, wi);
-			ctx.globalAlpha = 0.6 * (1 - k);
-			fr(silOf(img, "#c9a0ff"), A.idle[0], f.x, f.y, f.f, AP);
-		} else if (f.k === "vines") {
-			const u = f.u,
-				g = Math.min(1, k * 5),
-				a = k > 0.85 ? (1 - k) / 0.15 : 1;
-			ctx.globalAlpha = a;
-			ctx.lineWidth = 5;
-			for (let i = 0; i < 4; i++) {
-				const bx = u.x + (i - 1.5) * 13;
-				ctx.strokeStyle = i & 1 ? "#3a7a2a" : "#5aa03c";
-				ctx.beginPath();
-				ctx.moveTo(bx, u.y + 2);
-				for (let j = 1; j <= 5; j++) ctx.lineTo(bx + Math.sin(j * 1.9 + i) * 9, u.y + 2 - j * 11 * g);
-				ctx.stroke();
-				ctx.fillStyle = "#b8ff8a";
-				ctx.fillRect(bx + Math.sin(5 * 1.9 + i) * 9 - 3, u.y - 55 * g - 2, 6, 6);
-			}
-		} else if (f.k === "wave") {
-			ctx.strokeStyle = f.c;
-			for (let i = 0; i < 3; i++) {
-				const q = clamp(k * 1.4 - i * 0.2, 0, 1);
-				if (q <= 0 || q >= 1) continue;
-				ctx.globalAlpha = 1 - q;
-				ctx.lineWidth = 8 * (1 - q) + 2;
-				ctx.beginPath();
-				ctx.ellipse(f.x, f.y, 520 * ez.o(q), 200 * ez.o(q), 0, 0, TAU);
-				ctx.stroke();
-			}
-		} else if (f.k === "star") {
-			const r = 46 * (0.4 + ez.o(k));
-			ctx.globalAlpha = 1 - k;
-			ctx.fillStyle = f.c;
-			ctx.beginPath();
-			for (let i = 0; i < 8; i++) {
-				const a = (i / 8) * TAU + 0.4,
-					rr2 = i & 1 ? r * 0.22 : r;
-				ctx.lineTo(f.x + Math.cos(a) * rr2, f.y + Math.sin(a) * rr2);
-			}
-			ctx.fill();
-		} else if (f.k === "sweep") {
-			const x = f.x0 - (f.x0 - FLD.x0 + 80) * ez.o(k);
-			ctx.globalAlpha = 0.85 * (1 - k * k);
-			ctx.fillStyle = f.c;
-			ctx.fillRect(x, f.y - f.h / 2, 90 + 80 * k, f.h);
-			ctx.fillStyle = "#fff";
-			ctx.fillRect(x, f.y - f.h / 2, 16, f.h);
-			ctx.globalAlpha = 0.35 * (1 - k);
-			ctx.fillStyle = f.c;
-			ctx.fillRect(x, f.y - f.h / 2, f.x0 - x, f.h);
-		}
+		const d = FXDRAW[f.k];
+		if (d) d(f, Math.min(1, f.t / f.d), wi);
 		ctx.globalAlpha = 1;
 	}
 }
@@ -587,18 +618,58 @@ function deadDraw(d, wi) {
 		const x = u.x + Math.sin(t * 60) * 5 * (1 - k);
 		fr(img, f, x, u.y, u.face, AP * (u.sc || 1), 1 - k * 0.25);
 		ctx.globalAlpha *= Math.abs(Math.sin(t * 20)) * 0.8;
-		fr(silOf(img, "#ffffff"), f, x, u.y, u.face, AP * (u.sc || 1), 1 - k * 0.25);
+		frSil(img, f, "#ffffff", x, u.y, u.face, AP * (u.sc || 1), 1 - k * 0.25);
 	} else fr(img, f, u.x, u.y, u.face, AP * (u.sc || 1), u.team ? 1 - k * 0.3 : 1);
 	ctx.globalAlpha = 1;
 }
 // ---------- сцена боя ----------
 const ZONE = { x0: 96, x1: 506 };
-function dFight() {
-	const A = F.A,
-		fight = State.is("fight"),
-		wi = F.w,
-		w = WORLDS[wi];
-	// камера: лёгкий наезд на финальный удар и смену фазы
+// ---------- экстраполяция позиций между шагами симуляции ----------
+// Loop.alpha — доля шага 1/60, не вошедшая в симуляцию в этом кадре (0 на ровных 60 Гц).
+// Бойцы и снаряды на время отрисовки сдвигаются на alpha последнего смещения, затем
+// позиции возвращаются: логика видит только «настоящие» координаты.
+const LERP_PREV = new WeakMap(),
+	LERP_UNDO = [];
+function lerpRemember(list) {
+	for (let i = 0; i < list.length; i++) {
+		const u = list[i];
+		let r = LERP_PREV.get(u);
+		if (!r) LERP_PREV.set(u, (r = { x: 0, y: 0 }));
+		r.x = u.x;
+		r.y = u.y;
+	}
+}
+function lerpApply(list, k) {
+	for (let i = 0; i < list.length; i++) {
+		const u = list[i],
+			r = LERP_PREV.get(u);
+		if (!r) continue;
+		const dx = u.x - r.x,
+			dy = u.y - r.y;
+		// телепорт/рывок (больше 40 px за шаг) не экстраполируем — иначе на кадр промелькнёт «перелёт»
+		if (dx * dx + dy * dy > 1600 || (dx === 0 && dy === 0)) continue;
+		LERP_UNDO.push(u, u.x, u.y);
+		u.x += dx * k;
+		u.y += dy * k;
+	}
+}
+function fightLerpIn() {
+	LERP_UNDO.length = 0;
+	if (!F || !Machine.is("fight") || paused || !(Loop.alpha > 0.01) || F.lock > 0 || F.out) return;
+	lerpApply(F.pl, Loop.alpha);
+	lerpApply(F.en, Loop.alpha);
+	if (F.proj) lerpApply(F.proj, Loop.alpha);
+}
+function fightLerpOut() {
+	for (let i = LERP_UNDO.length - 3; i >= 0; i -= 3) {
+		const u = LERP_UNDO[i];
+		u.x = LERP_UNDO[i + 1];
+		u.y = LERP_UNDO[i + 2];
+	}
+	LERP_UNDO.length = 0;
+}
+// камера боя: лёгкий наезд на финальный удар и смену фазы (ctx.save() здесь — парный restore в dFight)
+function fightCamera(fight) {
 	const tz = fight && F.slowT > 0 && F.slowS < 0.32 ? 1.12 : 1,
 		fo = F.focus || { x: 609, y: 300 };
 	CAM.z += (tz - CAM.z) * Math.min(1, DT * 7);
@@ -611,12 +682,9 @@ function dFight() {
 		ctx.scale(CAM.z, CAM.z);
 		ctx.translate(-cx, -cy);
 	}
-	ctx.drawImage(A.floor, 0, 0, W, H);
-	stageFx(A);
-	heatHaze(A);
-	const units = fight ? F.pl.concat(F.en) : G.slots.filter((u) => u && u.placed).concat(F.en),
-		selU = !fight && sel >= 0 ? G.slots[sel] : null;
-	// --- слой земли ---
+}
+// слой земли: зона расстановки, лужи, телеграфы, тени и кольца под бойцами, частицы слоя 0
+function fightGround(A, w, fight, units) {
 	layBegin();
 	if (!fight) {
 		// зона расстановки
@@ -661,7 +729,9 @@ function dFight() {
 	}
 	Parts.draw(0);
 	layEnd();
-	// --- объекты и бойцы по глубине ---
+}
+// объекты, декор, бойцы и трупы — в порядке глубины (y)
+function fightDepth(A, w, wi, units, selU) {
 	const list = [];
 	for (const o of A.obs)
 		if (!o.dead) {
@@ -689,7 +759,9 @@ function dFight() {
 		else deadDraw(q.dd, wi);
 	}
 	if (F.cat) drawCat();
-	// --- верхний слой эффектов ---
+}
+// верхний слой: снаряды, эффекты, падающие бомбы, частицы слоя 1
+function fightTop(fight, wi) {
 	layBegin();
 	if (fight) dProj();
 	dFx(wi);
@@ -708,7 +780,9 @@ function dFight() {
 			}
 	layEnd();
 	Parts.draw(1);
-	// --- свет ---
+}
+// свет, свечения, погодный тон, виньетка
+function fightLight(A, w, fight, units) {
 	if (QL.lv > 0) {
 		Light.begin(w.amb[A.tod]);
 		arenaLights(A);
@@ -737,11 +811,9 @@ function dFight() {
 	wxTint(A);
 	Parts.draw(2);
 	vignette(A.tod === 2 ? 1 : 0.7);
-	// --- полосы и цифры ---
-	for (const u of units) uBar(u, fight);
-	if (fight) dNums();
-	ctx.restore();
-	// --- ввод в сцене ---
+}
+// ввод в сцене: расстановка бойцов (до боя) и карточки по касанию
+function fightInput(A, fight) {
 	if (!fight) {
 		area(ZONE.x0 - 10, A.y0 - 30, ZONE.x1 - ZONE.x0 + 20, FLD.y1 - A.y0 + 44, (px, py) => {
 			const hit = G.slots.find((u) => u && u.placed && Math.abs(px - u.x) < 26 && py < u.y + 12 && py > u.y - 84);
@@ -776,6 +848,27 @@ function dFight() {
 			area(u.x - 24, u.y - 84, 48, 92, () => {
 				pop = { u, mine: false };
 			});
+}
+function dFight() {
+	const A = F.A,
+		fight = Machine.is("fight"),
+		wi = F.w,
+		w = WORLDS[wi];
+	fightCamera(fight);
+	ctx.drawImage(A.floor, 0, 0, W, H);
+	stageFx(A);
+	heatHaze(A);
+	const units = fight ? F.pl.concat(F.en) : G.slots.filter((u) => u && u.placed).concat(F.en),
+		selU = !fight && sel >= 0 ? G.slots[sel] : null;
+	fightGround(A, w, fight, units);
+	fightDepth(A, w, wi, units, selU);
+	fightTop(fight, wi);
+	fightLight(A, w, fight, units);
+	// --- полосы и цифры ---
+	for (const u of units) uBar(u, fight);
+	if (fight) dNums();
+	ctx.restore();
+	fightInput(A, fight);
 	fightHud(fight);
 }
 function autoPlace() {
@@ -878,7 +971,7 @@ function bossBar(u) {
 	}
 	uc("ui", "g_skull", x - 20, y + 7, AP);
 	tx(fmt(Math.max(0, u.hp)) + " / " + fmt(u.max), 609, y + 8, 12, "#fff", "center", true);
-	if (u.inv > 0 && State.is("fight")) txo("неуязвим", x + w + 10, y + 8, 13, "#fff3b0", "left");
+	if (u.inv > 0 && Machine.is("fight")) txo("неуязвим", x + w + 10, y + 8, 13, "#fff3b0", "left");
 	// значки статусов босса
 	const ks = Object.keys(u.st || {}).filter((q) => ATL.ui["s_" + q]);
 	ks.forEach((q, i) => us("ui", "s_" + q, x + i * 18, y + 20, AP));
@@ -887,13 +980,14 @@ function bossBar(u) {
 const SLX = (i) => 343 + i * 67.5,
 	SLY = 470;
 function hud() {
-	const fight = State.is("fight");
+	const fight = Machine.is("fight"),
+		prep = Machine.is("prep");
 	n9("win", 323, 448, 572, 98, 17);
 	for (let i = 0; i < 8; i++) {
 		const x = Math.round(SLX(i)),
 			y = SLY,
 			u = G.slots[i],
-			isSel = sel === i && State.is("prep"),
+			isSel = sel === i && prep,
 			dead = fight && u && (u.hp <= 0 || !F.pl.includes(u)),
 			ready = fight && u && !dead && u.en >= 100;
 		if (!u) {
@@ -912,7 +1006,7 @@ function hud() {
 		ctx.beginPath();
 		ctx.rect(x + 4, y + 4 + lift, 52, 46);
 		ctx.clip();
-		ctx.globalAlpha = (State.is("prep") && u.placed) || (fight && !F.pl.includes(u) && u.hp > 0) ? 0.4 : 1;
+		ctx.globalAlpha = (prep && u.placed) || (fight && !F.pl.includes(u) && u.hp > 0) ? 0.4 : 1;
 		uPort(u, x + 30, y + 62 + lift, AP, dead);
 		ctx.restore();
 		ctx.globalAlpha = 1;
@@ -926,7 +1020,7 @@ function hud() {
 			ctx.fillRect(x + 7, y + 55 + lift, Math.round(46 * Math.min(1, u.en / 100)), 2);
 		}
 		if (u.skull) uc("ui", "skull_s", x + 49, y + 12 + lift, 1);
-		if (State.is("prep") && u.placed) uc("ui", "g_check", x + 30, y + 26, AP);
+		if (prep && u.placed) uc("ui", "g_check", x + 30, y + 26, AP);
 		if (dead) uc("ui", "g_skull", x + 30, y + 28, AP);
 		if (ready && CFG.autoUlt === false) txo("УЛЬТА", x + 30, y - 6, 12, "#ffe27a", "center");
 		if (isSel) arrowDown(x + 30, y - 12 - 3 * Math.sin(t * 6));
@@ -937,7 +1031,7 @@ function hud() {
 function slotTap(i) {
 	const u = G.slots[i];
 	if (!u) return;
-	if (State.is("shop")) {
+	if (Machine.is("shop")) {
 		if (G.sk) {
 			if (u.skull) G.sm = "Монета-череп уже надета";
 			else if (G.coin < 3) {
@@ -961,7 +1055,7 @@ function slotTap(i) {
 		} else pop = { u, mine: true };
 		return;
 	}
-	if (State.is("prep")) {
+	if (Machine.is("prep")) {
 		if (u.placed) {
 			u.placed = false;
 			sel = i;
@@ -971,10 +1065,10 @@ function slotTap(i) {
 			sel = i;
 			sfx("pick");
 		}
-	} else if (State.is("fight")) {
+	} else if (Machine.is("fight")) {
 		if (F.pl.includes(u) && u.en >= 100 && CFG.autoUlt === false) u.ultQ = 1;
 		else pop = { u, mine: false };
-	} else if (State.is("map") || State.is("msg")) pop = { u, mine: true };
+	} else if (Machine.is("map", "msg")) pop = { u, mine: true };
 }
 // кормление мясом: +10% здоровья (и полное лечение), +8% атаки
 function feed(u) {
@@ -1009,29 +1103,15 @@ function popLines(s, w, sz) {
 	});
 	return n;
 }
-function dPop() {
-	if (!pop) return;
-	const u = pop.u,
-		mine = pop.mine && !State.is("fight") && !u.team,
-		K = KIT[u.k],
-		x = 826,
-		y = 84,
-		w = 372,
-		h = u.team
-			? u.boss ? 262 : 214
-			: (() => {
-					// панель растягивается под длину описаний навыка и ульты
-					const need = 190 + 17 + popLines(K.ab.d, w - 28, 12) * 15 + 8 + 17 + popLines(K.ult.d, w - 28, 12) * 15;
-					return Math.min(H - y - 26, Math.max(mine ? 348 : 300, need + (mine ? 62 : 16)));
-				})();
-	area(0, 0, W, H, () => (pop = null));
-	ctx.fillStyle = "rgba(8,6,14,.45)";
-	ctx.fillRect(0, 0, W, H);
-	panel(x, y, w, h);
-	area(x - 12, y - 12, w + 24, h + 24, () => {});
-	// портрет в рамке редкости
-	const r = u.r || 0,
-		up = pop.up ? Math.max(0, 1 - (t - pop.up) * 2.5) : 0;
+// высота карточки: у врагов фиксированная, у своих — под длину описаний навыка и ульты (+ место под кнопку)
+function popHeight(u, K, mine, w, y) {
+	if (u.team) return u.boss ? 262 : 214;
+	const need = 190 + 17 + popLines(K.ab.d, w - 28, 12) * 15 + 8 + 17 + popLines(K.ult.d, w - 28, 12) * 15;
+	return Math.min(H - y - 26, Math.max(mine ? 348 : 300, need + (mine ? 62 : 16)));
+}
+// шапка карточки: портрет в рамке редкости (у врагов — рамка по типу), вспышка повышения, имя, тип/редкость, стихия/роль
+function dPopHead(u, K, x, y, up) {
+	const r = u.r || 0;
 	ctx.fillStyle = "#2a2238";
 	ctx.fillRect(x + 12, y + 12, 68, 68);
 	ctx.save();
@@ -1052,7 +1132,9 @@ function dPop() {
 		txo(RAR[r].n, x + 96, y + 47, 14, RAR[r].c, "left");
 		tx(K.role + " · ур. " + (u.lv || 1), x + 96, y + 68, 13, "#d9d4e8");
 	}
-	// характеристики
+}
+// характеристики в два столбца; при вспышке повышения здоровье и атака подсвечены зелёным
+function dPopStats(u, x, y, up) {
 	const st = [
 		["hp", fmt(Math.max(0, Math.round(u.hp))) + " / " + fmt(u.max), "Здоровье"],
 		["atk", fmt(u.atk), "Атака"],
@@ -1069,6 +1151,9 @@ function dPop() {
 		tx(q[2], cx + 28, cy + 13, 12, "#b9b3c8");
 		txo("" + q[1], cx + 164, cy + 13, 14, up > 0 && i < 2 ? "#aaff9a" : "#fff", "right");
 	});
+}
+// низ карточки: подсказка по врагу или навык + ульта своего бойца и кнопка (кормление / просмотр анимаций в коллекции)
+function dPopBody(u, K, mine, x, y, w, h) {
 	let yy = y + 190;
 	if (u.team) {
 		const tips = u.boss
@@ -1079,35 +1164,58 @@ function dPop() {
 					? "Плюётся издалека и накладывает эффект своей стихии."
 					: "Медленный, но их бывает много.";
 		txw(tips, x + 14, yy, w - 28, 16, 13, "#e8e2f4");
-	} else {
-		txo(K.ab.n, x + 14, yy, 14, EL[K.el].c, "left");
-		tx("каждые " + K.ab.cd + " с", x + w - 14, yy, 12, "#b9b3c8", "right");
-		yy += 17;
-		yy += txw(K.ab.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15 + 8;
-		txo("Ульта: " + K.ult.n, x + 14, yy, 14, "#ffd27a", "left");
-		yy += 17;
-		yy += txw(K.ult.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15;
-		if (mine && State.is("codex")) btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
-		else if (mine) btn(x + 14, y + h - 50, w - 28, 42, "Накормить: +10% здоровья, +8% атаки", () => feed(u), "#2e7d32", { dis: G.meat <= 0, sz: 14, ic: "meat_s" });
+		return;
 	}
+	txo(K.ab.n, x + 14, yy, 14, EL[K.el].c, "left");
+	tx("каждые " + K.ab.cd + " с", x + w - 14, yy, 12, "#b9b3c8", "right");
+	yy += 17;
+	yy += txw(K.ab.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15 + 8;
+	txo("Ульта: " + K.ult.n, x + 14, yy, 14, "#ffd27a", "left");
+	yy += 17;
+	yy += txw(K.ult.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15;
+	if (mine && Machine.is("codex")) btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
+	else if (mine) btn(x + 14, y + h - 50, w - 28, 42, "Накормить: +10% здоровья, +8% атаки", () => feed(u), "#2e7d32", { dis: G.meat <= 0, sz: 14, ic: "meat_s" });
+}
+// карточка юнита (pop): затемнение, панель, шапка, характеристики, низ; нажатие вне панели закрывает
+function dPop() {
+	if (!pop) return;
+	const u = pop.u,
+		mine = pop.mine && !Machine.is("fight") && !u.team,
+		K = KIT[u.k],
+		x = 826,
+		y = 84,
+		w = 372,
+		h = popHeight(u, K, mine, w, y),
+		up = pop.up ? Math.max(0, 1 - (t - pop.up) * 2.5) : 0;
+	area(0, 0, W, H, () => (pop = null));
+	ctx.fillStyle = "rgba(8,6,14,.45)";
+	ctx.fillRect(0, 0, W, H);
+	panel(x, y, w, h);
+	area(x - 12, y - 12, w + 24, h + 24, () => {});
+	dPopHead(u, K, x, y, up);
+	dPopStats(u, x, y, up);
+	dPopBody(u, K, mine, x, y, w, h);
 }
 // обновление визуальной части (вне симуляции): частицы, таймеры эффектов, погода
+const fxAlive = (f) => f.t < f.d,
+	numAlive = (n) => n.t < (n.k === "crit" || n.k === "txt" ? 1.1 : 0.85);
 function visTick(dt) {
 	Parts.upd(dt * TSC);
-	if (F && (State.is("fight") || State.is("prep"))) {
+	if (F && Machine.is("fight", "prep")) {
 		const sd = dt * TSC;
 		wxEmit(F.A, dt);
 		for (const f of F.fx) f.t += f.k === "banner" || f.k === "cut" || f.k === "go" || f.k === "flash" ? dt : sd;
-		F.fx = F.fx.filter((f) => f.t < f.d);
+		compact(F.fx, fxAlive);
 		for (const n of F.nums) n.t += dt;
-		F.nums = F.nums.filter((n) => n.t < (n.k === "crit" || n.k === "txt" ? 1.1 : 0.85));
-		const us2 = State.is("fight") ? F.pl.concat(F.en) : F.en;
+		compact(F.nums, numAlive);
+		const inFight = Machine.is("fight"),
+			us2 = inFight ? F.pl.concat(F.en) : F.en;
 		let fo = null;
 		for (const u of us2) {
 			const k = u.hp / u.max;
 			u.hpl = u.hpl === undefined || u.hpl < k ? k : Math.max(k, u.hpl - dt * 0.45);
 			const s = u.st;
-			if (!s || !State.is("fight")) continue;
+			if (!s || !inFight) continue;
 			const hy = u.y - (u.boss ? 70 : 28),
 				rd = u.boss ? 60 : 16;
 			if (s.burn && Rand.next() < dt * 14) Parts.add({ x: u.x + rr(-rd, rd), y: hy + rr(-10, 16), vx: rr(-10, 10), vy: rr(-80, -40), life: 0.5, c: pick(["#ff8a3c", "#ffe27a", "#ff5a1c"]), s: 4, k: 0, e: 0.3 });
@@ -1120,10 +1228,53 @@ function visTick(dt) {
 			if (u.boss) fo = u;
 		}
 		F.focus = fo ? { x: fo.x, y: fo.y - 60 } : F.focus;
-		if (State.is("fight") && !fo && F.pl[0]) {
+		if (inFight && !fo && F.pl[0]) {
 			const e = F.en[0] || F.pl[0];
 			F.focus = { x: e.x, y: e.y - 20 };
 		}
 	}
 }
+
+// ---------- частицы и числа по событиям боя ----------
+// Логика (hurt/heal/deaths) только сообщает о событии; порядок подписчиков: сначала частицы
+// (этот файл), затем звук (70_audio.js) — ровно тот порядок, что был при прямых вызовах.
+Events.on("unit:healed", (tg, v) => {
+	Fx.num(tg, "+" + fmt(v), "heal");
+	burst(tg.x, tg.y - 30, 6, { c: ["#6dff7a", "#d6ffb0"], sp: 50, g: -120, life: 0.7, s: 4, rad: 24 });
+});
+Events.on("unit:hit", (tg, e) => {
+	const c = EL[e.el] || EL.phys,
+		hy = e.hy,
+		el = e.el;
+	if (e.dot) {
+		Fx.num(tg, e.dm, "dot", c.c);
+		return;
+	}
+	Fx.num(tg, e.crit ? fmt(e.dm) + "!" : e.dm, e.crit ? "crit" : tg.team ? "dmg" : "hit");
+	burst(tg.x, hy, e.crit ? 14 : 5, { c: [c.c, c.c2], sp: e.crit ? 260 : 150, s: e.crit ? 6 : 4, life: 0.35, sv: 0.6 });
+	if (el === "fire") burst(tg.x, hy, 3, { c: ["#ff8a3c", "#ffe27a"], k: 1, s: 7, g: -160, sp: 40, life: 0.5 });
+	else if (el === "ice") burst(tg.x, hy, 4, { c: ["#ffffff", "#9fe8ff"], k: 4, s: 6, sp: 130, life: 0.45, g: 300 });
+	else if (el === "poison") burst(tg.x, hy, 3, { c: "rgba(155,224,78,.6)", k: 5, s: 6, e: 2, g: -40, sp: 30, life: 0.6 });
+	else if (el === "dark") burst(tg.x, hy, 4, { c: ["#b06cff", "#5a2a9a"], k: 1, s: 7, g: -60, sp: 60, life: 0.55 });
+	else if (el === "holy") burst(tg.x, hy, 4, { c: ["#fff3b0", "#ffffff"], k: 1, s: 6, g: -90, sp: 70, life: 0.5 });
+	else if (el === "bolt" || el === "prism") Fx.add({ k: "bolt", x0: tg.x + rr(-30, 30), y0: hy - 50, x1: tg.x, y1: hy, c: c.c, d: 0.12 });
+	if (e.crit) {
+		ring(tg.x, hy, 70, c.c2, 0.28, 6, 1, 1);
+		Fx.add({ k: "star", x: tg.x, y: hy, c: c.c2, d: 0.2 });
+		shake(0.12);
+	}
+});
+Events.on("unit:phoenix", (u) => {
+	Fx.add({ k: "pillar", x: u.x, y: u.y, c: "#ff9a3c", w: 70, d: 0.7 });
+	burst(u.x, u.y - 30, 24, { c: ["#ff9a3c", "#ffe27a", "#ff4a2a"], sp: 220, s: 6, g: -200, life: 0.9 });
+	Fx.txt(u.x, u.y - 100, "Феникс!", "#ffb03c", 22);
+});
+Events.on("coin:gain", (n, u) => {
+	if (u) Fx.txt(u.x, u.y - 96, "+" + n, "#ffd600", 22);
+});
+Events.on("unit:died", (u, c) => {
+	burst(u.x, u.y - 24, u.boss ? 50 : 16, { c: [c.c, c.c2, "#ffffff"], sp: u.boss ? 380 : 220, s: 6, sv: 0.8, life: 0.8, up: 60, fl: u.y + 6, bn: 0.4 });
+	ring(u.x, u.y, u.boss ? 300 : 70, c.c, 0.45, u.boss ? 10 : 4);
+	if (!u.team) for (let i = 0; i < 5; i++) Parts.add({ x: u.x + rr(-10, 10), y: u.y - 30, vx: rr(-10, 10), vy: rr(-80, -40), life: 1.2, c: "#cfe8ff", s: 7, k: 1, wob: 30, wf: 4, ph: rr(0, 6) });
+});
 

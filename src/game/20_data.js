@@ -9,9 +9,74 @@ const RAR = [
 	{ n: "Мифическая", c: "#ff466e", m: 6.5, um: 2 },
 	{ n: "Секретная", c: "#5ff0e0", m: 9, um: 2.6 },
 ];
+// ---------- баланс: числа логики в одном месте ----------
+// Логика боя, лавки, наград и врагов читает отсюда. Значения ровно те, что раньше были
+// рассыпаны по коду (сверка — tests/unit/data.test.mjs, поведение — golden-эталон).
+const BAL = {
+	fight: {
+		timer: 110, // секунд на обычный бой
+		bossTimer: 200, // секунд на босса
+		timeoutEdge: 0.05, // по таймеру побеждает отряд, если его доля HP выше вражеской на столько
+		subStep: 0.025, // максимальный подшаг симуляции, с
+		maxSub: 16, // подшагов за один вызов upd
+		outWin: 1.5, // пауза до экрана победы, с
+		outWinBoss: 3.1,
+		outLose: 1.3, // пауза до экрана поражения / исхода по таймеру
+	},
+	dmg: {
+		armK: 100, // урон × armK / (armK + броня)
+		critHero: 0.06, // базовый шанс крита бойца (если у набора нет своего)
+		critFoe: 0.05, // шанс крита врага
+		critMul: 1.8,
+		shockMul: 1.15, // множитель урона по цели в шоке
+		enMax: 100, // энергия ульты
+		enHit: 8, // энергия атакующему за удар
+		enTaken: 4, // энергия цели за полученный удар
+		enTick: 2.2, // пассивная энергия бойца в секунду
+		dotTick: 0.5, // период тика горения/яда, с
+		hazTick: 0.5, // период проверки опасных покрытий, с
+		hazDmg: 0.015, // доля max HP за тик покрытия
+		hazDmgBoss: 0.004,
+		hazSt: 0.006, // сила статуса от покрытия (доля max HP)
+		poolDmg: 0.3, // доля атаки хозяина лужи за тик
+		curseHeal: 0.5, // лечение под проклятием
+		soulHeal: 0.05, // «души» (погода): доля max HP убийце
+		skullCoin: 8, // монет за врага с черепом
+	},
+	rar: {
+		w: [52, 27, 14, 5.2, 1.5, 0.3, 0.08], // веса редкостей 0..6
+		luckK: 0.28, // удача сдвигает веса: w_i × (1 + luck × luckK)^i
+	},
+	shop: {
+		relPrice: [8, 12, 18, 28, 45, 80, 140], // цена реликвии по редкости
+		relPriceW: 2, // + столько за каждый пройденный мир
+		rrBase: 3, // цена обновления товара
+		rrStep: 2, // + столько за каждое обновление
+		stock: 3, // реликвий на витрине
+	},
+	foe: {
+		hpK: 1.14, // рост HP врагов по мирам
+		atkK: 1.12, // рост атаки
+		armK: 0.2, // рост брони: × (1 + armK × мир)
+		bossHp: 0.25, // доля базового HP босса в первом мире
+		bossHpK: 1.3, // рост HP босса по мирам
+	},
+	win: {
+		healFloor: 0.25, // после победы HP не ниже этой доли max
+		healBonus: 0.2, // + столько от max
+		arenaCoin: 8, // монеты за волну арены: arenaCoin + arenaCoinWave × волна
+		arenaCoinWave: 2,
+		bossCoin: 20, // монеты за босса (× cmul)
+		bossMeat: 3, // мясо за босса: bossMeat + мир
+		fightCoin: 6, // монеты за обычный бой: (fightCoin + глубина) × cmul
+		arenaNodeCoin: 10, // монеты за узел «Арена»
+		relicChance: 0.14, // шанс реликвии после обычного боя
+		swampRelicChance: 0.4, // после логова
+	},
+};
 // бросок редкости: luck сдвигает шансы вверх, min — нижняя граница
 function rollRar(luck = 0, min = 0, rnd01 = Rand.next) {
-	const w = [52, 27, 14, 5.2, 1.5, 0.3, 0.08].map((v, i) => (i < min ? 0 : v * Math.pow(1 + luck * 0.28, i)));
+	const w = BAL.rar.w.map((v, i) => (i < min ? 0 : v * Math.pow(1 + luck * BAL.rar.luckK, i)));
 	let s = w.reduce((a, b) => a + b, 0) * rnd01();
 	for (let i = 0; i < 7; i++) if ((s -= w[i]) <= 0) return i;
 	return min;
@@ -28,7 +93,6 @@ const EL = {
 	prism: { c: "#ff8af0", c2: "#b0f4ff", st: "shock" },
 	chaos: { c: "#ff4fd8", c2: "#5ff0e0", st: "rnd" },
 };
-const STN = { burn: "Горение", poison: "Яд", chill: "Холод", shock: "Шок", curse: "Проклятие", stun: "Оглушение", shield: "Щит", rage: "Ярость" };
 
 // ---------- реликвии: общие пассивки отряда. st — меняет характеристики (как значки), p — эффект в бою ----------
 const RELIC = {
@@ -61,7 +125,7 @@ const RELIC = {
 	blade: { n: "Клинок палача", p: "crd", v: (m) => 0.15 * m, d: (m) => `Урон критов +${pct(0.15 * m)}` },
 };
 const RELIC_IDS = Object.keys(RELIC);
-const relPrice = (r, w) => [8, 12, 18, 28, 45, 80, 140][r] + (w || 0) * 2;
+const relPrice = (r, w) => BAL.shop.relPrice[r] + (w || 0) * BAL.shop.relPriceW;
 // суммарные боевые бонусы отряда от реликвий
 function relBonus() {
 	const b = { ls: 0, chain: 0, psn: 0, frz: 0, abil: 0, ward: 0, crit: 0, coin: 0, avg: 0, chg: 0, phx: 0, cdr: 0, crd: 0 };
@@ -470,8 +534,8 @@ const WX = {
 	eclipse: { n: "Затмение", d: "Ульты у всех заряжаются в 1.5 раза быстрее", chg: 1.5 },
 };
 // характеристики врагов: мир 1 — оригинальные числа, дальше растут по экспоненте
-const WHP = 1.14,
-	WAT = 1.12;
+const WHP = BAL.foe.hpK,
+	WAT = BAL.foe.atkK;
 function foeDef(w, slot) {
 	const W0 = WORLDS[w],
 		b = slot === "boss" ? ENEM.boss : slot === "b" ? ENEM.red : slot === "m" ? ENEM.swamp : ENEM.slime;
@@ -479,9 +543,9 @@ function foeDef(w, slot) {
 		...b,
 		// у босса своя кривая: в первом мире с ним справляется отряд из трёх бойцов,
 		// дальше он растёт быстрее обычных врагов
-		hp: Math.round(slot === "boss" ? b.hp * 0.25 * Math.pow(1.3, w) : b.hp * Math.pow(WHP, w)),
+		hp: Math.round(slot === "boss" ? b.hp * BAL.foe.bossHp * Math.pow(BAL.foe.bossHpK, w) : b.hp * Math.pow(WHP, w)),
 		atk: Math.round(b.atk * Math.pow(WAT, w)),
-		arm: Math.round(b.arm * (1 + 0.2 * w)),
+		arm: Math.round(b.arm * (1 + BAL.foe.armK * w)),
 		slot,
 		el: W0.el,
 		set: slot === "boss" ? "king" : slot === "b" ? "red" : "slime",

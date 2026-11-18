@@ -38,16 +38,30 @@ function unlock() {
 	} catch (_) {}
 	fit();
 }
-function lp(e) {
-	const w = innerWidth,
-		h = innerHeight,
-		po = h > w,
-		bw = po ? h : w,
-		bh = po ? w : h,
-		lx = po ? e.clientY : e.clientX,
-		ly = po ? w - e.clientX : e.clientY,
-		s = Math.min(bw / W, bh / H);
-	return [(lx - (bw - W * s) / 2) / s, (ly - (bh - H * s) / 2) / s];
+// атмосфера вне боя: погода мира на карте/в событии/в лавке (в следующем мире — на экране «мир пройден»), снег в меню
+function ambientTick(dt) {
+	if (Machine.is("map", "msg", "world", "shop")) {
+		MAPA.w = WORLDS[Machine.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
+		if (!(Machine.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, Machine.is("shop") ? 0.5 : 0.7);
+	} else if (Machine.is("menu", "pick", "settings")) {
+		MAPA.w = WORLDS[0];
+		wxEmit(MAPA, dt, 2.2);
+	}
+}
+// симуляция кадра: фиксированный шаг 1/60 с (накопитель Loop, не более Loop.MAX шагов), переходы по карте, визуальные таймеры, атмосфера.
+// Сбой здесь не должен дотянуться до отрисовки и цикла
+function simTick(raw, dt) {
+	try {
+		const steps = Loop.feed(raw / 1000),
+			t0 = performance.now();
+		for (let i = 0; i < steps; i++) Machine.update(Loop.STEP);
+		dbgMark("upd", performance.now() - t0);
+		flowTick();
+		visTick(dt);
+		ambientTick(dt);
+	} catch (e) {
+		logErr("update", e);
+	}
 }
 function loop(ts) {
 	FRAME_N++;
@@ -69,73 +83,46 @@ function loop(ts) {
 		if (paused !== pz) {
 			pz = paused;
 			Music.pause(paused);
+			// после паузы накопленное время не должно превратиться в рывок симуляции
+			Loop.reset();
 		}
-		Music.level(State.is("fight") ? 1 : 0);
+		Music.level(Machine.is("fight") ? 1 : 0);
 		Tune.upd();
-		if (!paused) {
-			// сбой в симуляции не должен дотянуться до отрисовки и цикла
-			try {
-				upd(dt);
-				flowTick();
-				visTick(dt);
-				// атмосфера вне боя
-				if (State.is("map") || State.is("msg") || State.is("world") || State.is("shop")) {
-					MAPA.w = WORLDS[State.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
-					if (!(State.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, State.is("shop") ? 0.5 : 0.7);
-				} else if (State.is("menu") || State.is("pick") || State.is("settings")) {
-					MAPA.w = WORLDS[0];
-					wxEmit(MAPA, dt, 2.2);
-				}
-			} catch (e) {
-				logErr("update", e);
-			}
+		if (!paused) simTick(raw, dt);
+	}
+	// фон карты собирается порциями между симуляцией и отрисовкой (см. bakeMap)
+	if (MAPJ && READY && G) {
+		try {
+			bakeStep(BAKE_MS);
+		} catch (e) {
+			MAPJ = null;
+			logErr("update", e);
 		}
 	}
 	try {
+		const t1 = performance.now();
 		draw();
+		dbgMark("draw", performance.now() - t1);
+		dbgDraw();
 		errFrameOk();
 	} catch (e) {
 		logErr("draw", e);
 	}
 	requestAnimationFrame(loop);
 }
-cv.addEventListener("pointerdown", (e) => {
-	if (!READY) return;
-	const [px, py] = lp(e);
-	for (let i = hits.length - 1; i >= 0; i--) {
-		const h = hits[i];
-		if (px >= h.x && px <= h.x + h.w && py >= h.y && py <= h.y + h.h) {
-			Music.sfx("click");
-			h.f(px, py);
-			break;
-		}
+// касания, клавиатура и отмена указателей — в Input (13_input.js)
+Input.install(cv);
+addEventListener("resize", fit);
+addEventListener("orientationchange", () => Timers.after(150, fit, "boot"));
+document.addEventListener("visibilitychange", () => {
+	Music.pause(document.hidden || paused);
+	// свёрнутая вкладка: время не копится, бой встаёт на паузу — без скачка после возврата
+	if (document.hidden) {
+		Loop.reset();
+		Input.reset();
+		if (Machine.is("fight", "prep")) paused = true;
 	}
 });
-addEventListener("keydown", (e) => {
-	if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
-	if (!READY || e.repeat) return;
-	const k = e.key;
-	if (k === "Escape" && State.is("codex") && CODEX_TEST) { CODEX_TEST = null; pop = null; e.preventDefault(); return; }
-	if (k === "Escape" || k === "p" || k === "P" || k === "з" || k === "З") {
-		if (!State.is("menu") && !State.is("settings") && !State.is("win") && !State.is("lose")) paused = !paused;
-	} else if (paused) return;
-	else if (k === " " || k === "Enter") {
-		if (State.is("prep") && G.slots.some((u) => u && u.placed)) startFight();
-		else if (State.is("prep")) autoPlace();
-		else if (State.is("msg") && EV) {
-			const e2 = EV;
-			if (!e2.open) {
-				e2.open = 1;
-				e2.to = t;
-				sfx("chest");
-			} else if (!e2.pick) evClose();
-		}
-		e.preventDefault();
-	} else if (State.is("fight") && (k === "1" || k === "2" || k === "3")) SPDX = +k;
-});
-addEventListener("resize", fit);
-addEventListener("orientationchange", () => setTimeout(fit, 150));
-document.addEventListener("visibilitychange", () => Music.pause(document.hidden || paused));
 ["pointerdown", "touchstart", "keydown"].forEach((ev2) => addEventListener(ev2, unlock, { passive: true }));
 errInstallGlobals();
 if (CFG.q === undefined) CFG.q = "auto";
@@ -146,12 +133,12 @@ Music.cfg(CFG.music, CFG.vol);
 Music.start();
 sfxBank();
 Music.sfxv = CFG.sfx === undefined ? 1 : CFG.sfx;
-setInterval(() => Music.wake(), 1000);
+Timers.every(1000, () => Music.wake(), "audio");
 // Сид случайности: в браузере партии не должны повторяться, поэтому берём время.
 // Тесты выставляют сид сами: Rand.seed(N) сразу после загрузки (см. tests/harness).
 Rand.seed((Date.now() ^ ((performance.now() * 1000) | 0)) >>> 0);
 requestAnimationFrame(loop);
 loadAll().then(() => {
 	newGame();
-	State.go("menu");
+	Machine.go("menu");
 });

@@ -83,3 +83,41 @@ test("delSave очищает оба слота", async () => {
 	assert.equal(g.readStorage(SAVEK_B), null, "резерв удалён");
 	assert.equal(g.dev.loadGame(), false, "загружать больше нечего");
 });
+
+test("экспорт/импорт текстом: проверка, резерв, подъём v2, понятные отказы", async () => {
+	const g = await fresh();
+	g.dev.G.coin = 91;
+	assert.equal(g.dev.saveGame(), true);
+	const text = g.dev.run("exportSaveText()");
+	assert.equal(text, g.readStorage(SAVEK), "экспорт отдаёт конверт как есть");
+	// меняем состояние и возвращаем сохранение из экспортированного текста
+	g.dev.G.coin = 5;
+	assert.equal(g.dev.saveGame(), true);
+	const r = JSON.parse(g.dev.run(`JSON.stringify(importSaveText(${JSON.stringify(text)}))`));
+	assert.deepEqual(r, { ok: true, ver: 3 });
+	assert.equal(JSON.parse(JSON.parse(g.readStorage(SAVEK)).data).g.coin, 91, "основной слот = импортированное");
+	assert.equal(JSON.parse(JSON.parse(g.readStorage(SAVEK_B)).data).g.coin, 5, "прошлое валидное ушло в резерв");
+	assert.equal(g.dev.loadGame(), true);
+	assert.equal(g.dev.G.coin, 91);
+	// старый формат v2 поднимается до v3 при импорте
+	const inner = JSON.parse(JSON.parse(text).data);
+	const v2 = JSON.stringify({ v: 2, N: inner.N, E: inner.E, sd: inner.sd, bi: 0, g: Object.assign({}, inner.g, { coin: 42 }) });
+	const r2 = JSON.parse(g.dev.run(`JSON.stringify(importSaveText(${JSON.stringify(v2)}))`));
+	assert.deepEqual(r2, { ok: true, ver: 2 });
+	assert.equal(JSON.parse(g.readStorage(SAVEK)).v, 3);
+	// отказы с человеческим объяснением, слот не тронут
+	const before = g.readStorage(SAVEK);
+	const bad = (t) => JSON.parse(g.dev.run(`JSON.stringify(importSaveText(${JSON.stringify(t)}))`));
+	assert.match(bad("").why, /пустой/);
+	assert.match(bad("не json").why, /не JSON/);
+	assert.match(bad("[1,2]").why, /не сохранение/);
+	const env = JSON.parse(text);
+	env.sum = "deadbeef";
+	assert.match(bad(JSON.stringify(env)).why, /контрольная сумма/);
+	assert.match(bad(JSON.stringify({ v: 3, data: JSON.stringify({ N: [], E: [], g: {} }) })).why, /не хватает/);
+	assert.equal(g.readStorage(SAVEK), before);
+	// окно экспорта/импорта строится без ошибок даже в заглушке DOM
+	assert.equal(g.dev.run('!!saveDialog("export") && !!saveDialog("import")'), true);
+	assert.equal(g.fatal, null);
+	assert.equal(g.dev.errs().length, 0);
+});

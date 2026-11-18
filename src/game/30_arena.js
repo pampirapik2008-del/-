@@ -30,15 +30,48 @@ const PATCH = {
 	bog: { c: ["#1e3a3a", "#1a3232", "#162a2a"], slow: 0.72, shine: 1, n: "Трясина" },
 	toxic: { c: ["#b8ff5e", "#7ad03c", "#3c8a28"], haz: "poison", glow: "#9be04e", n: "Ядовитая лужа" },
 };
-const TINTC = {};
+// перекраски атласов под мир: текущему миру нужны ≤ 5 записей (реквизит, две пары монстров, карта,
+// торговец), лимит 12 держит и соседний мир; вытесненный холст теряет и свои силуэты (D21)
+const TINT_MAX = 12,
+	TINTC = lru(TINT_MAX, (c) => {
+		if (c && c.getContext) SILC.delete(c);
+	});
+// пол арены печётся в холст 609×270; живы только арены текущего боя (F.A) и фона наград (BGA),
+// поэтому холсты берутся из пула и переиспользуются, а не создаются на каждый бой
+const FLOORP = [];
+function floorCanvas() {
+	const a = F && F.A ? F.A.floor : null,
+		b = BGA ? BGA.floor : null;
+	for (const c of FLOORP) if (c !== a && c !== b) return c;
+	const c = mkC(609, 270);
+	FLOORP.push(c);
+	return c;
+}
+// сводка кэшей холстов: записи и мегабайты растров — для панели отладки, soak-теста и тестов утечек
+function cacheStats() {
+	let n = 0,
+		px = 0;
+	const add = (c) => {
+		if (c && c.getContext) {
+			n++;
+			px += c.width * c.height;
+		}
+	};
+	for (const k in GLOWC) add(GLOWC[k]);
+	for (let i = 0; i < SILQ.length; i += 2) add(SILQ[i][SILQ[i + 1]]);
+	for (const c of TINTC.values()) add(c);
+	for (const c of FLOORP) add(c);
+	return { glow: GLOWN, sil: SILQ.length / 2, tint: TINTC.size, floors: FLOORP.length, n, mb: (px * 4) / 1048576 };
+}
 function propImg(w) {
 	if (!w.pt) return IMG.props;
-	return TINTC["p" + w.i] || (TINTC["p" + w.i] = recolor(IMG.props, w.pt));
+	return TINTC.get("p" + w.i) || TINTC.set("p" + w.i, recolor(IMG.props, w.pt));
 }
 // атлас монстров, перекрашенный под мир: "a" — основная пара, "m" — тёмная родня
 function mobImg(w, key) {
-	const id = "m" + w.i + key;
-	if (TINTC[id]) return TINTC[id];
+	const id = "m" + w.i + key,
+		hit = TINTC.get(id);
+	if (hit) return hit;
 	let rules = [];
 	if (key === "m") {
 		const q = w.tM || { to: (w.tA ? w.tA.to : 120) + 14, sat: (w.tA ? w.tA.sat : 1) * 0.9, val: (w.tA ? w.tA.val : 1) * 0.62 };
@@ -48,22 +81,24 @@ function mobImg(w, key) {
 		if (w.tA) rules.push({ h: GREEN_H, ...w.tA });
 		if (w.tB) rules.push({ h: RED_H, ...w.tB });
 	}
-	return (TINTC[id] = rules.length ? recolor(IMG.mobs, rules) : IMG.mobs);
+	return TINTC.set(id, rules.length ? recolor(IMG.mobs, rules) : IMG.mobs);
+}
+// хеш узла решётки шума: раньше был замыканием внутри vnoise и создавался на каждый вызов
+// (329 тысяч раз за одну карту); вынесен наружу — арифметика та же, биты результата те же
+function vhash(i, j, s) {
+	let n = (Math.imul(i, 374761393) + Math.imul(j, 668265263) + Math.imul(s | 0, 1442695041)) | 0;
+	n = Math.imul(n ^ (n >>> 13), 1274126177);
+	return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
 }
 function vnoise(x, y, s) {
-	const h = (i, j) => {
-		let n = (Math.imul(i, 374761393) + Math.imul(j, 668265263) + Math.imul(s | 0, 1442695041)) | 0;
-		n = Math.imul(n ^ (n >>> 13), 1274126177);
-		return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
-	};
 	const xi = Math.floor(x),
 		yi = Math.floor(y),
 		fx = x - xi,
 		fy = y - yi,
-		a = h(xi, yi),
-		b = h(xi + 1, yi),
-		c = h(xi, yi + 1),
-		d = h(xi + 1, yi + 1),
+		a = vhash(xi, yi, s),
+		b = vhash(xi + 1, yi, s),
+		c = vhash(xi, yi + 1, s),
+		d = vhash(xi + 1, yi + 1, s),
 		u = fx * fx * (3 - 2 * fx),
 		v = fy * fy * (3 - 2 * fy);
 	return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
@@ -85,19 +120,10 @@ function fogSpr() {
 	return (FOGC = c);
 }
 
-function mkArena(seed, wi, kind) {
-	const R = rng32(seed),
-		w = WORLDS[wi],
-		y0 = w.fy0,
+// кандидаты в препятствия по схеме расстановки (lay): [x, y, вид], вид B/S — большое/малое, L — свет, D — разрушаемое
+function arenaCand(A, R, kind, cx, cy, hh) {
+	const { y0 } = A,
 		y1 = FLD.y1,
-		A = { seed, wi, w, y0, obs: [], dec: [], patches: [], pools: [], gv: 0, nf: new Map(), em: {}, ev: 3, kind };
-	A.tod = R() < 0.45 ? 0 : R() < 0.55 ? 1 : 2;
-	A.wx = kind === "boss" ? w.wx[1] : R() < 0.4 ? w.wx[0] : w.wx[1 + ((R() * (w.wx.length - 1)) | 0)];
-	if (A.wx === "eclipse" || A.wx === "storm") A.tod = 2;
-	A.flip = R() < 0.5;
-	const cx = 609,
-		cy = (y0 + y1) / 2,
-		hh = (y1 - y0) / 2,
 		cand = [];
 	const lay = kind === "boss" ? "ring" : ["open", "lanes", "choke", "scatter", "ring", "diag"][(R() * 6) | 0];
 	A.lay = lay;
@@ -123,6 +149,12 @@ function mkArena(seed, wi, kind) {
 	cand.push([330 + R() * 560, y0 + 16 + R() * (y1 - y0 - 28), "D"]);
 	if (R() < 0.6) cand.push([330 + R() * 560, y0 + 16 + R() * (y1 - y0 - 28), "D"]);
 	if (A.tod === 2 && R() < 0.7) cand.push([R() < 0.5 ? 180 + R() * 200 : 840 + R() * 200, cy + (R() - 0.5) * hh * 1.6, "L"]);
+	return cand;
+}
+// препятствия из кандидатов (без наложений) + сетка; проход между сторонами обязан существовать
+function arenaObstacles(A, R, cand, cy) {
+	const { w, y0 } = A,
+		y1 = FLD.y1;
 	for (const [x0, yy, kd] of cand) {
 		const list = kd === "B" ? w.big : kd === "S" ? w.small : kd === "L" ? w.light : w.destr,
 			spr = list[(R() * list.length) | 0],
@@ -133,14 +165,17 @@ function mkArena(seed, wi, kind) {
 		A.obs.push(o);
 	}
 	buildGrid(A);
-	// проход между сторонами обязан существовать
 	let guard = 0;
 	while (!navReach(A, 150, cy, 1070, cy) && A.obs.length && guard++ < 12) {
 		A.obs.splice((R() * A.obs.length) | 0, 1);
 		buildGrid(A);
 	}
-	// покрытия
-	const np = 2 + ((R() * 3) | 0);
+}
+// покрытия (2–4): замедляющие/опасные не засоряют зону расстановки, без наложений
+function arenaPatches(A, R) {
+	const { w, y0 } = A,
+		y1 = FLD.y1,
+		np = 2 + ((R() * 3) | 0);
 	for (let i = 0; i < np; i++) {
 		const k = w.patch[R() < 0.6 ? 0 : 1],
 			P = PATCH[k],
@@ -149,8 +184,12 @@ function mkArena(seed, wi, kind) {
 		if (A.patches.some((q) => Math.abs(q.x - p.x) < q.rx + p.rx && Math.abs(q.y - p.y) < q.ry + p.ry)) continue;
 		A.patches.push(p);
 	}
-	// мелкий декор
-	const nd = 5 + ((R() * 5) | 0);
+}
+// мелкий декор (5–9): крупный (папоротник, грибы) — по краям, остальной — где нет препятствий
+function arenaDecor(A, R) {
+	const { w, y0 } = A,
+		y1 = FLD.y1,
+		nd = 5 + ((R() * 5) | 0);
 	for (let i = 0; i < nd; i++) {
 		const spr = w.decor[(R() * w.decor.length) | 0];
 		if (!ATL.props[spr]) continue;
@@ -160,6 +199,25 @@ function mkArena(seed, wi, kind) {
 		if (A.obs.some((q) => Math.abs(q.x - x) < q.rx + 30 && Math.abs(q.y - y) < q.ry + 16)) continue;
 		A.dec.push({ spr, x, y, fl: R() < 0.5 });
 	}
+}
+// арена боя по сиду: время суток, погода, схема, препятствия, покрытия, декор, искры фона, запечённый пол.
+// Порядок вызовов R() фиксирован (golden): tod → wx → flip → схема/кандидаты → препятствия → покрытия → декор → искры
+function mkArena(seed, wi, kind) {
+	const R = rng32(seed),
+		w = WORLDS[wi],
+		y0 = w.fy0,
+		y1 = FLD.y1,
+		A = { seed, wi, w, y0, obs: [], dec: [], patches: [], pools: [], gv: 0, nf: new Map(), em: {}, ev: 3, kind };
+	A.tod = R() < 0.45 ? 0 : R() < 0.55 ? 1 : 2;
+	A.wx = kind === "boss" ? w.wx[1] : R() < 0.4 ? w.wx[0] : w.wx[1 + ((R() * (w.wx.length - 1)) | 0)];
+	if (A.wx === "eclipse" || A.wx === "storm") A.tod = 2;
+	A.flip = R() < 0.5;
+	const cx = 609,
+		cy = (y0 + y1) / 2,
+		hh = (y1 - y0) / 2;
+	arenaObstacles(A, R, arenaCand(A, R, kind, cx, cy, hh), cy);
+	arenaPatches(A, R);
+	arenaDecor(A, R);
 	// искры на заднем плане (кристаллы, звёзды) — фиксированный набор точек
 	A.tw = Array.from({ length: 14 }, () => [R() * W, 20 + R() * (y0 - 60), R() * 6]);
 	bakeFloor(A);
@@ -305,11 +363,12 @@ function surfAt(A, x, y) {
 }
 // запечь пол: фон арены + покрытия + тени неподвижных объектов (в арт-пикселях)
 function bakeFloor(A) {
-	const c = A.floor || (A.floor = mkC(609, 270)),
+	const c = A.floor || (A.floor = floorCanvas()),
 		x = c.getContext("2d"),
 		st = IMG[A.w.stage] || IMG.stage_taiga;
 	x.imageSmoothingEnabled = false;
 	x.setTransform(1, 0, 0, 1, 0, 0);
+	x.clearRect(0, 0, 609, 270); // холст из пула мог хранить пол прошлой арены
 	if (A.flip) {
 		x.translate(609, 0);
 		x.scale(-1, 1);
@@ -400,41 +459,68 @@ function wxEmit(A, dt, scale = 1) {
 		A.em[id] = acc;
 	}
 }
-// «живые» детали фона — у каждого мира свои
-function stageFx(A) {
+// туман двумя слоями, ползущими в разные стороны (тайга, болото, мёртвые земли и погода «туман»)
+function stageFog(A, fog) {
 	const id = A.w.id,
-		y0 = A.y0,
-		fog = fogSpr();
-	if (id === "taiga" || id === "swamp" || id === "dead" || A.wx === "fog") {
-		const al = (A.wx === "fog" ? 0.55 : 0.3) * (id === "taiga" ? 0.8 : 1);
-		ctx.globalAlpha = al;
-		for (let i = 0; i < 2; i++) {
-			const sp = i ? 14 : -9,
-				ox = (((t * sp) % 1024) + 1024) % 1024;
-			ctx.drawImage(fog, ox - 1024, y0 - 130 + i * 26, 1024, 150);
-			ctx.drawImage(fog, ox, y0 - 130 + i * 26, 1024, 150);
-			ctx.drawImage(fog, ox + 1024, y0 - 130 + i * 26, 1024, 150);
-		}
-		ctx.globalAlpha = 1;
-		if (id !== "taiga") glow(609, y0 - 40, 520, id === "swamp" ? "#3c8a50" : "#58a870", 0.1 + 0.04 * Math.sin(t * 0.7));
+		y0 = A.y0;
+	if (!(id === "taiga" || id === "swamp" || id === "dead" || A.wx === "fog")) return;
+	const al = (A.wx === "fog" ? 0.55 : 0.3) * (id === "taiga" ? 0.8 : 1);
+	ctx.globalAlpha = al;
+	for (let i = 0; i < 2; i++) {
+		const sp = i ? 14 : -9,
+			ox = (((t * sp) % 1024) + 1024) % 1024;
+		ctx.drawImage(fog, ox - 1024, y0 - 130 + i * 26, 1024, 150);
+		ctx.drawImage(fog, ox, y0 - 130 + i * 26, 1024, 150);
+		ctx.drawImage(fog, ox + 1024, y0 - 130 + i * 26, 1024, 150);
 	}
-	if (id === "taiga" && A.tod === 0) {
-		// косые лучи заката
-		ctx.save();
-		ctx.globalCompositeOperation = "lighter";
-		for (let i = 0; i < 4; i++) {
-			const x = 180 + i * 250 + Math.sin(t * 0.3 + i) * 20;
-			ctx.globalAlpha = 0.05 + 0.025 * Math.sin(t * 0.8 + i * 2);
-			ctx.fillStyle = "#ffd9a0";
-			ctx.beginPath();
-			ctx.moveTo(x, 0);
-			ctx.lineTo(x + 70, 0);
-			ctx.lineTo(x - 130, y0 + 60);
-			ctx.lineTo(x - 260, y0 + 60);
-			ctx.fill();
-		}
-		ctx.restore();
-	} else if (id === "desert") glow(A.flip ? 600 : 618, 96, 230, "#fff0b0", 0.16 + 0.05 * Math.sin(t * 1.3));
+	ctx.globalAlpha = 1;
+	if (id !== "taiga") glow(609, y0 - 40, 520, id === "swamp" ? "#3c8a50" : "#58a870", 0.1 + 0.04 * Math.sin(t * 0.7));
+}
+// косые лучи заката (тайга на закате)
+function stageRays(y0) {
+	ctx.save();
+	ctx.globalCompositeOperation = "lighter";
+	for (let i = 0; i < 4; i++) {
+		const x = 180 + i * 250 + Math.sin(t * 0.3 + i) * 20;
+		ctx.globalAlpha = 0.05 + 0.025 * Math.sin(t * 0.8 + i * 2);
+		ctx.fillStyle = "#ffd9a0";
+		ctx.beginPath();
+		ctx.moveTo(x, 0);
+		ctx.lineTo(x + 70, 0);
+		ctx.lineTo(x - 130, y0 + 60);
+		ctx.lineTo(x - 260, y0 + 60);
+		ctx.fill();
+	}
+	ctx.restore();
+}
+// финальный мир: столб света сверху и мерцающее золотое кольцо на полу
+function stageFinal(y0) {
+	const a = 0.12 + 0.06 * Math.sin(t * 1.1);
+	ctx.save();
+	ctx.globalCompositeOperation = "lighter";
+	const g = ctx.createLinearGradient(0, 0, 0, y0 + 40);
+	g.addColorStop(0, "rgba(190,230,255," + a * 2 + ")");
+	g.addColorStop(1, "rgba(190,230,255,0)");
+	ctx.fillStyle = g;
+	ctx.beginPath();
+	ctx.moveTo(569, 0);
+	ctx.lineTo(649, 0);
+	ctx.lineTo(719, y0 + 40);
+	ctx.lineTo(499, y0 + 40);
+	ctx.fill();
+	ctx.restore();
+	ctx.strokeStyle = "rgba(255,214,120," + (0.25 + 0.2 * Math.sin(t * 1.6)) + ")";
+	ctx.lineWidth = 3;
+	ctx.beginPath();
+	ctx.ellipse(609, (y0 + FLD.y1) / 2 + 10, 250, 78, 0, 0, TAU);
+	ctx.stroke();
+}
+// особенность каждого мира: лучи, солнце, сияние, огонь, искры кристаллов, хаос-перелив, финал, небо
+function stageWorldFx(A) {
+	const id = A.w.id,
+		y0 = A.y0;
+	if (id === "taiga" && A.tod === 0) stageRays(y0);
+	else if (id === "desert") glow(A.flip ? 600 : 618, 96, 230, "#fff0b0", 0.16 + 0.05 * Math.sin(t * 1.3));
 	else if (id === "ice") for (let i = 0; i < 4; i++) glow(200 + i * 270 + Math.sin(t * 0.4 + i * 1.7) * 90, 60 + Math.sin(t * 0.6 + i) * 14, 170, i & 1 ? "#a070ff" : "#50ffb0", 0.1 + 0.06 * Math.sin(t * 0.9 + i * 2.1));
 	else if (id === "fire") {
 		glow(609, y0 - 30, 620, "#ff5a1c", 0.1 + 0.05 * Math.sin(t * 2.1));
@@ -452,27 +538,14 @@ function stageFx(A) {
 		ctx.fillRect(0, 0, W, H);
 		ctx.restore();
 		for (let i = 0; i < 3; i++) glow(240 + i * 370 + Math.sin(t * 0.5 + i) * 60, 90 + Math.cos(t * 0.7 + i) * 30, 120, i & 1 ? "#ff4fd8" : "#5ff0e0", 0.16);
-	} else if (id === "final") {
-		const a = 0.12 + 0.06 * Math.sin(t * 1.1);
-		ctx.save();
-		ctx.globalCompositeOperation = "lighter";
-		const g = ctx.createLinearGradient(0, 0, 0, y0 + 40);
-		g.addColorStop(0, "rgba(190,230,255," + a * 2 + ")");
-		g.addColorStop(1, "rgba(190,230,255,0)");
-		ctx.fillStyle = g;
-		ctx.beginPath();
-		ctx.moveTo(569, 0);
-		ctx.lineTo(649, 0);
-		ctx.lineTo(719, y0 + 40);
-		ctx.lineTo(499, y0 + 40);
-		ctx.fill();
-		ctx.restore();
-		ctx.strokeStyle = "rgba(255,214,120," + (0.25 + 0.2 * Math.sin(t * 1.6)) + ")";
-		ctx.lineWidth = 3;
-		ctx.beginPath();
-		ctx.ellipse(609, (y0 + FLD.y1) / 2 + 10, 250, 78, 0, 0, TAU);
-		ctx.stroke();
-	} else if (id === "sky") glow(609, 60, 420, "#ffffff", 0.08);
+	} else if (id === "final") stageFinal(y0);
+	else if (id === "sky") glow(609, 60, 420, "#ffffff", 0.08);
+}
+// «живые» детали фона — у каждого мира свои: туман → особенность мира → свечение покрытий
+function stageFx(A) {
+	const fog = fogSpr();
+	stageFog(A, fog);
+	stageWorldFx(A);
 	// светящиеся покрытия и лужи
 	for (const p of A.patches) if (p.P.glow) glow(p.x, p.y, p.rx * 1.3, p.P.glow, 0.2 + 0.1 * Math.sin(t * 3 + p.s));
 }

@@ -6,7 +6,6 @@ let BGA = null, // последняя арена — фон для экрана 
 	SRET = "menu",
 	MERCH = { t: -9, s: "" };
 const MAPA = { em: {}, wx: "clear", w: null };
-const SCENE = { menu: "menu", settings: "menu", pick: "menu", codex: "menu", map: "map", msg: "map", world: "map", prep: "fight", fight: "fight", shop: "shop", win: "end", lose: "end" };
 function stageBG(wi, dark = 0) {
 	const im = IMG[WORLDS[wi].stage] || IMG.stage_taiga;
 	ctx.drawImage(im, 0, 0, W, H);
@@ -54,12 +53,18 @@ function relicTip() {
 function nodeKind(n, i) {
 	return i === 0 ? "start" : n.k || "rand";
 }
-function dMap() {
-	const w = WORLDS[G.w],
-		av = MV ? [] : avail(),
-		lead = G.slots.find(Boolean);
-	ctx.drawImage(MAPC, 0, 0, W, H);
-	// блики воды
+// фон карты ещё собирается (bakeStep порциями): полоса прогресса вместо полукарты
+function dMapLoading() {
+	// первые 0,25 с — просто тёмный фон (на быстрых устройствах сборка укладывается в затемнение
+	// перехода и полоса не успевает мелькнуть); дальше — название мира и прогресс
+	if (t - MAPJ.t0 < 0.25) return;
+	const w = WORLDS[G.w];
+	txo("Мир " + (G.w + 1) + " · " + w.n, 609, 230, 30, "#ffd23c", "center");
+	pbar(409, 280, 400, 12, bakeProgress(), "#ffd23c");
+	tx("Рисую карту…", 609, 316, 14, "#b9b3c8", "center");
+}
+// блики воды на озёрах
+function dMapWater() {
 	for (const q of MAPL)
 		for (let j = 0; j < 6; j++) {
 			const a = Math.sin(t * 2.2 + j * 1.9 + q[0]);
@@ -68,82 +73,84 @@ function dMap() {
 				ctx.fillRect(Math.round(q[0] + q[2] * (0.24 + 0.52 * ((j * 0.37 + 0.13) % 1))) * 2, Math.round(q[1] + q[3] * (0.3 + 0.4 * ((j * 0.61 + 0.2) % 1))) * 2, 6, 2);
 			}
 		}
-	// доступные пути — бегущие огоньки
-	if (!MV)
-		for (const b of av) {
-			const A = N[G.cur],
-				B = N[b],
-				l = Math.hypot(B.x - A.x, B.y - A.y);
-			for (let s = (t * 46) % 22; s < l - 20; s += 22) {
-				if (s < 22) continue;
-				const px = A.x + ((B.x - A.x) * s) / l,
-					py = A.y + ((B.y - A.y) * s) / l + 6;
-				ctx.fillStyle = "#3a2408";
-				ctx.fillRect(Math.round(px / 2) * 2 - 4, Math.round(py / 2) * 2 - 4, 8, 8);
-				ctx.fillStyle = "#ffe27a";
-				ctx.fillRect(Math.round(px / 2) * 2 - 2, Math.round(py / 2) * 2 - 2, 4, 4);
-			}
+}
+// доступные пути — бегущие огоньки от текущего узла к каждому из av
+function dMapPaths(av) {
+	if (MV) return;
+	for (const b of av) {
+		const A = N[G.cur],
+			B = N[b],
+			l = Math.hypot(B.x - A.x, B.y - A.y);
+		for (let s = (t * 46) % 22; s < l - 20; s += 22) {
+			if (s < 22) continue;
+			const px = A.x + ((B.x - A.x) * s) / l,
+				py = A.y + ((B.y - A.y) * s) / l + 6;
+			ctx.fillStyle = "#3a2408";
+			ctx.fillRect(Math.round(px / 2) * 2 - 4, Math.round(py / 2) * 2 - 4, 8, 8);
+			ctx.fillStyle = "#ffe27a";
+			ctx.fillRect(Math.round(px / 2) * 2 - 2, Math.round(py / 2) * 2 - 2, 4, 4);
 		}
-	// узлы
-	N.forEach((n, i) => {
-		const k = nodeKind(n, i),
-			cur = i === G.cur,
-			vis = G.vis.has(i),
-			can = av.includes(i),
-			y = Math.round(n.y + (can ? -4 * Math.abs(Math.sin(t * 3 + i)) : 0)),
-			x = Math.round(n.x);
-		if (can) glow(x, n.y, 50, "#ffe27a", 0.4 + 0.2 * Math.sin(t * 4 + i));
-		if (k === "boss") glow(x, n.y, 64, "#ff3a4a", 0.3 + 0.15 * Math.sin(t * 2.4));
-		ctx.globalAlpha = vis && !cur ? 0.6 : 1;
-		if (ATL.map["i_" + k]) uc("map", "i_" + k, x, y, AP);
-		else {
-			uc("ui", can ? "node_hi" : vis ? "node_off" : "node", x, y, AP);
-			if (k === "chest") uc("ui", "chest0", x, y - 2, 1);
-			else if (k === "secret") uc("ui", "g_secret", x, y, AP);
-			else if (k === "rand") uc("ui", "g_rand", x, y, AP);
-			else if (k === "start") uc("ui", "g_star", x, y, AP);
-		}
-		ctx.globalAlpha = 1;
-		if (vis && !cur && i) uc("ui", "g_check", x + 16, y + 16, AP);
-		if (k === "secret" && !vis && Rand.next() < 0.05) Parts.add({ x: x + rr(-20, 20), y: y + rr(-20, 10), vy: -20, life: 0.7, c: "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
-		const lb = k === "boss" ? w.boss.n : NODE_LB[k];
-		if (lb) txo(lb, x, y + 38, k === "boss" ? 14 : 12, k === "boss" ? "#ffb0a0" : vis ? "#b9b3c8" : "#fff", "center");
-		area(x - 32, n.y - 32, 64, 72, () => {
-			if (MV) return;
-			if (can) walkTo(i);
-			else {
-				TIPN = { i, t0: t };
-				TIPR = null;
-			}
-		});
-	});
-	// отряд на карте
-	if (lead) {
-		let x = N[G.cur].x,
-			y = N[G.cur].y,
-			an = "idle",
-			face = 1;
-		if (MV) {
-			const k = ez.io(clamp((t - MV.t0) / MV.d, 0, 1)),
-				A = N[MV.a],
-				B = N[MV.b];
-			x = lerp(A.x, B.x, k);
-			y = lerp(A.y, B.y, k) - Math.abs(Math.sin(k * Math.PI * 5)) * 4;
-			an = "walk";
-			face = B.x >= A.x ? 1 : -1;
-			if (Rand.next() < 0.4) Parts.add({ x, y: y + 6, vx: -face * 20, vy: -14, life: 0.4, c: "rgba(230,220,200,.6)", s: 5, k: 5, e: 2, l: 2 });
-		}
-		ctx.fillStyle = "rgba(10,8,20,.4)";
-		ctx.beginPath();
-		ctx.ellipse(x, y + 8, 16, 6, 0, 0, TAU);
-		ctx.fill();
-		uIdle(lead, Math.round(x), Math.round(y + 8), AP, face, G.w, an);
-		// флажок отряда
-		if (!MV) arrowDown(x, y - 78 - 4 * Math.sin(t * 4));
 	}
-	Parts.draw(2);
-	vignette(0.8);
-	// интерфейс
+}
+// узел карты: подсветка доступного, значок по виду узла, галочка пройденного, подпись, зона нажатия
+function dMapNode(n, i, av, w) {
+	const k = nodeKind(n, i),
+		cur = i === G.cur,
+		vis = G.vis.has(i),
+		can = av.includes(i),
+		y = Math.round(n.y + (can ? -4 * Math.abs(Math.sin(t * 3 + i)) : 0)),
+		x = Math.round(n.x);
+	if (can) glow(x, n.y, 50, "#ffe27a", 0.4 + 0.2 * Math.sin(t * 4 + i));
+	if (k === "boss") glow(x, n.y, 64, "#ff3a4a", 0.3 + 0.15 * Math.sin(t * 2.4));
+	ctx.globalAlpha = vis && !cur ? 0.6 : 1;
+	if (ATL.map["i_" + k]) uc("map", "i_" + k, x, y, AP);
+	else {
+		uc("ui", can ? "node_hi" : vis ? "node_off" : "node", x, y, AP);
+		if (k === "chest") uc("ui", "chest0", x, y - 2, 1);
+		else if (k === "secret") uc("ui", "g_secret", x, y, AP);
+		else if (k === "rand") uc("ui", "g_rand", x, y, AP);
+		else if (k === "start") uc("ui", "g_star", x, y, AP);
+	}
+	ctx.globalAlpha = 1;
+	if (vis && !cur && i) uc("ui", "g_check", x + 16, y + 16, AP);
+	if (k === "secret" && !vis && Rand.next() < 0.05) Parts.add({ x: x + rr(-20, 20), y: y + rr(-20, 10), vy: -20, life: 0.7, c: "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
+	const lb = k === "boss" ? w.boss.n : NODE_LB[k];
+	if (lb) txo(lb, x, y + 38, k === "boss" ? 14 : 12, k === "boss" ? "#ffb0a0" : vis ? "#b9b3c8" : "#fff", "center");
+	area(x - 32, n.y - 32, 64, 72, () => {
+		if (MV) return;
+		if (can) walkTo(i);
+		else {
+			TIPN = { i, t0: t };
+			TIPR = null;
+		}
+	});
+}
+// отряд на карте: стоит на текущем узле или идёт по пути (MV) с пылью из-под ног
+function dMapParty(lead) {
+	let x = N[G.cur].x,
+		y = N[G.cur].y,
+		an = "idle",
+		face = 1;
+	if (MV) {
+		const k = ez.io(clamp((t - MV.t0) / MV.d, 0, 1)),
+			A = N[MV.a],
+			B = N[MV.b];
+		x = lerp(A.x, B.x, k);
+		y = lerp(A.y, B.y, k) - Math.abs(Math.sin(k * Math.PI * 5)) * 4;
+		an = "walk";
+		face = B.x >= A.x ? 1 : -1;
+		if (Rand.next() < 0.4) Parts.add({ x, y: y + 6, vx: -face * 20, vy: -14, life: 0.4, c: "rgba(230,220,200,.6)", s: 5, k: 5, e: 2, l: 2 });
+	}
+	ctx.fillStyle = "rgba(10,8,20,.4)";
+	ctx.beginPath();
+	ctx.ellipse(x, y + 8, 16, 6, 0, 0, TAU);
+	ctx.fill();
+	uIdle(lead, Math.round(x), Math.round(y + 8), AP, face, G.w, an);
+	// флажок отряда
+	if (!MV) arrowDown(x, y - 78 - 4 * Math.sin(t * 4));
+}
+// интерфейс карты: ресурсы, заголовок мира, шкала шагов до босса, реликвии, магазин, подсказки узла и реликвии
+function dMapHud(w) {
 	resBar();
 	const ttl = "Мир " + (G.w + 1) + " · " + w.n;
 	ctx.font = font(20);
@@ -169,6 +176,21 @@ function dMap() {
 		tip(n.x, n.y - 30, k === "boss" ? w.boss.n : k === "start" ? "Лагерь" : NODE_LB[k] || "Неизвестность", k === "start" ? "Отсюда начался поход" : (NODE_TIP[k] || "") + (G.vis.has(TIPN.i) ? " (пройдено)" : ""), "#ffe27a");
 	}
 	relicTip();
+}
+// экран карты: готовая земля (MAPC) → вода, пути, узлы, отряд, частицы, виньетка, интерфейс
+function dMap() {
+	if (MAPJ) return dMapLoading();
+	const w = WORLDS[G.w],
+		av = MV ? [] : avail(),
+		lead = G.slots.find(Boolean);
+	ctx.drawImage(MAPC, 0, 0, W, H);
+	dMapWater();
+	dMapPaths(av);
+	N.forEach((n, i) => dMapNode(n, i, av, w));
+	if (lead) dMapParty(lead);
+	Parts.draw(2);
+	vignette(0.8);
+	dMapHud(w);
 }
 
 // ---------- событие: сундук, карточки с эффектом редкости ----------
@@ -235,12 +257,12 @@ function cardFace(c, i, x, y, w, h) {
 	rframe(r, x, y, w, h);
 	rfx(r, x, y, w, h, i * 0.4);
 }
-function dMsg() {
-	const e = EV;
-	if (!e) {
-		State.go("map");
-		return dMap();
-	}
+// размеры карточки события
+const MCW = 164,
+	MCH = 206,
+	MGAP = 18;
+// фон под окном события: арена, сцена или карта; карта под окном не получает касаний
+function msgBG(e) {
 	if (e.bg && BGA) {
 		ctx.drawImage(BGA.floor, 0, 0, W, H);
 		resBar();
@@ -248,29 +270,108 @@ function dMsg() {
 		stageBG(G.w);
 		resBar();
 	} else dMap();
-	hits = [];
+	Input.layer(); // карта под окном события не получает касаний
+}
+// момент раскрытия i-й карты
+const evRt = (e, i) => (e.to || e.t0) + (e.chest === undefined ? 0.3 : 0.55) + i * 0.32;
+// касание по экрану: открыть сундук или ускорить раскрытие карт
+function evSkip(e) {
+	if (!e.open) {
+		e.open = 1;
+		e.to = t;
+		sfx("chest");
+		shake(0.15);
+	} else if (t < evRt(e, e.cards.length - 1) + 0.3) e.to = t - 10;
+}
+// закрытый сундук: покачивание, подсказка, автооткрытие через 1,6 с
+function msgChestClosed(e, cy, best) {
+	const sh = Math.sin(t * 26) * Math.max(0, Math.sin(t * 3)) * 4;
+	glow(609, cy + 96, 110, RAR[best].c, 0.25 + 0.15 * Math.sin(t * 5));
+	uc("ui", "chest0", Math.round(609 + sh), cy + 100, 4);
+	txo("Нажми, чтобы открыть", 609, cy + 190, 15, "#fff3c0", "center");
+	if (t - e.t0 > 1.6) evSkip(e);
+}
+// первые 0,75 с после открытия сундука: вспышка и разлёт искр
+function msgChestOpen(e, cy, best) {
+	const k = t - e.to;
+	if (k < 0.75) {
+		ctx.globalAlpha = k < 0.45 ? 1 : 1 - (k - 0.45) / 0.3;
+		glow(609, cy + 90, 90 + 240 * k, RAR[best].c, 0.7 * (1 - k));
+		uc("ui", k < 0.14 ? "chest1" : "chest2", 609, cy + 100, 4);
+		ctx.globalAlpha = 1;
+		if (!e.cf) {
+			e.cf = 1;
+			burst(609, cy + 80, 30 + best * 12, { c: [RAR[best].c, "#fff3a0", "#ffffff"], sp: 380, s: 6, sv: 0.8, life: 0.9, up: 180, l: 2 });
+			if (best >= 3) shake(0.2 + best * 0.08);
+		}
+	}
+}
+// одна карта события: переворот, звук и эффекты по редкости, выбор при e.pick
+function msgCard(e, c, i, cy, x0) {
+	const k = (t - evRt(e, i)) / 0.34;
+	if (e.chest !== undefined && t - e.to < 0.35 + i * 0.1) return;
+	const r = c.t === "relic" || c.t === "hero" ? c.r : 0,
+		x = x0 + i * (MCW + MGAP),
+		picked = e.pick && e.sel === i,
+		yy = cy + (picked ? -8 : 0) + (k < 0 ? 0 : -6 * Math.sin(Math.PI * clamp(k, 0, 1))),
+		cx = x + MCW / 2;
+	c.x = cx;
+	c.y = yy + MCH / 2;
+	if (k >= 0.5 && !e.rv[i]) {
+		// момент раскрытия: звук и эффект по редкости
+		e.rv[i] = 1;
+		c.rt = t;
+		sfx(c.t === "res" ? (c.ic === "coin" ? "coin" : "pick") : c.t === "txt" ? "heal" : "rev" + r);
+		burst(cx, yy + MCH / 2, 10 + r * 9, { c: [RAR[r].c, "#ffffff"], sp: 200 + r * 50, s: 5, sv: 0.8, life: 0.7 + r * 0.1, l: 2, g: 200 });
+		if (r >= 3) ring(cx, yy + MCH / 2, 150 + r * 30, RAR[r].c, 0.6, 6, 1, 2);
+		if (r >= 4) {
+			shake(r >= 5 ? 0.5 : 0.3);
+			FLASH = { c: RAR[r].c, t0: t, d: r >= 5 ? 0.7 : 0.45 };
+		}
+	}
+	if (k >= 0.5 && r >= 3) rays(cx, yy + MCH / 2, r, 150 + r * 14);
+	if (k >= 0.5 && r >= 4 && Rand.next() < 0.3) Parts.add({ x: cx + rr(-80, 80), y: yy + rr(0, MCH), vy: -40, life: 1, c: r >= 5 ? `hsl(${(Rand.next() * 360) | 0},95%,70%)` : "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
+	const fl = Math.abs(Math.cos(Math.PI * clamp(k, 0, 1)));
+	ctx.save();
+	ctx.translate(cx, 0);
+	ctx.scale(Math.max(0.03, fl), 1);
+	ctx.translate(-cx, 0);
+	if (e.pick && e.sel >= 0 && !picked) ctx.globalAlpha = 0.55;
+	if (k < 0.5) {
+		ctx.fillStyle = "#231b30";
+		ctx.fillRect(x + 6, yy + 6, MCW - 12, MCH - 12);
+		rframe(0, x, yy, MCW, MCH);
+		uc("ui", "g_rand", cx, yy + MCH / 2, 4);
+	} else cardFace(c, i, x, yy, MCW, MCH);
+	ctx.restore();
+	if (picked) {
+		ctx.strokeStyle = "#ffe27a";
+		ctx.lineWidth = 4;
+		ctx.strokeRect(x - 4, yy - 4, MCW + 8, MCH + 8);
+	}
+	if (e.pick && k >= 1)
+		area(x, cy - 8, MCW, MCH + 8, () => {
+			e.sel = i;
+			sfx("pick");
+		});
+}
+function dMsg() {
+	const e = EV;
+	if (!e) {
+		Machine.go("map", "событие потеряно");
+		return dMap();
+	}
+	msgBG(e);
 	const a = Math.min(1, (t - e.t0) * 5),
 		n = e.cards.length,
-		cw = 164,
-		ch = 206,
-		gap = 18,
-		tot = n * cw + (n - 1) * gap,
+		tot = n * MCW + (n - 1) * MGAP,
 		pw = Math.max(460, tot + 90),
-		ph = (n ? ch + 24 : 0) + 150 + (e.stats ? 26 : 0),
+		ph = (n ? MCH + 24 : 0) + 150 + (e.stats ? 26 : 0),
 		px = 609 - pw / 2,
 		py = Math.round(270 - ph / 2) + 6;
 	ctx.fillStyle = "rgba(8,6,14," + 0.72 * a + ")";
 	ctx.fillRect(0, 0, W, H);
-	const skip = () => {
-		if (!e.open) {
-			e.open = 1;
-			e.to = t;
-			sfx("chest");
-			shake(0.15);
-		} else if (t < rt(n - 1) + 0.3) e.to = t - 10;
-	};
-	const rt = (i) => (e.to || e.t0) + (e.chest === undefined ? 0.3 : 0.55) + i * 0.32;
-	area(0, 0, W, H, skip);
+	area(0, 0, W, H, () => evSkip(e));
 	ctx.save();
 	ctx.translate(609, 270);
 	ctx.scale(0.9 + 0.1 * ez.back(a), 0.9 + 0.1 * ez.back(a));
@@ -288,77 +389,12 @@ function dMsg() {
 	ctx.globalAlpha = 1;
 	// сундук
 	const best = e.cards.reduce((m, c) => Math.max(m, c.r || 0), 0);
-	if (e.chest !== undefined && !e.open) {
-		const sh = Math.sin(t * 26) * Math.max(0, Math.sin(t * 3)) * 4;
-		glow(609, cy + 96, 110, RAR[best].c, 0.25 + 0.15 * Math.sin(t * 5));
-		uc("ui", "chest0", Math.round(609 + sh), cy + 100, 4);
-		txo("Нажми, чтобы открыть", 609, cy + 190, 15, "#fff3c0", "center");
-		if (t - e.t0 > 1.6) skip();
-	} else {
-		if (e.chest !== undefined) {
-			const k = t - e.to;
-			if (k < 0.75) {
-				ctx.globalAlpha = k < 0.45 ? 1 : 1 - (k - 0.45) / 0.3;
-				glow(609, cy + 90, 90 + 240 * k, RAR[best].c, 0.7 * (1 - k));
-				uc("ui", k < 0.14 ? "chest1" : "chest2", 609, cy + 100, 4);
-				ctx.globalAlpha = 1;
-				if (!e.cf) {
-					e.cf = 1;
-					burst(609, cy + 80, 30 + best * 12, { c: [RAR[best].c, "#fff3a0", "#ffffff"], sp: 380, s: 6, sv: 0.8, life: 0.9, up: 180, l: 2 });
-					if (best >= 3) shake(0.2 + best * 0.08);
-				}
-			}
-		}
+	if (e.chest !== undefined && !e.open) msgChestClosed(e, cy, best);
+	else {
+		if (e.chest !== undefined) msgChestOpen(e, cy, best);
 		const x0 = 609 - tot / 2;
-		e.cards.forEach((c, i) => {
-			const k = (t - rt(i)) / 0.34;
-			if (e.chest !== undefined && t - e.to < 0.35 + i * 0.1) return;
-			const r = c.t === "relic" || c.t === "hero" ? c.r : 0,
-				x = x0 + i * (cw + gap),
-				picked = e.pick && e.sel === i,
-				yy = cy + (picked ? -8 : 0) + (k < 0 ? 0 : -6 * Math.sin(Math.PI * clamp(k, 0, 1))),
-				cx = x + cw / 2;
-			c.x = cx;
-			c.y = yy + ch / 2;
-			if (k >= 0.5 && !e.rv[i]) {
-				// момент раскрытия: звук и эффект по редкости
-				e.rv[i] = 1;
-				c.rt = t;
-				sfx(c.t === "res" ? (c.ic === "coin" ? "coin" : "pick") : c.t === "txt" ? "heal" : "rev" + r);
-				burst(cx, yy + ch / 2, 10 + r * 9, { c: [RAR[r].c, "#ffffff"], sp: 200 + r * 50, s: 5, sv: 0.8, life: 0.7 + r * 0.1, l: 2, g: 200 });
-				if (r >= 3) ring(cx, yy + ch / 2, 150 + r * 30, RAR[r].c, 0.6, 6, 1, 2);
-				if (r >= 4) {
-					shake(r >= 5 ? 0.5 : 0.3);
-					FLASH = { c: RAR[r].c, t0: t, d: r >= 5 ? 0.7 : 0.45 };
-				}
-			}
-			if (k >= 0.5 && r >= 3) rays(cx, yy + ch / 2, r, 150 + r * 14);
-			if (k >= 0.5 && r >= 4 && Rand.next() < 0.3) Parts.add({ x: cx + rr(-80, 80), y: yy + rr(0, ch), vy: -40, life: 1, c: r >= 5 ? `hsl(${(Rand.next() * 360) | 0},95%,70%)` : "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
-			const fl = Math.abs(Math.cos(Math.PI * clamp(k, 0, 1)));
-			ctx.save();
-			ctx.translate(cx, 0);
-			ctx.scale(Math.max(0.03, fl), 1);
-			ctx.translate(-cx, 0);
-			if (e.pick && e.sel >= 0 && !picked) ctx.globalAlpha = 0.55;
-			if (k < 0.5) {
-				ctx.fillStyle = "#231b30";
-				ctx.fillRect(x + 6, yy + 6, cw - 12, ch - 12);
-				rframe(0, x, yy, cw, ch);
-				uc("ui", "g_rand", cx, yy + ch / 2, 4);
-			} else cardFace(c, i, x, yy, cw, ch);
-			ctx.restore();
-			if (picked) {
-				ctx.strokeStyle = "#ffe27a";
-				ctx.lineWidth = 4;
-				ctx.strokeRect(x - 4, yy - 4, cw + 8, ch + 8);
-			}
-			if (e.pick && k >= 1)
-				area(x, cy - 8, cw, ch + 8, () => {
-					e.sel = i;
-					sfx("pick");
-				});
-		});
-		const done = t > rt(n - 1) + 0.45 || !n;
+		e.cards.forEach((c, i) => msgCard(e, c, i, cy, x0));
+		const done = t > evRt(e, n - 1) + 0.45 || !n;
 		if (done) {
 			const by = py + ph - 56;
 			if (e.pick) btn(509, by, 200, 46, e.sel >= 0 ? "Забрать" : "Выбери карту", () => e.sel >= 0 && evClose(), "#2e7d32", { dis: e.sel < 0, pulse: e.sel >= 0, sz: 19 });
@@ -425,11 +461,15 @@ function shopAct(c) {
 		}
 	}
 }
-function dShop() {
-	const w = WORLDS[G.w],
-		st = shopStock();
-	stageBG(G.w, 0.5);
-	// прилавок и торговец
+// геометрия прилавка: 5 колонок × 3 ряда карточек
+const SHX0 = 346,
+	SHY0 = 74,
+	SHCW = 166,
+	SHCH = 112,
+	SHGX = 6,
+	SHGY = 8;
+// прилавок и торговец: свет, фигура (перекрашенный маг), сундуки, искры
+function shopMerchant() {
 	const mx = 168,
 		my = 438,
 		buyT = t - MERCH.t;
@@ -437,7 +477,7 @@ function dShop() {
 	Light.add(mx - 96, my - 110, 300, "#ffd27a", 1);
 	Light.add(mx + 40, my - 30, 260, "#ffb060", 0.8);
 	Light.end();
-	const mi = TINTC.merch || (TINTC.merch = recolor(IMG.heroes, [{ h: [180, 262], to: 26, sat: 1, val: 1.05 }, { h: [80, 172], to: 288, sat: 0.85, val: 0.95 }])),
+	const mi = TINTC.get("merch") || TINTC.set("merch", recolor(IMG.heroes, [{ h: [180, 262], to: 26, sat: 1, val: 1.05 }, { h: [80, 172], to: 288, sat: 0.85, val: 0.95 }])),
 		A = ATL.heroes.mage,
 		f = buyT < 0.6 ? aFrame(A, "cast", 0) : aFrame(A, "idle", 0, t * 2.2);
 	ctx.fillStyle = "rgba(10,8,20,.45)";
@@ -453,107 +493,96 @@ function dShop() {
 	uc("ui", "coin", mx + 30, my - 40, 1);
 	uc("ui", "meat", mx + 8, my - 42, 1);
 	if (Rand.next() < 0.08) Parts.add({ x: mx + 86 + rr(-20, 20), y: my - 60, vy: -30, life: 0.8, c: "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
-	// товары
-	title(G.arena ? "Лавка · волна " + G.wave : "Лавка гоблина", 34, "#fff3c0", 24);
-	resBar();
-	const X0 = 346,
-		Y0 = 74,
-		CW = 166,
-		CH = 112,
-		GX = 6,
-		GY = 8;
-	["Реликвии", "Значки отряда", "Припасы"].forEach((s, r) => {
+}
+// значок товара на карточке
+function shopIcon(c, inf, ix, iy, idx) {
+	if (c[0] === "relic") {
+		if (inf.q.nw && t - inf.q.nw < 0.5) glow(ix, iy, 60, "#ffffff", 1 - (t - inf.q.nw) * 2);
+		glow(ix, iy, 30, RAR[inf.r].c, 0.4);
+		uc("ui", "r_" + inf.q.id, ix, Math.round(iy + Math.sin(t * 2 + idx) * 2), 3);
+	} else if (c[0] === "rr") {
 		ctx.save();
-		ctx.translate(X0 - 16, Y0 + r * (CH + GY) + CH / 2);
-		ctx.rotate(-Math.PI / 2);
-		txo(s, 0, 0, 11, "#cfc9db", "center");
+		ctx.translate(ix, iy);
+		ctx.rotate(t * 1.2);
+		uc("ui", "g_arrow", 0, -12, AP);
+		ctx.rotate(Math.PI);
+		uc("ui", "g_arrow", 0, -12, AP);
 		ctx.restore();
-	});
-	SHOPG.forEach((c, idx) => {
-		if (!c) return;
-		const col = idx % 5,
-			row = (idx / 5) | 0,
-			inf = shopInfo(c),
-			sl = SS.sel === idx,
-			x = X0 + col * (CW + GX),
-			y = Y0 + row * (CH + GY) - (sl ? 4 : 0),
-			can = G.coin >= inf.p && !inf.sold,
-			act = (c[1] === "sk" && G.sk) || (c[1] === "rm" && G.rm);
-		ctx.fillStyle = sl ? "#2e2440" : "#1c1626";
-		ctx.fillRect(x + 5, y + 5, CW - 10, CH - 10);
-		if (inf.r > 0) {
-			ctx.globalAlpha = 0.18;
-			ctx.fillStyle = RAR[inf.r].c;
-			ctx.fillRect(x + 5, y + 5, CW - 10, CH - 10);
-			ctx.globalAlpha = 1;
-		}
-		if (inf.sold) ctx.globalAlpha = 0.35;
-		// значок товара
-		const ix = x + 36,
-			iy = y + 40;
-		if (c[0] === "relic") {
-			if (inf.q.nw && t - inf.q.nw < 0.5) glow(ix, iy, 60, "#ffffff", 1 - (t - inf.q.nw) * 2);
-			glow(ix, iy, 30, RAR[inf.r].c, 0.4);
-			uc("ui", "r_" + inf.q.id, ix, Math.round(iy + Math.sin(t * 2 + idx) * 2), 3);
-		} else if (c[0] === "rr") {
-			ctx.save();
-			ctx.translate(ix, iy);
-			ctx.rotate(t * 1.2);
-			uc("ui", "g_arrow", 0, -12, AP);
-			ctx.rotate(Math.PI);
-			uc("ui", "g_arrow", 0, -12, AP);
-			ctx.restore();
-		} else if (c[0] === "b") {
-			ctx.fillStyle = INK;
-			ctx.fillRect(ix - 22, iy - 22, 44, 44);
-			ctx.fillStyle = BCOL[c[1]];
-			ctx.fillRect(ix - 19, iy - 19, 38, 38);
-			ctx.fillStyle = "rgba(255,255,255,.35)";
-			ctx.fillRect(ix - 19, iy - 19, 38, 6);
-			gly(c[1], ix, iy + 1, 24, "#17121f");
-		} else if (c[1] === "heal") {
-			gly("hp", ix, iy, 40, "#6dff7a", "#17121f");
-			txo("+", ix, iy - 2, 22, "#fff", "center");
-		} else if (c[1] === "meat") uc("ui", "meat", ix, iy, AP);
-		else if (c[1] === "sk") uc("ui", "skull", ix, iy, AP);
-		else {
-			uc("ui", "g_skull", ix - 6, iy, AP);
-			uc("ui", "g_arrow", ix + 16, iy, AP);
-		}
-		txw(inf.n.replace("Значок: ", ""), x + 66, y + 22, CW - 74, 15, 13, "#fff", "left", true);
-		if (inf.sub) tx(RAR[inf.r].n, x + 66, y + 62, 11, RAR[inf.r].c);
-		if (inf.own !== undefined) tx("куплено: " + inf.own, x + 66, y + 62, 11, "#b9b3c8");
-		// цена
-		ctx.globalAlpha = inf.sold ? 0.35 : 1;
-		chip(x + 10, y + CH - 36, CW - 20, 26, act ? "rgba(46,125,50,.9)" : can ? "rgba(20,16,28,.85)" : "rgba(60,16,20,.85)");
-		if (inf.sold) txo("Продано", x + CW / 2, y + CH - 22, 13, "#b9b3c8", "center");
-		else if (act) txo("Выбери бойца внизу", x + CW / 2, y + CH - 22, 12, "#fff", "center");
-		else if (inf.p > 0) {
-			uc("ui", "coin_s", x + CW / 2 - 16, y + CH - 23, AP);
-			txo("" + inf.p, x + CW / 2 + 4, y + CH - 22, 15, can ? "#fff3a0" : "#ff8a7a", "left");
-		} else txo(c[1] === "rm" ? "Вернёт 2 монеты" : "Бесплатно", x + CW / 2, y + CH - 22, 12, "#fff3a0", "center");
+	} else if (c[0] === "b") {
+		ctx.fillStyle = INK;
+		ctx.fillRect(ix - 22, iy - 22, 44, 44);
+		ctx.fillStyle = BCOL[c[1]];
+		ctx.fillRect(ix - 19, iy - 19, 38, 38);
+		ctx.fillStyle = "rgba(255,255,255,.35)";
+		ctx.fillRect(ix - 19, iy - 19, 38, 6);
+		gly(c[1], ix, iy + 1, 24, "#17121f");
+	} else if (c[1] === "heal") {
+		gly("hp", ix, iy, 40, "#6dff7a", "#17121f");
+		txo("+", ix, iy - 2, 22, "#fff", "center");
+	} else if (c[1] === "meat") uc("ui", "meat", ix, iy, AP);
+	else if (c[1] === "sk") uc("ui", "skull", ix, iy, AP);
+	else {
+		uc("ui", "g_skull", ix - 6, iy, AP);
+		uc("ui", "g_arrow", ix + 16, iy, AP);
+	}
+}
+// одна карточка товара: фон, значок, название, цена, рамка редкости, касание (второе — покупка)
+function shopCard(c, idx) {
+	if (!c) return;
+	const col = idx % 5,
+		row = (idx / 5) | 0,
+		inf = shopInfo(c),
+		sl = SS.sel === idx,
+		x = SHX0 + col * (SHCW + SHGX),
+		y = SHY0 + row * (SHCH + SHGY) - (sl ? 4 : 0),
+		can = G.coin >= inf.p && !inf.sold,
+		act = (c[1] === "sk" && G.sk) || (c[1] === "rm" && G.rm);
+	ctx.fillStyle = sl ? "#2e2440" : "#1c1626";
+	ctx.fillRect(x + 5, y + 5, SHCW - 10, SHCH - 10);
+	if (inf.r > 0) {
+		ctx.globalAlpha = 0.18;
+		ctx.fillStyle = RAR[inf.r].c;
+		ctx.fillRect(x + 5, y + 5, SHCW - 10, SHCH - 10);
 		ctx.globalAlpha = 1;
-		rframe(inf.r, x, y, CW, CH);
-		if (!inf.sold) rfx(inf.r, x, y, CW, CH, idx * 0.3);
-		if (sl) {
-			ctx.strokeStyle = "#ffe27a";
-			ctx.lineWidth = 3;
-			ctx.strokeRect(x - 3, y - 3, CW + 6, CH + 6);
+	}
+	if (inf.sold) ctx.globalAlpha = 0.35;
+	// значок товара
+	const ix = x + 36,
+		iy = y + 40;
+	shopIcon(c, inf, ix, iy, idx);
+	txw(inf.n.replace("Значок: ", ""), x + 66, y + 22, SHCW - 74, 15, 13, "#fff", "left", true);
+	if (inf.sub) tx(RAR[inf.r].n, x + 66, y + 62, 11, RAR[inf.r].c);
+	if (inf.own !== undefined) tx("куплено: " + inf.own, x + 66, y + 62, 11, "#b9b3c8");
+	// цена
+	ctx.globalAlpha = inf.sold ? 0.35 : 1;
+	chip(x + 10, y + SHCH - 36, SHCW - 20, 26, act ? "rgba(46,125,50,.9)" : can ? "rgba(20,16,28,.85)" : "rgba(60,16,20,.85)");
+	if (inf.sold) txo("Продано", x + SHCW / 2, y + SHCH - 22, 13, "#b9b3c8", "center");
+	else if (act) txo("Выбери бойца внизу", x + SHCW / 2, y + SHCH - 22, 12, "#fff", "center");
+	else if (inf.p > 0) {
+		uc("ui", "coin_s", x + SHCW / 2 - 16, y + SHCH - 23, AP);
+		txo("" + inf.p, x + SHCW / 2 + 4, y + SHCH - 22, 15, can ? "#fff3a0" : "#ff8a7a", "left");
+	} else txo(c[1] === "rm" ? "Вернёт 2 монеты" : "Бесплатно", x + SHCW / 2, y + SHCH - 22, 12, "#fff3a0", "center");
+	ctx.globalAlpha = 1;
+	rframe(inf.r, x, y, SHCW, SHCH);
+	if (!inf.sold) rfx(inf.r, x, y, SHCW, SHCH, idx * 0.3);
+	if (sl) {
+		ctx.strokeStyle = "#ffe27a";
+		ctx.lineWidth = 3;
+		ctx.strokeRect(x - 3, y - 3, SHCW + 6, SHCH + 6);
+	}
+	area(x, SHY0 + row * (SHCH + SHGY), SHCW, SHCH, () => {
+		if (inf.sold) return;
+		if (SS.sel === idx) shopAct(c);
+		else {
+			SS.sel = idx;
+			G.sm = "";
+			sfx("pick");
 		}
-		area(x, Y0 + row * (CH + GY), CW, CH, () => {
-			if (inf.sold) return;
-			if (SS.sel === idx) shopAct(c);
-			else {
-				SS.sel = idx;
-				G.sm = "";
-				sfx("pick");
-			}
-		});
 	});
-	// реплика торговца
-	const selc = SS.sel >= 0 ? SHOPG[SS.sel] : null,
-		inf = selc ? shopInfo(selc) : null,
-		bx = 14,
+}
+// реплика торговца слева (описание выбранного товара или присказка) и кнопки покупки/выхода
+function shopSpeech(selc, inf) {
+	const bx = 14,
 		by = 84,
 		bw = 312,
 		bh = 168;
@@ -585,13 +614,33 @@ function dShop() {
 			G.rm = G.sk = false;
 			if (G.arena) arenaNext();
 			else {
-				State.go("map");
+				Machine.go("map");
 				autosave();
 			}
 		},
 		"#8e24aa",
 		{ sz: 22 },
 	);
+}
+function dShop() {
+	shopStock(); // товар появляется при первом заходе
+	stageBG(G.w, 0.5);
+	shopMerchant();
+	// товары
+	title(G.arena ? "Лавка · волна " + G.wave : "Лавка гоблина", 34, "#fff3c0", 24);
+	resBar();
+	["Реликвии", "Значки отряда", "Припасы"].forEach((s, r) => {
+		ctx.save();
+		ctx.translate(SHX0 - 16, SHY0 + r * (SHCH + SHGY) + SHCH / 2);
+		ctx.rotate(-Math.PI / 2);
+		txo(s, 0, 0, 11, "#cfc9db", "center");
+		ctx.restore();
+	});
+	SHOPG.forEach((c, idx) => shopCard(c, idx));
+	// реплика торговца
+	const selc = SS.sel >= 0 ? SHOPG[SS.sel] : null,
+		inf = selc ? shopInfo(selc) : null;
+	shopSpeech(selc, inf);
 	relicRow(10, 46, 11, 30, 28);
 	hud();
 	Parts.draw(2);
@@ -683,6 +732,16 @@ function logo(y) {
 		ctx.restore();
 	}
 }
+// новый поход: сброс состояния и три случайных кандидата на выбор (одинаково из меню и после
+// поражения — порядок обращений к Rand общий, его видит golden)
+function startPick() {
+	newGame();
+	G.choices = HEROES.slice()
+		.sort(() => Rand.next() - 0.5)
+		.slice(0, 3);
+	PK = -1;
+	Machine.go("pick");
+}
 function dMenu() {
 	menuBG();
 	Light.begin("#7a78b0");
@@ -708,26 +767,15 @@ function dMenu() {
 	logo(84);
 	const bs = [
 		["Продолжить", () => (SAVED ? loadGame() || (delSave(), toast("Сохранение повреждено")) : toast("Сохранения пока нет")), "#2e7d32", !SAVED],
-		[
-			"Новая игра",
-			() => {
-				newGame();
-				G.choices = HEROES.slice()
-					.sort(() => Rand.next() - 0.5)
-					.slice(0, 3);
-				PK = -1;
-				State.go("pick");
-			},
-			"#8e24aa",
-		],
+		["Новая игра", startPick, "#8e24aa"],
 		["Боевая арена", arenaStart, "#8e24aa"],
-		["Коллекция", () => { CODEX_TEST = null; pop = null; State.go("codex"); }, "#8e24aa"],
+		["Коллекция", () => { CODEX_TEST = null; pop = null; Machine.go("codex"); }, "#8e24aa"],
 		[
 			"Настройки",
 			() => {
 				delAsk = false;
 				SRET = "menu";
-				State.go("settings");
+				Machine.go("settings");
 			},
 			"#8e24aa",
 		],
@@ -817,9 +865,10 @@ function dCodex() {
 	menuBG(false);
 	ctx.fillStyle = "rgba(10,8,18,.6)";
 	ctx.fillRect(0, 0, W, H);
-	title("Коллекция бойцов", 40);
-	txo("Все герои отряда · редкость влияет на здоровье и атаку · нажми на карточку для подробностей", 609, 62, 13, "#e8e2f4", "center", INK, false);
-	const cw = 164, chh = 204, gx = 12, gy = 70;
+	// баннер заголовка занимает 74 px по высоте, поэтому подсказка живёт внизу, рядом с «Назад»
+	title("Коллекция бойцов", 36);
+	txo("Все герои отряда · редкость влияет на здоровье и атаку · нажми на карточку для подробностей", 609, 506, 13, "#e8e2f4", "center", INK, false);
+	const cw = 164, chh = 200, gx = 12, gy = 74;
 	HEROES.forEach((h, i) => {
 		const col = i % 7, row = (i / 7) | 0;
 		const x = gx + col * (cw + 8), y = gy + row * (chh + 6);
@@ -844,7 +893,7 @@ function dCodex() {
 			gly(q[0], sx + 6, sy, 12, j === 0 ? "#ff6a6a" : "#ffd27a", "#17121f");
 			tx("" + q[1], sx + 18, sy + 1, 12, "#fff");
 		});
-		txo(K.ab.n, x + 10, y + 154, 11, EL[K.el].c, "left");
+		txo(K.ab.n, x + 14, y + 154, 11, EL[K.el].c, "left"); // x + 14: левее — под рамкой, первая буква пропадает
 		rframe(rar, x, y, cw, chh);
 		rfx(rar, x, y, cw, chh, i * 0.7);
 		area(x, y, cw, chh, () => { pop = { u: mkHero(h, rar), mine: true }; sfx("pick"); });
@@ -914,54 +963,21 @@ function dPick() {
 function startRun() {
 	if (PK < 0) return;
 	G.slots[0] = recruit(G.choices[PK], 0);
-	State.go("map");
+	Machine.go("map");
 	sfx("start");
 	autosave();
 }
 // ---------- настройки ----------
-function _mxh(s) {
-	let h = 0x811c9dc5;
-	const t2 = "mxdev2026" + s;
-	for (let i = 0; i < t2.length; i++) { h ^= t2.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-	return h.toString(16).padStart(8, "0");
-}
+// пароль режима разработчика проверяет загрузчик (src/editor/loader.js → MXCore.verifyPassword):
+// один пароль на все устройства, в коде только соль и хеш PBKDF2-SHA-256; доступ действует до перезагрузки страницы
 function devGate() {
-	if (document.getElementById("mx-dev-ov")) return;
-	const ov = document.createElement("div");
-	ov.id = "mx-dev-ov";
-	ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(5,3,8,.75);display:flex;align-items:center;justify-content:center";
-	ov.innerHTML = '<div style="background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:22px 24px;color:#fff;font:14px system-ui;text-align:center;min-width:280px"><div style="font-weight:800;margin-bottom:12px">Режим разработчика</div><input id="mx-dev-in" type="password" inputmode="numeric" autocomplete="off" placeholder="Пароль" style="width:100%;padding:10px;border-radius:8px;border:1px solid #555;background:#0f0b16;color:#fff;text-align:center;font-size:16px"><div id="mx-dev-err" style="color:#ff6a6a;min-height:18px;margin-top:8px;font-size:12px"></div><div style="display:flex;gap:8px;margin-top:10px"><button id="mx-dev-ok" style="flex:1;padding:10px;border-radius:8px;border:0;background:#8e24aa;color:#fff;font-weight:800;cursor:pointer">Войти</button><button id="mx-dev-no" style="flex:1;padding:10px;border-radius:8px;border:1px solid #555;background:#2a2238;color:#fff;cursor:pointer">Отмена</button></div></div>';
-	document.body.appendChild(ov);
-	const inp = ov.querySelector("#mx-dev-in");
-	inp.focus();
-	const close = () => ov.remove();
-	ov.querySelector("#mx-dev-no").onclick = (e) => { e.stopPropagation(); close(); };
-	ov.addEventListener("pointerdown", (e) => e.stopPropagation());
-	ov.addEventListener("click", (e) => e.stopPropagation());
-	const ok = () => {
-		if (_mxh(inp.value) === "4d2208a5") {
-			window.__mxStorage.setItem("mx_dev", "1");
-			const b = document.getElementById("mx-b");
-			if (b) b.style.display = "block";
-			if (window.mxUnlock) window.mxUnlock();
-			close();
-			toast("Режим разработчика включён");
-		} else {
-			ov.querySelector("#mx-dev-err").textContent = "Неверный пароль";
-			inp.value = "";
-			inp.focus();
-		}
-	};
-	ov.querySelector("#mx-dev-ok").onclick = (e) => { e.stopPropagation(); ok(); };
-	inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Enter") ok(); if (e.key === "Escape") close(); };
+	if (window.mxGate) window.mxGate(true);
+	else toast("Редактор не подключён");
 }
-function dSet() {
-	menuBG(false);
-	ctx.fillStyle = "rgba(10,8,18,.6)";
-	ctx.fillRect(0, 0, W, H);
-	panel(209, 74, 800, 392);
-	title("Настройки", 76);
-	const rows = [
+// строки настроек: [подпись, значение, действие, включено?, цвет кнопки?]
+// звук: музыка, её громкость, громкость звуков
+function setAudioRows() {
+	return [
 		[
 			"Музыка",
 			Music.on ? "Вкл" : "Выкл",
@@ -992,6 +1008,11 @@ function dSet() {
 			},
 			CFG.sfx !== 0,
 		],
+	];
+}
+// игра: графика, тряска, ульты героев, счётчик FPS, удаление сохранения (с подтверждением)
+function setGameRows() {
+	return [
 		[
 			"Графика",
 			QL.auto ? "Авто (" + ["низк.", "средн.", "выс."][QL.lv] + ")" : ["Низкая", "Средняя", "Высокая"][QL.lv],
@@ -1046,6 +1067,14 @@ function dSet() {
 			SAVED ? "#c62828" : "#555",
 		],
 	];
+}
+function dSet() {
+	menuBG(false);
+	ctx.fillStyle = "rgba(10,8,18,.6)";
+	ctx.fillRect(0, 0, W, H);
+	panel(209, 74, 800, 392);
+	title("Настройки", 76);
+	const rows = setAudioRows().concat(setGameRows());
 	rows.forEach(([lb, val, f, on, col], i) => {
 		const x = 233 + (i % 2) * 390,
 			y = 128 + ((i / 2) | 0) * 66;
@@ -1054,11 +1083,15 @@ function dSet() {
 		btn(x + 196, y + 7, 164, 40, val, f, col || (on === undefined || on ? "#2e7d32" : "#555"), { sz: 15 });
 	});
 	if (CFG.autoUlt === false) tx("Ручные ульты: нажми на портрет бойца, когда полоска энергии полная", 609, 400, 12, "#b9b3c8", "center");
-	btn(233, 414, 268, 44, window.__mxStorage.getItem("mx_dev") === "1" ? "Разработчик: включён" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
+	// в сборке без редактора (dist/game-public.html, src/runner.js) кнопки разработчика нет
+	if (!window.__mxPublic) btn(233, 414, 268, 44, window.__mxUnlocked ? "Разработчик: открыт" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
 	btn(529, 414, 160, 44, "Назад", () => {
 		delAsk = false;
-		S = SRET;
+		Machine.go(SRET, "назад из настроек");
 	});
+	// перенос сохранения файлом/текстом — запасной путь, когда хранилище браузера недоступно
+	btn(705, 414, 140, 44, "Экспорт", () => saveDialog("export"), "#8e24aa", { sz: 15 });
+	btn(851, 414, 140, 44, "Импорт", () => saveDialog("import"), "#8e24aa", { sz: 15 });
 }
 // ---------- мир пройден ----------
 function dWorld() {
@@ -1100,7 +1133,7 @@ function dWorld() {
 }
 // ---------- итог похода ----------
 function dEnd() {
-	const wn = State.is("win"),
+	const wn = Machine.is("win"),
 		st = G.st;
 	if (BGA) ctx.drawImage(BGA.floor, 0, 0, W, H);
 	else stageBG(G.w || 0);
@@ -1140,14 +1173,7 @@ function dEnd() {
 	});
 	btn(389, 468, 210, 50, G.arena ? "Ещё раз" : "Новый поход", () => {
 		if (G.arena) arenaStart();
-		else {
-			newGame();
-			G.choices = HEROES.slice()
-				.sort(() => Rand.next() - 0.5)
-				.slice(0, 3);
-			PK = -1;
-			State.go("pick");
-		}
+		else startPick();
 	}, "#2e7d32", { sz: 20 });
 	btn(619, 468, 210, 50, "В меню", toMenu, "#8e24aa", { sz: 20 });
 }
@@ -1157,7 +1183,7 @@ function pauseMenu() {
 	ctx.fillStyle = "rgba(8,6,14,.74)";
 	ctx.fillRect(0, 0, W, H);
 	area(0, 0, W, H, () => {});
-	const camp = G && !G.arena && !State.is("pick") && !State.is("win") && !State.is("lose"),
+	const camp = G && !G.arena && !Machine.is("pick", "win", "lose"),
 		items = [
 			["Вернуться в игру", () => (paused = false), "#2e7d32"],
 			[
@@ -1166,7 +1192,7 @@ function pauseMenu() {
 					paused = false;
 					delAsk = false;
 					SRET = S;
-					State.go("settings");
+					Machine.go("settings");
 				},
 				"#8e24aa",
 			],
@@ -1194,40 +1220,21 @@ function draw() {
 	ctx.globalCompositeOperation = "source-over";
 	ctx.fillStyle = "#0c0a12";
 	ctx.fillRect(0, 0, W, H);
-	hits = [];
+	Input.begin();
 	if (!READY) {
 		txo("Пробуждение монстров", 609, 230, 34, "#ffd23c", "center");
 		pbar(409, 280, 400, 12, LOADP, "#ffd23c");
 		tx("Загрузка…", 609, 316, 14, "#b9b3c8", "center");
 		return;
 	}
-	if (State.cur !== lastS) {
-		if (SCENE[S] !== SCENE[lastS]) {
-			Parts.clear();
-			TRT = 0.42;
-			CAM.z = 1;
-		}
-		if (State.is("win") || State.is("lose")) ENDT = t;
-		if (!State.is("prep") && !State.is("fight") && !State.is("shop") && !State.is("map")) pop = null;
-		if (lastS === "fight" || lastS === "prep") pop = null;
-		TIPN = TIPR = null;
-		lastS = S;
-	}
+	// смена экрана: exit предыдущего, enter нового (см. Machine.sync и таблицу экранов ниже)
+	Machine.sync();
 	ctx.save();
 	if (SK > 0) ctx.translate(Math.round((Rand.next() - 0.5) * SK * 20) * 2, Math.round((Rand.next() - 0.5) * SK * 20) * 2);
-	if (State.is("menu")) dMenu();
-	else if (State.is("pick")) dPick();
-	else if (State.is("map")) dMap();
-	else if (State.is("prep") || State.is("fight")) dFight();
-	else if (State.is("msg")) dMsg();
-	else if (State.is("shop")) dShop();
-	else if (State.is("settings")) dSet();
-	else if (State.is("world")) dWorld();
-	else if (State.is("codex")) dCodex();
-	else dEnd();
-	if (State.is("map") || State.is("prep") || State.is("fight") || State.is("shop") || State.is("codex")) dPop();
-	if (!State.is("menu") && !State.is("win") && !State.is("lose") && !State.is("settings")) ibtn("pause", 1142, 6, () => (paused = true));
-	if (!State.is("settings")) ibtn("note", State.is("menu") || State.is("win") || State.is("lose") ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
+	Machine.drawScreen();
+	if (Machine.flag("popup")) dPop();
+	if (Machine.flag("pausable") !== false) ibtn("pause", 1142, 6, () => (paused = true));
+	if (!Machine.is("settings")) ibtn("note", Machine.is("menu", "win", "lose") ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
 	Fly.draw();
 	if (FLASH) {
 		const k = (t - FLASH.t0) / FLASH.d;
@@ -1246,4 +1253,33 @@ function draw() {
 	if (CFG.fps) fpsDraw();
 }
 
-
+// ---------- таблица экранов ----------
+// Экран = запись в машине: scene (общая сцена — при её смене очищаются частицы и идёт
+// затемнение), draw, при необходимости update/enter/exit. Бой и расстановка делят отрисовку
+// dFight с интерполяцией движения между шагами симуляции.
+function dFightScreen() {
+	fightLerpIn();
+	try {
+		dFight();
+	} finally {
+		fightLerpOut();
+	}
+}
+function enterEnd() {
+	ENDT = t;
+}
+// Таблица экранов. Свойства: scene — сцена (смена сцены чистит частицы и даёт затемнение),
+// pausable — можно ставить паузу (кнопка и Esc), save — что пишет saveGame ("state" | "snap" | "none"),
+// autosave — autosave() пишет на этом экране, popup — рисуется карточка юнита dPop.
+Machine.reg("menu", { scene: "menu", draw: dMenu, pausable: false, save: "state" });
+Machine.reg("pick", { scene: "menu", draw: dPick, save: "state" });
+Machine.reg("settings", { scene: "menu", draw: dSet, pausable: false, save: "state" });
+Machine.reg("codex", { scene: "menu", draw: dCodex, save: "state", popup: true });
+Machine.reg("map", { scene: "map", draw: dMap, save: "state", autosave: true, popup: true });
+Machine.reg("msg", { scene: "map", draw: dMsg, save: "state" });
+Machine.reg("world", { scene: "map", draw: dWorld, save: "state", autosave: true });
+Machine.reg("prep", { scene: "fight", draw: dFightScreen, save: "snap", autosave: true, popup: true });
+Machine.reg("fight", { scene: "fight", draw: dFightScreen, update: upd, save: "snap", popup: true });
+Machine.reg("shop", { scene: "shop", draw: dShop, save: "state", popup: true });
+Machine.reg("win", { scene: "end", draw: dEnd, enter: enterEnd, pausable: false, save: "none" });
+Machine.reg("lose", { scene: "end", draw: dEnd, enter: enterEnd, pausable: false, save: "none" });
