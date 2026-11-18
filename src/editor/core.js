@@ -115,6 +115,35 @@ const MXCore = (() => {
 			"){clearInterval(iv);return post({ok:false,why:'игра не загрузилась за '+Math.round(el/1000)+' с',state:st})}},250)})();"
 		);
 	}
-	return { parsePatches, applyPatches, checkSyntax, maskSecrets, apiError, isTruncated, hash, pruneList, trialScript, unfence };
+	// ---------- пароль режима разработчика ----------
+	// Один пароль на все устройства. В коде только соль и хеш: hash = PBKDF2-HMAC-SHA-256(пароль, salt, iter), hex.
+	// Считается WebCrypto (нужен защищённый контекст: file://, https или localhost). Открытого пароля в репозитории нет;
+	// подбор хеша из публичного кода стоит iter хешей SHA-256 на одну попытку. Доступ не сохраняется — до перезагрузки страницы.
+	const AUTH = { salt: "f59c238ab9b41fc54ec92368b4bbe15b", iter: 300000, hash: "1924131050348cf4026f4f7a3e6e7769d797e2c4293c791e24b47c8ddcd00c42" };
+	const hexOf = (buf) => Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+	async function pwdHash(pwd, auth, subtle) {
+		const a = auth || api.AUTH;
+		const s = subtle || (typeof crypto !== "undefined" && crypto.subtle);
+		if (!s || !s.deriveBits) throw new Error("В этом окне нет WebCrypto (небезопасный адрес). Откройте файл напрямую или по https.");
+		const enc = new TextEncoder();
+		const key = await s.importKey("raw", enc.encode(String(pwd == null ? "" : pwd)), "PBKDF2", false, ["deriveBits"]);
+		const bits = await s.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: enc.encode(String(a.salt)), iterations: a.iter | 0 }, key, 256);
+		return hexOf(bits);
+	}
+	// сравнение без раннего выхода: время не зависит от того, где строки разошлись
+	function hexEq(a, b) {
+		a = String(a == null ? "" : a);
+		b = String(b == null ? "" : b);
+		let d = a.length ^ b.length;
+		const n = Math.max(a.length, b.length);
+		for (let i = 0; i < n; i++) d |= (a.charCodeAt(i) | 0) ^ (b.charCodeAt(i) | 0);
+		return d === 0;
+	}
+	async function verifyPassword(pwd, auth, subtle) {
+		const a = auth || api.AUTH;
+		return hexEq(await pwdHash(pwd, a, subtle), a.hash);
+	}
+	const api = { parsePatches, applyPatches, checkSyntax, maskSecrets, apiError, isTruncated, hash, pruneList, trialScript, unfence, AUTH, pwdHash, hexEq, verifyPassword };
+	return api;
 })();
 if (typeof window !== "undefined") window.MXCore = MXCore;

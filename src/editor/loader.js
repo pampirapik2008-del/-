@@ -7,6 +7,7 @@ let LS, STORAGE_TEMP=false;
 try { LS=window.localStorage; LS.getItem('mx_storage_probe'); }
 catch(e) { STORAGE_TEMP=true; const m=new Map(); LS={getItem:k=>m.has(String(k))?m.get(String(k)):null,setItem:(k,v)=>m.set(String(k),String(v)),removeItem:k=>m.delete(String(k))}; }
 window.__mxStorage=LS;
+LS.removeItem('mx_dev'); // флаг старой схемы «доступ навсегда» больше не используется: вход действует до перезагрузки страницы
 const K={cfg:'mx_cfg',act:'mx_active',good:'mx_good',pend:'mx_pending',note:'mx_notice'};
 const ORIG=$('#game-src').textContent,PREFIX=$('#game-assets').textContent;
 let CODE=ORIG,PENDING=false;
@@ -319,9 +320,40 @@ function ui(){
   hd.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const r=p.getBoundingClientRect();dr={dx:e.clientX-r.left,dy:e.clientY-r.top};hd.setPointerCapture(e.pointerId)});
   hd.addEventListener('pointermove',e=>{if(dr)place(e.clientX-dr.dx,e.clientY-dr.dy)});
   hd.addEventListener('pointerup',()=>{if(dr){dr=null;LS.setItem('mx_pos',JSON.stringify([parseInt(p.style.left),parseInt(p.style.top)]))}});
-  /* скин убран */
-  b.style.display=LS.getItem('mx_dev')==='1'?'block':'none';
-  window.mxUnlock=(open)=>{LS.setItem('mx_dev','1');b.style.display='block';if(open&&!p.classList.contains('on'))b.onclick()};
+  /* ---------- вход в редактор: один пароль на все устройства, в коде только соль и хеш (MXCore.AUTH) ----------
+     Доступ держится в памяти до перезагрузки страницы, в хранилище ничего не пишется. Окно запроса — DOM,
+     поэтому работает и при сломанной игре (аварийный жест). */
+  let UNLOCKED=false;b.style.display='none';window.__mxUnlocked=false;
+  const openPanel=()=>{if(!p.classList.contains('on'))b.onclick()};
+  const gate=(open)=>{
+    if(UNLOCKED){if(open)openPanel();return}
+    if(document.getElementById('mx-dev-ov'))return;
+    const ov=document.createElement('div');ov.id='mx-dev-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(5,3,8,.75);display:flex;align-items:center;justify-content:center';
+    ov.innerHTML='<div style="background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:22px 24px;color:#fff;font:14px system-ui;text-align:center;min-width:280px;max-width:92vw"><div style="font-weight:800;margin-bottom:12px">Режим разработчика</div>'+
+      '<input id="mx-dev-in" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Пароль" style="width:100%;box-sizing:border-box;padding:10px;border-radius:9px;border:1px solid #6a4a8a;background:#0f0a16;color:#fff;font:15px system-ui;outline:0">'+
+      '<div id="mx-dev-err" style="color:#ff8a8a;font-size:12px;min-height:16px;margin:8px 0"></div>'+
+      '<div style="display:flex;gap:8px;justify-content:center"><button id="mx-dev-ok" style="font:14px system-ui;padding:9px 18px;border-radius:9px;border:0;background:#8e24aa;color:#fff">Войти</button><button id="mx-dev-no" style="font:14px system-ui;padding:9px 18px;border-radius:9px;border:1px solid #555;background:#222;color:#ddd">Отмена</button></div>'+
+      '<div style="color:#9a8aa8;font-size:11px;margin-top:10px">Доступ действует до перезагрузки страницы</div></div>';
+    document.body.appendChild(ov);
+    ['pointerdown','pointerup','touchstart','touchmove','touchend','mousedown','mouseup','click','keydown','keyup','keypress','wheel'].forEach(ev=>ov.addEventListener(ev,e=>e.stopPropagation()));
+    const inp=ov.querySelector('#mx-dev-in'),err=ov.querySelector('#mx-dev-err'),okb=ov.querySelector('#mx-dev-ok');
+    const close=()=>ov.remove();
+    let busy=false;
+    const ok=async()=>{
+      if(busy)return;busy=true;okb.disabled=true;err.textContent='Проверяю…';
+      let good=false,why='';
+      try{good=await MXCore.verifyPassword(inp.value)}catch(e){why=String(e&&e.message||e)}
+      busy=false;okb.disabled=false;
+      if(good){UNLOCKED=true;window.__mxUnlocked=true;b.style.display='block';close();toast('Редактор открыт до перезагрузки страницы');if(open)openPanel();return}
+      err.textContent=why||'Неверный пароль';inp.value='';inp.focus();
+    };
+    okb.onclick=e=>{e.stopPropagation();ok()};
+    ov.querySelector('#mx-dev-no').onclick=e=>{e.stopPropagation();close()};
+    inp.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')ok();if(e.key==='Escape')close()};
+    inp.focus();
+  };
+  window.mxGate=gate;window.mxUnlock=gate;
   let picked=null;
   const pickBtn=$('#mx-pick'),pickedEl=$('#mx-picked');
   pickBtn.onclick=()=>{
@@ -346,7 +378,7 @@ function ui(){
       cancel();
     };
   };
-  b.onclick=()=>{p.classList.toggle('on');const on=p.classList.contains('on');window.__mxOpen=on;if(on){place(parseInt(p.style.left),parseInt(p.style.top));renderV();bg.play().catch(()=>{})}else bg.pause()};$('#mx-x').onclick=()=>{p.classList.remove('on');window.__mxOpen=false;bg.pause()};
+  b.onclick=()=>{if(!UNLOCKED)return gate(true);p.classList.toggle('on');const on=p.classList.contains('on');window.__mxOpen=on;if(on){place(parseInt(p.style.left),parseInt(p.style.top));renderV();bg.play().catch(()=>{})}else bg.pause()};$('#mx-x').onclick=()=>{p.classList.remove('on');window.__mxOpen=false;bg.pause()};
   $('#mx-go').onclick=async()=>{
     let req=$('#mx-q').value.trim();if(!req)return;sync();
     if(picked){let ctx='';try{ctx=' Экран игры: '+S+'.';if(G&&G.slots){const near=G.slots.filter(u=>u&&Math.hypot(u.x-picked.x,u.y-picked.y)<90).map(u=>u.n||u.k);if(near.length)ctx+=' В этой точке находится: '+near.join(', ')+'.';}}catch(e){}const zx=picked.x<406?'слева':picked.x<812?'в центре':'справа';const zy=picked.y<180?'сверху':picked.y<360?'в середине':'снизу';req='Область бага на экране игры: x='+picked.x+', y='+picked.y+' (экран 1218×540, начало координат слева сверху; область: '+zx+' '+zy+').'+ctx+' Определи, какой объект игры в этой точке (герой, враг, декорация, элемент интерфейса), и ищи баг в функциях, которые его рисуют и обновляют. '+req;}

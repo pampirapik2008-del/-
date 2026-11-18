@@ -170,9 +170,14 @@ function loadLoader(opts) {
 	const dom = createDom();
 	const win = dom.windowObj;
 	const timers = []; // ручные таймеры: тест сам двигает время
+	// крошечный реестр элементов по id: innerHTML с id="…" рождает дочерние заглушки, querySelector('#id') их находит,
+	// remove() снимает регистрацию — этого хватает, чтобы прогнать окно пароля настоящими обработчиками
+	const byId = new Map();
 	const patchEl = (el) => {
 		const cls = new Set();
-		return Object.assign(el, {
+		let html = "", id = "";
+		const kids = [];
+		Object.assign(el, {
 			append() {},
 			insertBefore() {},
 			click() {},
@@ -181,14 +186,29 @@ function loadLoader(opts) {
 			closest: () => null,
 			setPointerCapture() {},
 			releasePointerCapture() {},
+			remove() { byId.delete(id); for (const k of kids) byId.delete(k); },
+			querySelector: (sel) => (sel[0] === "#" && byId.get(sel.slice(1))) || null,
 			classList: { add: (c) => cls.add(c), remove: (c) => cls.delete(c), toggle: (c, f) => (f === undefined ? (cls.has(c) ? cls.delete(c) : cls.add(c)) : f ? cls.add(c) : cls.delete(c)), contains: (c) => cls.has(c) },
 		});
+		Object.defineProperty(el, "id", { get: () => id, set: (v) => { id = String(v); byId.set(id, el); } });
+		Object.defineProperty(el, "innerHTML", {
+			get: () => html,
+			set: (v) => {
+				html = String(v);
+				for (const m of html.matchAll(/<(\w+)[^>]*?\sid="([^"]+)"/g)) {
+					const k = patchEl(mk(m[1]));
+					k.value = ""; k.textContent = ""; k.disabled = false; k.id = m[2]; kids.push(m[2]);
+				}
+			},
+		});
+		return el;
 	};
 	const mk = dom.document.createElement;
 	dom.document.createElement = (tag) => patchEl(mk(tag));
 	dom.document.head = patchEl(mk("head"));
 	patchEl(dom.document.body);
-	dom.document.querySelector = (sel) => patchEl(Object.assign(mk("div"), { textContent: sel === "#game-src" ? "/*game*/" : sel === "#game-assets" ? "/*assets*/" : "" }));
+	dom.document.getElementById = (i) => byId.get(i) || null;
+	dom.document.querySelector = (sel) => byId.get(sel.slice(1)) || patchEl(Object.assign(mk("div"), { textContent: sel === "#game-src" ? "/*game*/" : sel === "#game-assets" ? "/*assets*/" : "" }));
 	const warns = [];
 	const reloads = [];
 	Object.assign(win, {
@@ -215,11 +235,16 @@ function loadLoader(opts) {
 		TypeError,
 		Function,
 		setImmediate,
+		crypto: globalThis.crypto,
+		TextEncoder,
+		Uint8Array,
 	});
 	for (const [k, v] of Object.entries(opts.ls || {})) win.localStorage.setItem(k, v);
 	if (opts.game) Object.assign(win, opts.game);
 	vm.createContext(win);
-	vm.runInContext(CORE_SRC + "\n" + LOADER_SRC, win, { filename: "loader.js" });
+	vm.runInContext(CORE_SRC, win, { filename: "core.js" });
+	if (opts.auth) win.MXCore.AUTH = opts.auth; // тестовая пара соль/хеш вместо боевой
+	vm.runInContext(LOADER_SRC, win, { filename: "loader.js" });
 	// прокрутить ручные таймеры до момента ms (интервалы срабатывают кратно периоду)
 	const advance = async (ms) => {
 		for (let now = 0; now <= ms; now += 250) {
@@ -236,7 +261,27 @@ function loadLoader(opts) {
 	const settle = async () => {
 		for (let i = 0; i < 12; i++) await new Promise((r) => setImmediate(r));
 	};
-	return { win, ls: win.localStorage, warns, reloads, advance, settle, winListeners: dom.winListeners };
+	return { win, ls: win.localStorage, warns, reloads, advance, settle, winListeners: dom.winListeners, byId };
+}
+// тестовая пара «пароль → соль/хеш» (боевой пароль в тестах не фигурирует: проверяется та же функция на своей паре)
+const TEST_PWD = "тестовый пароль редактора 42";
+let TEST_AUTH = null;
+async function testAuth() {
+	if (!TEST_AUTH) {
+		TEST_AUTH = { salt: "соль-для-тестов", iter: 2000, hash: "" };
+		TEST_AUTH.hash = await MXCore.pwdHash(TEST_PWD, TEST_AUTH);
+	}
+	return TEST_AUTH;
+}
+// ввести пароль в окно загрузчика (настоящие обработчики DOM-заглушки)
+async function enterPassword(L, pwd) {
+	const inp = L.byId.get("mx-dev-in");
+	assert.ok(inp, "окно пароля открыто");
+	inp.value = pwd;
+	inp.onkeydown({ key: "Enter", stopPropagation() {} });
+	// PBKDF2 считается в пуле потоков — ждём настоящим временем, а не микрозадачами
+	for (let i = 0; i < 400 && L.byId.get("mx-dev-err") && L.byId.get("mx-dev-err").textContent === "Проверяю…"; i++) await new Promise((r) => setTimeout(r, 5));
+	await L.settle();
 }
 
 test("загрузчик: интерфейс и запуск оригинала без ошибок, панель открывается аварийным жестом", async () => {
@@ -246,12 +291,95 @@ test("загрузчик: интерфейс и запуск оригинала 
 	assert.equal(typeof L.win.MXCore, "object");
 	assert.equal(typeof L.win.mxUnlock, "function");
 	assert.equal(L.ls.getItem("mx_dev"), null);
-	// 5 касаний левого верхнего угла — панель доступна даже при сломанной игре
+	// 5 касаний левого верхнего угла — окно пароля доступно даже при сломанной игре, но панель без пароля не открывается
 	const taps = L.winListeners.pointerdown || [];
 	assert.ok(taps.length >= 1, "есть обработчик аварийного жеста");
 	for (let i = 0; i < 5; i++) taps.forEach((f) => f({ clientX: 10, clientY: 10 }));
-	assert.equal(L.ls.getItem("mx_dev"), "1");
-	assert.equal(L.win.__mxOpen, true);
+	assert.ok(L.byId.get("mx-dev-ov"), "жест открывает окно пароля");
+	assert.notEqual(L.win.__mxOpen, true, "панель закрыта");
+	assert.equal(L.ls.getItem("mx_dev"), null, "в хранилище ничего не пишется");
+});
+
+test("пароль редактора: PBKDF2-SHA-256 с солью — верный подходит, неверный нет; в коде только соль и хеш", async () => {
+	const a = await testAuth();
+	assert.match(a.hash, /^[0-9a-f]{64}$/);
+	assert.equal(await MXCore.verifyPassword(TEST_PWD, a), true);
+	assert.equal(await MXCore.verifyPassword(TEST_PWD + " ", a), false);
+	assert.equal(await MXCore.verifyPassword("", a), false);
+	assert.equal(await MXCore.verifyPassword("676767", a), false);
+	assert.equal(await MXCore.verifyPassword(TEST_PWD, { ...a, salt: "другая соль" }), false, "соль входит в хеш");
+	// сравнение без раннего выхода
+	assert.equal(MXCore.hexEq("abcd", "abcd"), true);
+	assert.equal(MXCore.hexEq("abcd", "abce"), false);
+	assert.equal(MXCore.hexEq("abcd", "abc"), false);
+	assert.equal(MXCore.hexEq("", ""), true);
+	// боевые константы: хеш правильной формы, не заглушка, соль задана, раундов не меньше 100 000
+	const A = MXCore.AUTH;
+	assert.match(A.hash, /^[0-9a-f]{64}$/);
+	assert.notEqual(A.hash, "0".repeat(64), "хеш заполнен");
+	assert.ok(A.salt.length >= 16);
+	assert.ok(A.iter >= 100000);
+	assert.notEqual(await MXCore.verifyPassword(TEST_PWD), true, "тестовый пароль боевому хешу не подходит");
+	// без WebCrypto — понятная ошибка, а не «тихий» отказ
+	await assert.rejects(MXCore.pwdHash("x", a, null), /WebCrypto/);
+	// старой схемы (FNV-1a с солью в коде игры) больше нет ни в коде, ни в сборках
+	const files = ["index.html", "dist/game.html", "src/game/65_screens.js", "src/editor/loader.js"].filter((f) => fs.existsSync(path.join(ROOT, f)));
+	for (const f of files) {
+		const t = fs.readFileSync(path.join(ROOT, f), "utf8");
+		assert.ok(!t.includes("mxdev2026") && !t.includes("_mxh("), f + ": старая проверка пароля удалена");
+		assert.ok(!t.includes("mx_dev\", \"1\"") && !t.includes("setItem('mx_dev'"), f + ": доступ не сохраняется в хранилище");
+	}
+});
+
+// настоящий пароль не хранится в репозитории: проверка с ним выполняется только локально, если он передан через переменную окружения
+test("настоящий пароль подходит и не лежит в исходниках/сборках (нужен MX_EDITOR_PASSWORD)", { skip: !process.env.MX_EDITOR_PASSWORD && "нет MX_EDITOR_PASSWORD" }, async () => {
+	const pwd = process.env.MX_EDITOR_PASSWORD;
+	assert.equal(await MXCore.verifyPassword(pwd), true);
+	assert.equal(await MXCore.verifyPassword(pwd + "1"), false);
+	const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (["node_modules", ".git", ".cache"].includes(e.name) ? [] : walk(path.join(d, e.name))) : [path.join(d, e.name)]));
+	const leaks = walk(ROOT).filter((f) => /\.(js|mjs|html|md|json|txt)$/.test(f) && fs.readFileSync(f, "utf8").includes(pwd));
+	assert.deepEqual(leaks, [], "открытого пароля нет ни в одном файле репозитория");
+});
+
+test("вход в редактор: верный пароль открывает панель, неверный — нет, после перезагрузки снова закрыто", async () => {
+	const auth = await testAuth();
+	const L = loadLoader({ auth });
+	await L.settle();
+	assert.equal(L.win.__mxUnlocked, false);
+	assert.equal(typeof L.win.mxGate, "function");
+	// кнопка «AI» скрыта, пока пароль не введён
+	const btn = [...L.byId.values()].find((e) => e.id === "mx-b");
+	assert.ok(btn, "кнопка панели создана");
+	assert.equal(btn.style.display, "none");
+	// неверный пароль
+	L.win.mxGate(true);
+	assert.ok(L.byId.get("mx-dev-ov"), "окно пароля");
+	await enterPassword(L, "неверный пароль 123");
+	assert.equal(L.byId.get("mx-dev-err").textContent, "Неверный пароль");
+	assert.equal(L.win.__mxUnlocked, false);
+	assert.notEqual(L.win.__mxOpen, true);
+	assert.ok(L.byId.get("mx-dev-ov"), "окно осталось открытым для новой попытки");
+	// верный пароль
+	await enterPassword(L, TEST_PWD);
+	assert.equal(L.win.__mxUnlocked, true);
+	assert.equal(L.byId.get("mx-dev-ov"), undefined, "окно закрылось");
+	assert.equal(btn.style.display, "block");
+	assert.equal(L.win.__mxOpen, true, "панель открыта");
+	assert.equal(L.ls.getItem("mx_dev"), null, "в хранилище доступ не записан");
+	// повторный вызов при открытом доступе окно не показывает
+	L.win.mxGate();
+	assert.equal(L.byId.get("mx-dev-ov"), undefined);
+	// «перезагрузка»: тот же localStorage, новый загрузчик — снова закрыто
+	const keep = {};
+	for (const k of ["mx_cfg", "mx_pos", "mx_active", "mx_good"]) if (L.ls.getItem(k) != null) keep[k] = L.ls.getItem(k);
+	const R = loadLoader({ auth, ls: keep });
+	await R.settle();
+	assert.equal(R.win.__mxUnlocked, false);
+	assert.equal([...R.byId.values()].find((e) => e.id === "mx-b").style.display, "none");
+	R.win.mxUnlock(true);
+	assert.ok(R.byId.get("mx-dev-ov"), "после перезагрузки снова спрашивает пароль");
+	assert.notEqual(R.win.__mxOpen, true);
+	assert.deepEqual(R.warns, []);
 });
 
 test("загрузчик: незавершённый прошлый запуск откатывается на good с пометкой «не запустилась»", async () => {

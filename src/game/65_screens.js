@@ -957,41 +957,11 @@ function startRun() {
 	autosave();
 }
 // ---------- настройки ----------
-function _mxh(s) {
-	let h = 0x811c9dc5;
-	const t2 = "mxdev2026" + s;
-	for (let i = 0; i < t2.length; i++) { h ^= t2.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-	return h.toString(16).padStart(8, "0");
-}
+// пароль режима разработчика проверяет загрузчик (src/editor/loader.js → MXCore.verifyPassword):
+// один пароль на все устройства, в коде только соль и хеш PBKDF2-SHA-256; доступ действует до перезагрузки страницы
 function devGate() {
-	if (document.getElementById("mx-dev-ov")) return;
-	const ov = document.createElement("div");
-	ov.id = "mx-dev-ov";
-	ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(5,3,8,.75);display:flex;align-items:center;justify-content:center";
-	ov.innerHTML = '<div style="background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:22px 24px;color:#fff;font:14px system-ui;text-align:center;min-width:280px"><div style="font-weight:800;margin-bottom:12px">Режим разработчика</div><input id="mx-dev-in" type="password" inputmode="numeric" autocomplete="off" placeholder="Пароль" style="width:100%;padding:10px;border-radius:8px;border:1px solid #555;background:#0f0b16;color:#fff;text-align:center;font-size:16px"><div id="mx-dev-err" style="color:#ff6a6a;min-height:18px;margin-top:8px;font-size:12px"></div><div style="display:flex;gap:8px;margin-top:10px"><button id="mx-dev-ok" style="flex:1;padding:10px;border-radius:8px;border:0;background:#8e24aa;color:#fff;font-weight:800;cursor:pointer">Войти</button><button id="mx-dev-no" style="flex:1;padding:10px;border-radius:8px;border:1px solid #555;background:#2a2238;color:#fff;cursor:pointer">Отмена</button></div></div>';
-	document.body.appendChild(ov);
-	const inp = ov.querySelector("#mx-dev-in");
-	inp.focus();
-	const close = () => ov.remove();
-	ov.querySelector("#mx-dev-no").onclick = (e) => { e.stopPropagation(); close(); };
-	ov.addEventListener("pointerdown", (e) => e.stopPropagation());
-	ov.addEventListener("click", (e) => e.stopPropagation());
-	const ok = () => {
-		if (_mxh(inp.value) === "4d2208a5") {
-			window.__mxStorage.setItem("mx_dev", "1");
-			const b = document.getElementById("mx-b");
-			if (b) b.style.display = "block";
-			if (window.mxUnlock) window.mxUnlock();
-			close();
-			toast("Режим разработчика включён");
-		} else {
-			ov.querySelector("#mx-dev-err").textContent = "Неверный пароль";
-			inp.value = "";
-			inp.focus();
-		}
-	};
-	ov.querySelector("#mx-dev-ok").onclick = (e) => { e.stopPropagation(); ok(); };
-	inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Enter") ok(); if (e.key === "Escape") close(); };
+	if (window.mxGate) window.mxGate(true);
+	else toast("Редактор не подключён");
 }
 function dSet() {
 	menuBG(false);
@@ -1092,7 +1062,7 @@ function dSet() {
 		btn(x + 196, y + 7, 164, 40, val, f, col || (on === undefined || on ? "#2e7d32" : "#555"), { sz: 15 });
 	});
 	if (CFG.autoUlt === false) tx("Ручные ульты: нажми на портрет бойца, когда полоска энергии полная", 609, 400, 12, "#b9b3c8", "center");
-	btn(233, 414, 268, 44, window.__mxStorage.getItem("mx_dev") === "1" ? "Разработчик: включён" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
+	btn(233, 414, 268, 44, window.__mxUnlocked ? "Разработчик: открыт" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
 	btn(529, 414, 160, 44, "Назад", () => {
 		delAsk = false;
 		Machine.go(SRET, "назад из настроек");

@@ -1340,7 +1340,7 @@ const Music = (() => {
 // ловится по отдельности, пишется в кольцевой журнал, а три подряд идущих сбоя
 // переводят игру в безопасный режим с понятным окном вместо мёртвого экрана.
 // версия исходников подставляется сборкой (короткий хеш src/ + ассетов)
-let GAME_BUILD = "5d16756dd1db";
+let GAME_BUILD = "e953bdf60086";
 const ERRS = [];
 const ERR_MAX = 200;
 let ERR_SEQ = 0,
@@ -9050,41 +9050,11 @@ function startRun() {
 	autosave();
 }
 // ---------- настройки ----------
-function _mxh(s) {
-	let h = 0x811c9dc5;
-	const t2 = "mxdev2026" + s;
-	for (let i = 0; i < t2.length; i++) { h ^= t2.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-	return h.toString(16).padStart(8, "0");
-}
+// пароль режима разработчика проверяет загрузчик (src/editor/loader.js → MXCore.verifyPassword):
+// один пароль на все устройства, в коде только соль и хеш PBKDF2-SHA-256; доступ действует до перезагрузки страницы
 function devGate() {
-	if (document.getElementById("mx-dev-ov")) return;
-	const ov = document.createElement("div");
-	ov.id = "mx-dev-ov";
-	ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(5,3,8,.75);display:flex;align-items:center;justify-content:center";
-	ov.innerHTML = '<div style="background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:22px 24px;color:#fff;font:14px system-ui;text-align:center;min-width:280px"><div style="font-weight:800;margin-bottom:12px">Режим разработчика</div><input id="mx-dev-in" type="password" inputmode="numeric" autocomplete="off" placeholder="Пароль" style="width:100%;padding:10px;border-radius:8px;border:1px solid #555;background:#0f0b16;color:#fff;text-align:center;font-size:16px"><div id="mx-dev-err" style="color:#ff6a6a;min-height:18px;margin-top:8px;font-size:12px"></div><div style="display:flex;gap:8px;margin-top:10px"><button id="mx-dev-ok" style="flex:1;padding:10px;border-radius:8px;border:0;background:#8e24aa;color:#fff;font-weight:800;cursor:pointer">Войти</button><button id="mx-dev-no" style="flex:1;padding:10px;border-radius:8px;border:1px solid #555;background:#2a2238;color:#fff;cursor:pointer">Отмена</button></div></div>';
-	document.body.appendChild(ov);
-	const inp = ov.querySelector("#mx-dev-in");
-	inp.focus();
-	const close = () => ov.remove();
-	ov.querySelector("#mx-dev-no").onclick = (e) => { e.stopPropagation(); close(); };
-	ov.addEventListener("pointerdown", (e) => e.stopPropagation());
-	ov.addEventListener("click", (e) => e.stopPropagation());
-	const ok = () => {
-		if (_mxh(inp.value) === "4d2208a5") {
-			window.__mxStorage.setItem("mx_dev", "1");
-			const b = document.getElementById("mx-b");
-			if (b) b.style.display = "block";
-			if (window.mxUnlock) window.mxUnlock();
-			close();
-			toast("Режим разработчика включён");
-		} else {
-			ov.querySelector("#mx-dev-err").textContent = "Неверный пароль";
-			inp.value = "";
-			inp.focus();
-		}
-	};
-	ov.querySelector("#mx-dev-ok").onclick = (e) => { e.stopPropagation(); ok(); };
-	inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Enter") ok(); if (e.key === "Escape") close(); };
+	if (window.mxGate) window.mxGate(true);
+	else toast("Редактор не подключён");
 }
 function dSet() {
 	menuBG(false);
@@ -9185,7 +9155,7 @@ function dSet() {
 		btn(x + 196, y + 7, 164, 40, val, f, col || (on === undefined || on ? "#2e7d32" : "#555"), { sz: 15 });
 	});
 	if (CFG.autoUlt === false) tx("Ручные ульты: нажми на портрет бойца, когда полоска энергии полная", 609, 400, 12, "#b9b3c8", "center");
-	btn(233, 414, 268, 44, window.__mxStorage.getItem("mx_dev") === "1" ? "Разработчик: включён" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
+	btn(233, 414, 268, 44, window.__mxUnlocked ? "Разработчик: открыт" : "Режим разработчика", () => devGate(), "#8e24aa", { sz: 15 });
 	btn(529, 414, 160, 44, "Назад", () => {
 		delAsk = false;
 		Machine.go(SRET, "назад из настроек");
@@ -9749,7 +9719,36 @@ const MXCore = (() => {
 			"){clearInterval(iv);return post({ok:false,why:'игра не загрузилась за '+Math.round(el/1000)+' с',state:st})}},250)})();"
 		);
 	}
-	return { parsePatches, applyPatches, checkSyntax, maskSecrets, apiError, isTruncated, hash, pruneList, trialScript, unfence };
+	// ---------- пароль режима разработчика ----------
+	// Один пароль на все устройства. В коде только соль и хеш: hash = PBKDF2-HMAC-SHA-256(пароль, salt, iter), hex.
+	// Считается WebCrypto (нужен защищённый контекст: file://, https или localhost). Открытого пароля в репозитории нет;
+	// подбор хеша из публичного кода стоит iter хешей SHA-256 на одну попытку. Доступ не сохраняется — до перезагрузки страницы.
+	const AUTH = { salt: "f59c238ab9b41fc54ec92368b4bbe15b", iter: 300000, hash: "1924131050348cf4026f4f7a3e6e7769d797e2c4293c791e24b47c8ddcd00c42" };
+	const hexOf = (buf) => Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+	async function pwdHash(pwd, auth, subtle) {
+		const a = auth || api.AUTH;
+		const s = subtle || (typeof crypto !== "undefined" && crypto.subtle);
+		if (!s || !s.deriveBits) throw new Error("В этом окне нет WebCrypto (небезопасный адрес). Откройте файл напрямую или по https.");
+		const enc = new TextEncoder();
+		const key = await s.importKey("raw", enc.encode(String(pwd == null ? "" : pwd)), "PBKDF2", false, ["deriveBits"]);
+		const bits = await s.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: enc.encode(String(a.salt)), iterations: a.iter | 0 }, key, 256);
+		return hexOf(bits);
+	}
+	// сравнение без раннего выхода: время не зависит от того, где строки разошлись
+	function hexEq(a, b) {
+		a = String(a == null ? "" : a);
+		b = String(b == null ? "" : b);
+		let d = a.length ^ b.length;
+		const n = Math.max(a.length, b.length);
+		for (let i = 0; i < n; i++) d |= (a.charCodeAt(i) | 0) ^ (b.charCodeAt(i) | 0);
+		return d === 0;
+	}
+	async function verifyPassword(pwd, auth, subtle) {
+		const a = auth || api.AUTH;
+		return hexEq(await pwdHash(pwd, a, subtle), a.hash);
+	}
+	const api = { parsePatches, applyPatches, checkSyntax, maskSecrets, apiError, isTruncated, hash, pruneList, trialScript, unfence, AUTH, pwdHash, hexEq, verifyPassword };
+	return api;
 })();
 if (typeof window !== "undefined") window.MXCore = MXCore;
 
@@ -9762,6 +9761,7 @@ let LS, STORAGE_TEMP=false;
 try { LS=window.localStorage; LS.getItem('mx_storage_probe'); }
 catch(e) { STORAGE_TEMP=true; const m=new Map(); LS={getItem:k=>m.has(String(k))?m.get(String(k)):null,setItem:(k,v)=>m.set(String(k),String(v)),removeItem:k=>m.delete(String(k))}; }
 window.__mxStorage=LS;
+LS.removeItem('mx_dev'); // флаг старой схемы «доступ навсегда» больше не используется: вход действует до перезагрузки страницы
 const K={cfg:'mx_cfg',act:'mx_active',good:'mx_good',pend:'mx_pending',note:'mx_notice'};
 const ORIG=$('#game-src').textContent,PREFIX=$('#game-assets').textContent;
 let CODE=ORIG,PENDING=false;
@@ -10074,9 +10074,40 @@ function ui(){
   hd.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;const r=p.getBoundingClientRect();dr={dx:e.clientX-r.left,dy:e.clientY-r.top};hd.setPointerCapture(e.pointerId)});
   hd.addEventListener('pointermove',e=>{if(dr)place(e.clientX-dr.dx,e.clientY-dr.dy)});
   hd.addEventListener('pointerup',()=>{if(dr){dr=null;LS.setItem('mx_pos',JSON.stringify([parseInt(p.style.left),parseInt(p.style.top)]))}});
-  /* скин убран */
-  b.style.display=LS.getItem('mx_dev')==='1'?'block':'none';
-  window.mxUnlock=(open)=>{LS.setItem('mx_dev','1');b.style.display='block';if(open&&!p.classList.contains('on'))b.onclick()};
+  /* ---------- вход в редактор: один пароль на все устройства, в коде только соль и хеш (MXCore.AUTH) ----------
+     Доступ держится в памяти до перезагрузки страницы, в хранилище ничего не пишется. Окно запроса — DOM,
+     поэтому работает и при сломанной игре (аварийный жест). */
+  let UNLOCKED=false;b.style.display='none';window.__mxUnlocked=false;
+  const openPanel=()=>{if(!p.classList.contains('on'))b.onclick()};
+  const gate=(open)=>{
+    if(UNLOCKED){if(open)openPanel();return}
+    if(document.getElementById('mx-dev-ov'))return;
+    const ov=document.createElement('div');ov.id='mx-dev-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(5,3,8,.75);display:flex;align-items:center;justify-content:center';
+    ov.innerHTML='<div style="background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:22px 24px;color:#fff;font:14px system-ui;text-align:center;min-width:280px;max-width:92vw"><div style="font-weight:800;margin-bottom:12px">Режим разработчика</div>'+
+      '<input id="mx-dev-in" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Пароль" style="width:100%;box-sizing:border-box;padding:10px;border-radius:9px;border:1px solid #6a4a8a;background:#0f0a16;color:#fff;font:15px system-ui;outline:0">'+
+      '<div id="mx-dev-err" style="color:#ff8a8a;font-size:12px;min-height:16px;margin:8px 0"></div>'+
+      '<div style="display:flex;gap:8px;justify-content:center"><button id="mx-dev-ok" style="font:14px system-ui;padding:9px 18px;border-radius:9px;border:0;background:#8e24aa;color:#fff">Войти</button><button id="mx-dev-no" style="font:14px system-ui;padding:9px 18px;border-radius:9px;border:1px solid #555;background:#222;color:#ddd">Отмена</button></div>'+
+      '<div style="color:#9a8aa8;font-size:11px;margin-top:10px">Доступ действует до перезагрузки страницы</div></div>';
+    document.body.appendChild(ov);
+    ['pointerdown','pointerup','touchstart','touchmove','touchend','mousedown','mouseup','click','keydown','keyup','keypress','wheel'].forEach(ev=>ov.addEventListener(ev,e=>e.stopPropagation()));
+    const inp=ov.querySelector('#mx-dev-in'),err=ov.querySelector('#mx-dev-err'),okb=ov.querySelector('#mx-dev-ok');
+    const close=()=>ov.remove();
+    let busy=false;
+    const ok=async()=>{
+      if(busy)return;busy=true;okb.disabled=true;err.textContent='Проверяю…';
+      let good=false,why='';
+      try{good=await MXCore.verifyPassword(inp.value)}catch(e){why=String(e&&e.message||e)}
+      busy=false;okb.disabled=false;
+      if(good){UNLOCKED=true;window.__mxUnlocked=true;b.style.display='block';close();toast('Редактор открыт до перезагрузки страницы');if(open)openPanel();return}
+      err.textContent=why||'Неверный пароль';inp.value='';inp.focus();
+    };
+    okb.onclick=e=>{e.stopPropagation();ok()};
+    ov.querySelector('#mx-dev-no').onclick=e=>{e.stopPropagation();close()};
+    inp.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')ok();if(e.key==='Escape')close()};
+    inp.focus();
+  };
+  window.mxGate=gate;window.mxUnlock=gate;
   let picked=null;
   const pickBtn=$('#mx-pick'),pickedEl=$('#mx-picked');
   pickBtn.onclick=()=>{
@@ -10101,7 +10132,7 @@ function ui(){
       cancel();
     };
   };
-  b.onclick=()=>{p.classList.toggle('on');const on=p.classList.contains('on');window.__mxOpen=on;if(on){place(parseInt(p.style.left),parseInt(p.style.top));renderV();bg.play().catch(()=>{})}else bg.pause()};$('#mx-x').onclick=()=>{p.classList.remove('on');window.__mxOpen=false;bg.pause()};
+  b.onclick=()=>{if(!UNLOCKED)return gate(true);p.classList.toggle('on');const on=p.classList.contains('on');window.__mxOpen=on;if(on){place(parseInt(p.style.left),parseInt(p.style.top));renderV();bg.play().catch(()=>{})}else bg.pause()};$('#mx-x').onclick=()=>{p.classList.remove('on');window.__mxOpen=false;bg.pause()};
   $('#mx-go').onclick=async()=>{
     let req=$('#mx-q').value.trim();if(!req)return;sync();
     if(picked){let ctx='';try{ctx=' Экран игры: '+S+'.';if(G&&G.slots){const near=G.slots.filter(u=>u&&Math.hypot(u.x-picked.x,u.y-picked.y)<90).map(u=>u.n||u.k);if(near.length)ctx+=' В этой точке находится: '+near.join(', ')+'.';}}catch(e){}const zx=picked.x<406?'слева':picked.x<812?'в центре':'справа';const zy=picked.y<180?'сверху':picked.y<360?'в середине':'снизу';req='Область бага на экране игры: x='+picked.x+', y='+picked.y+' (экран 1218×540, начало координат слева сверху; область: '+zx+' '+zy+').'+ctx+' Определи, какой объект игры в этой точке (герой, враг, декорация, элемент интерфейса), и ищи баг в функциях, которые его рисуют и обновляют. '+req;}
