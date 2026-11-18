@@ -9,7 +9,10 @@
 //     модуль-замыкание `const X = (() => { … })()` — пространство имён, а не функция:
 //     его не меряем целиком, а проверяем функции внутри него;
 //   - мёртвый код: объявление верхнего уровня в src/game, на которое нет ни одной
-//     ссылки (кроме комментариев) ни в игре, ни в обвязке тестов, — ошибка.
+//     ссылки (кроме комментариев) ни в игре, ни в обвязке тестов, — ошибка;
+//   - дубли: одно имя объявлено на верхнем уровне дважды (в одном файле или в разных) — ошибка:
+//     в склейке молча побеждает позднее объявление, а раннее становится мёртвым кодом-ловушкой
+//     (так совпали старые bakeLakes/bakeRoads из 01_head.js и новые из 60_game.js).
 //   node tools/lint.mjs            — проверка, код выхода 1 при ошибках
 //   node tools/lint.mjs --long     — только список длинных функций
 import fs from "node:fs";
@@ -109,10 +112,29 @@ export function deadDeclarations(texts, extraText = "") {
 	return out;
 }
 
+/* ---------- дубли: одно имя объявлено на верхнем уровне дважды ---------- */
+// Берутся те же объявления, что и для мёртвого кода (function/const/let/var/class в начале строки);
+// для каждого повторного — где было первое.
+export function duplicateDeclarations(texts) {
+	const seen = new Map(),
+		out = [];
+	for (const { file, text } of texts) {
+		text.split("\n").forEach((ln, i) => {
+			const m = /^(?:async\s+)?function\s*\*?\s*([A-Za-z_$][\w$]*)\s*\(/.exec(ln) || /^(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/.exec(ln) || /^class\s+([A-Za-z_$][\w$]*)\b/.exec(ln);
+			if (!m) return;
+			const prev = seen.get(m[1]);
+			if (prev) out.push({ name: m[1], file, line: i + 1, firstFile: prev.file, firstLine: prev.line });
+			else seen.set(m[1], { file, line: i + 1 });
+		});
+	}
+	return out;
+}
+
 {
 	const texts = files.map((f) => ({ file: f, text: fs.readFileSync(path.join(SRC, f), "utf8") }));
 	const extra = ["tests/harness/devapi.js", "tests/harness/boot.mjs"].map((p) => fs.readFileSync(path.join(ROOT, p), "utf8")).join("\n");
 	for (const d of deadDeclarations(texts, extra)) errors.push(`${d.file}:${d.line}: мёртвый код — ${d.name} нигде не используется`);
+	for (const d of duplicateDeclarations(texts)) errors.push(`${d.file}:${d.line}: ${d.name} уже объявлен в ${d.firstFile}:${d.firstLine} — в склейке победит позднее объявление`);
 }
 
 /* ---------- неявные глобалы ---------- */

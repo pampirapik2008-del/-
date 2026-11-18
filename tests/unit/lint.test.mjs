@@ -2,7 +2,7 @@
 // и мёртвый код (объявление верхнего уровня без единой ссылки).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { longFunctions, deadDeclarations, forbidden } from "../../tools/lint.mjs";
+import { longFunctions, deadDeclarations, duplicateDeclarations, forbidden } from "../../tools/lint.mjs";
 
 const body = (n) => Array.from({ length: n }, (_, i) => `\tx += ${i};`).join("\n");
 
@@ -72,5 +72,18 @@ test("экран вне 12_state.js: сравнения и присваиван�
 	// комментарии не считаются
 	assert.deepEqual(forbidden("60_game.js", '// раньше тут было S === "map"\n'), []);
 	assert.equal(forbidden("60_game.js", "const r = Math.random();\n")[0].msg.includes("Rand"), true);
+});
+
+test("дубли объявлений верхнего уровня: одно имя в двух файлах или дважды в одном — ошибка с указанием первого места", () => {
+	const texts = [
+		{ file: "a.js", text: "function bakeLakes(x) {\n}\nlet seed = 7;\nconst rn = () => 1;\n" },
+		{ file: "b.js", text: "// function bakeLakes — не объявление\nfunction bakeLakes(x, im) {\n}\nclass Foo {}\nvar seed = 1;\nclass Foo {}\n" },
+	];
+	assert.deepEqual(
+		duplicateDeclarations(texts).map((d) => `${d.file}:${d.line} ${d.name} <- ${d.firstFile}:${d.firstLine}`),
+		["b.js:2 bakeLakes <- a.js:1", "b.js:5 seed <- a.js:3", "b.js:6 Foo <- b.js:4"]
+	);
+	// вложенные объявления (с отступом) не считаются верхним уровнем
+	assert.deepEqual(duplicateDeclarations([{ file: "c.js", text: "function f() {\n\tconst x = 1;\n}\nfunction g() {\n\tconst x = 2;\n}\n" }]), []);
 });
 
