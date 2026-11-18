@@ -12,7 +12,8 @@ src/runner.js         запускатель сборки «для друзей�
 assets/img/*.png      арты (19 шт.), в сборке кодируются в base64
 assets/atlas.json     атлас кадров — текстом: в нём есть числа вида 46.0
 assets/font.woff2     шрифт игры
-tools/                extract / build / golden / fuzz / soak / heapdiff / perf / hot / entry / lint / shots / shotdiff / e2e / abcmd / modgraph
+tools/                extract / build / golden / fuzz / soak / heapdiff / perf / hot / entry / lint / shots / shotdiff / e2e / abcmd / modgraph / browser-tour
+tools/lib/browser.mjs запуск настоящего Chromium из npm (.cache/browser, ставится по требованию) для browser-tour
 tests/harness/        заглушка DOM + запуск игры в node:vm (в сборку не попадает)
 tests/unit/           unit-тесты (node:test)
 tests/golden/         эталон поведения (200 боёв + 500 карт)
@@ -243,6 +244,8 @@ stateDiagram-v2
 ## Ввод (`13_input.js`)
 
 Экран каждый кадр заново объявляет цели касания (`area/btn/ibtn` → `hits`); касание получает самая верхняя (последняя объявленная). `Input.layer()` — модальный слой: всё объявленное раньше отбрасывается (карта под окном события); меню паузы и панели бойца перекрывают экран полноэкранной целью. `Input.down(e)` — единственный обработчик `pointerdown`: вторичные указатели (`isPrimary === false`, второй палец при удержанном первом) не считаются нажатием; `pointerup/pointercancel/lostpointercapture` снимают указатель из `Input.active`, сворачивание вкладки сбрасывает все. `lp(e)` переводит координаты события в координаты холста 1218×540 с учётом letterbox-полей и поворота на 90° в портретной ориентации. Клавиатура: Esc/P — пауза, Space/Enter — «В бой!»/авторасстановка/закрыть событие, 1–3 — скорость боя.
+
+Координаты: `lp(e)` переводит точку страницы в игровые 1218×540 через письмо-коробку `fit()` (канвас растянут на окно, `object-fit: contain`); в портрете канвас повёрнут CSS-ом на 90°, и оси меняются местами (`lx = clientY`, `ly = innerWidth − clientX`). Это единственное место, где геометрия экрана встречается с геометрией игры; `tools/browser-tour.mjs` проверяет обратное преобразование настоящими кликами мыши и тача в обоих поворотах, при DPR 2 и после resize.
 
 ## Поток данных
 

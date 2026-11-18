@@ -4,8 +4,9 @@
 //   node tools/e2e.mjs                 — тур по сборке из src/ (как в браузере, но headless)
 //   node tools/e2e.mjs --html dist/game.html   — тур по готовому монолиту
 //   node tools/e2e.mjs --record        — переснять эталон (осознанно, см. docs/DECISIONS.md)
-// Headless Chromium в песочнице недоступен; это честная замена: тот же код, тот же шрифт,
-// та же растеризация 2D-канваса, но без DOM-событий браузера.
+// Это основная, детерминированная проверка без браузера: тот же код, тот же шрифт, та же растеризация
+// 2D-канваса. События браузера (мышь, тач с поворотом, клавиатура, DOM-окна) проверяет
+// tools/browser-tour.mjs в настоящем Chromium (ставится отдельно: npm run browser:setup).
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
