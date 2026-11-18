@@ -317,23 +317,8 @@ function bakeGround(J, y0, y1) {
 		}
 	}
 }
-// озёра, дороги, площадки под значками, лес и мелочи — поверх готовой земли
-function bakeDecor(J) {
-	const { x, im, AM, R, P, seed } = J;
-	x.putImageData(J.id, 0, 0);
-	const nodes = N.map((n) => [n.x / 2, n.y / 2]),
-		edges = E.map(([a, b]) => [nodes[a][0], nodes[a][1], nodes[b][0], nodes[b][1]]),
-		roadD = (px, py) => {
-			let d = 1e9;
-			for (const e of edges) d = Math.min(d, segD(px, py, e[0], e[1], e[2], e[3]));
-			return d;
-		},
-		nodeD = (px, py) => {
-			let d = 1e9;
-			for (const n of nodes) d = Math.min(d, Math.hypot(px - n[0], (py - n[1]) * 1.3));
-			return d;
-		};
-	// озёра
+// озёра: 1–2 штуки, не ближе 9 px к дороге и 18 к узлу, не вплотную друг к другу; список — в MAPL (для бликов)
+function bakeLakes(x, im, AM, R, roadD, nodeD) {
 	MAPL = [];
 	const nl = 1 + ((R() * 2) | 0);
 	for (let i = 0, tr = 0; i < nl && tr < 60; tr++) {
@@ -349,7 +334,9 @@ function bakeDecor(J) {
 		MAPL.push([lx, ly2, r[2], r[3]]);
 		i++;
 	}
-	// дороги: тёмная кайма + светлая середина, по пикселям
+}
+// дороги (тёмная кайма + светлая пунктирная середина, по пикселям) и площадки под значками узлов
+function bakeRoads(x, P, edges, nodes) {
 	for (let pass = 0; pass < 2; pass++) {
 		x.fillStyle = P.road[pass ? 0 : 1];
 		for (const e of edges) {
@@ -363,7 +350,6 @@ function bakeDecor(J) {
 			}
 		}
 	}
-	// площадки под значками
 	for (const n of nodes) {
 		x.fillStyle = P.road[1];
 		x.beginPath();
@@ -374,7 +360,9 @@ function bakeDecor(J) {
 		x.ellipse(n[0], n[1] + 3, 13, 7, 0, 0, TAU);
 		x.fill();
 	}
-	// лес и мелочи: рощи по шуму, поляны вокруг дорог
+}
+// лес и мелочи: 900 проб, рощи по шуму (dn), поляны вокруг дорог/узлов/озёр; рисуются снизу вверх по y
+function bakeForest(x, im, AM, R, P, seed, roadD, nodeD) {
 	const items = [];
 	for (let i = 0; i < 900; i++) {
 		const px = -8 + R() * 625,
@@ -403,6 +391,26 @@ function bakeDecor(J) {
 		x.fill();
 		x.drawImage(im, q[0], q[1], q[2], q[3], Math.round(o.x - q[2] / 2), Math.round(o.y - q[3]), q[2], q[3]);
 	}
+}
+// озёра, дороги, площадки под значками, лес и мелочи — поверх готовой земли (порядок = порядок вызовов R())
+function bakeDecor(J) {
+	const { x, im, AM, R, P, seed } = J;
+	x.putImageData(J.id, 0, 0);
+	const nodes = N.map((n) => [n.x / 2, n.y / 2]),
+		edges = E.map(([a, b]) => [nodes[a][0], nodes[a][1], nodes[b][0], nodes[b][1]]),
+		roadD = (px, py) => {
+			let d = 1e9;
+			for (const e of edges) d = Math.min(d, segD(px, py, e[0], e[1], e[2], e[3]));
+			return d;
+		},
+		nodeD = (px, py) => {
+			let d = 1e9;
+			for (const n of nodes) d = Math.min(d, Math.hypot(px - n[0], (py - n[1]) * 1.3));
+			return d;
+		};
+	bakeLakes(x, im, AM, R, roadD, nodeD);
+	bakeRoads(x, P, edges, nodes);
+	bakeForest(x, im, AM, R, P, seed, roadD, nodeD);
 }
 // порция работы: не дольше ms миллисекунд (земля — по строкам), затем декор одним куском.
 // Возвращает true, когда карта готова.

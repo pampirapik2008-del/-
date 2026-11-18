@@ -63,13 +63,8 @@ function dMapLoading() {
 	pbar(409, 280, 400, 12, bakeProgress(), "#ffd23c");
 	tx("Рисую карту…", 609, 316, 14, "#b9b3c8", "center");
 }
-function dMap() {
-	if (MAPJ) return dMapLoading();
-	const w = WORLDS[G.w],
-		av = MV ? [] : avail(),
-		lead = G.slots.find(Boolean);
-	ctx.drawImage(MAPC, 0, 0, W, H);
-	// блики воды
+// блики воды на озёрах
+function dMapWater() {
 	for (const q of MAPL)
 		for (let j = 0; j < 6; j++) {
 			const a = Math.sin(t * 2.2 + j * 1.9 + q[0]);
@@ -78,82 +73,84 @@ function dMap() {
 				ctx.fillRect(Math.round(q[0] + q[2] * (0.24 + 0.52 * ((j * 0.37 + 0.13) % 1))) * 2, Math.round(q[1] + q[3] * (0.3 + 0.4 * ((j * 0.61 + 0.2) % 1))) * 2, 6, 2);
 			}
 		}
-	// доступные пути — бегущие огоньки
-	if (!MV)
-		for (const b of av) {
-			const A = N[G.cur],
-				B = N[b],
-				l = Math.hypot(B.x - A.x, B.y - A.y);
-			for (let s = (t * 46) % 22; s < l - 20; s += 22) {
-				if (s < 22) continue;
-				const px = A.x + ((B.x - A.x) * s) / l,
-					py = A.y + ((B.y - A.y) * s) / l + 6;
-				ctx.fillStyle = "#3a2408";
-				ctx.fillRect(Math.round(px / 2) * 2 - 4, Math.round(py / 2) * 2 - 4, 8, 8);
-				ctx.fillStyle = "#ffe27a";
-				ctx.fillRect(Math.round(px / 2) * 2 - 2, Math.round(py / 2) * 2 - 2, 4, 4);
-			}
+}
+// доступные пути — бегущие огоньки от текущего узла к каждому из av
+function dMapPaths(av) {
+	if (MV) return;
+	for (const b of av) {
+		const A = N[G.cur],
+			B = N[b],
+			l = Math.hypot(B.x - A.x, B.y - A.y);
+		for (let s = (t * 46) % 22; s < l - 20; s += 22) {
+			if (s < 22) continue;
+			const px = A.x + ((B.x - A.x) * s) / l,
+				py = A.y + ((B.y - A.y) * s) / l + 6;
+			ctx.fillStyle = "#3a2408";
+			ctx.fillRect(Math.round(px / 2) * 2 - 4, Math.round(py / 2) * 2 - 4, 8, 8);
+			ctx.fillStyle = "#ffe27a";
+			ctx.fillRect(Math.round(px / 2) * 2 - 2, Math.round(py / 2) * 2 - 2, 4, 4);
 		}
-	// узлы
-	N.forEach((n, i) => {
-		const k = nodeKind(n, i),
-			cur = i === G.cur,
-			vis = G.vis.has(i),
-			can = av.includes(i),
-			y = Math.round(n.y + (can ? -4 * Math.abs(Math.sin(t * 3 + i)) : 0)),
-			x = Math.round(n.x);
-		if (can) glow(x, n.y, 50, "#ffe27a", 0.4 + 0.2 * Math.sin(t * 4 + i));
-		if (k === "boss") glow(x, n.y, 64, "#ff3a4a", 0.3 + 0.15 * Math.sin(t * 2.4));
-		ctx.globalAlpha = vis && !cur ? 0.6 : 1;
-		if (ATL.map["i_" + k]) uc("map", "i_" + k, x, y, AP);
-		else {
-			uc("ui", can ? "node_hi" : vis ? "node_off" : "node", x, y, AP);
-			if (k === "chest") uc("ui", "chest0", x, y - 2, 1);
-			else if (k === "secret") uc("ui", "g_secret", x, y, AP);
-			else if (k === "rand") uc("ui", "g_rand", x, y, AP);
-			else if (k === "start") uc("ui", "g_star", x, y, AP);
-		}
-		ctx.globalAlpha = 1;
-		if (vis && !cur && i) uc("ui", "g_check", x + 16, y + 16, AP);
-		if (k === "secret" && !vis && Rand.next() < 0.05) Parts.add({ x: x + rr(-20, 20), y: y + rr(-20, 10), vy: -20, life: 0.7, c: "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
-		const lb = k === "boss" ? w.boss.n : NODE_LB[k];
-		if (lb) txo(lb, x, y + 38, k === "boss" ? 14 : 12, k === "boss" ? "#ffb0a0" : vis ? "#b9b3c8" : "#fff", "center");
-		area(x - 32, n.y - 32, 64, 72, () => {
-			if (MV) return;
-			if (can) walkTo(i);
-			else {
-				TIPN = { i, t0: t };
-				TIPR = null;
-			}
-		});
-	});
-	// отряд на карте
-	if (lead) {
-		let x = N[G.cur].x,
-			y = N[G.cur].y,
-			an = "idle",
-			face = 1;
-		if (MV) {
-			const k = ez.io(clamp((t - MV.t0) / MV.d, 0, 1)),
-				A = N[MV.a],
-				B = N[MV.b];
-			x = lerp(A.x, B.x, k);
-			y = lerp(A.y, B.y, k) - Math.abs(Math.sin(k * Math.PI * 5)) * 4;
-			an = "walk";
-			face = B.x >= A.x ? 1 : -1;
-			if (Rand.next() < 0.4) Parts.add({ x, y: y + 6, vx: -face * 20, vy: -14, life: 0.4, c: "rgba(230,220,200,.6)", s: 5, k: 5, e: 2, l: 2 });
-		}
-		ctx.fillStyle = "rgba(10,8,20,.4)";
-		ctx.beginPath();
-		ctx.ellipse(x, y + 8, 16, 6, 0, 0, TAU);
-		ctx.fill();
-		uIdle(lead, Math.round(x), Math.round(y + 8), AP, face, G.w, an);
-		// флажок отряда
-		if (!MV) arrowDown(x, y - 78 - 4 * Math.sin(t * 4));
 	}
-	Parts.draw(2);
-	vignette(0.8);
-	// интерфейс
+}
+// узел карты: подсветка доступного, значок по виду узла, галочка пройденного, подпись, зона нажатия
+function dMapNode(n, i, av, w) {
+	const k = nodeKind(n, i),
+		cur = i === G.cur,
+		vis = G.vis.has(i),
+		can = av.includes(i),
+		y = Math.round(n.y + (can ? -4 * Math.abs(Math.sin(t * 3 + i)) : 0)),
+		x = Math.round(n.x);
+	if (can) glow(x, n.y, 50, "#ffe27a", 0.4 + 0.2 * Math.sin(t * 4 + i));
+	if (k === "boss") glow(x, n.y, 64, "#ff3a4a", 0.3 + 0.15 * Math.sin(t * 2.4));
+	ctx.globalAlpha = vis && !cur ? 0.6 : 1;
+	if (ATL.map["i_" + k]) uc("map", "i_" + k, x, y, AP);
+	else {
+		uc("ui", can ? "node_hi" : vis ? "node_off" : "node", x, y, AP);
+		if (k === "chest") uc("ui", "chest0", x, y - 2, 1);
+		else if (k === "secret") uc("ui", "g_secret", x, y, AP);
+		else if (k === "rand") uc("ui", "g_rand", x, y, AP);
+		else if (k === "start") uc("ui", "g_star", x, y, AP);
+	}
+	ctx.globalAlpha = 1;
+	if (vis && !cur && i) uc("ui", "g_check", x + 16, y + 16, AP);
+	if (k === "secret" && !vis && Rand.next() < 0.05) Parts.add({ x: x + rr(-20, 20), y: y + rr(-20, 10), vy: -20, life: 0.7, c: "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
+	const lb = k === "boss" ? w.boss.n : NODE_LB[k];
+	if (lb) txo(lb, x, y + 38, k === "boss" ? 14 : 12, k === "boss" ? "#ffb0a0" : vis ? "#b9b3c8" : "#fff", "center");
+	area(x - 32, n.y - 32, 64, 72, () => {
+		if (MV) return;
+		if (can) walkTo(i);
+		else {
+			TIPN = { i, t0: t };
+			TIPR = null;
+		}
+	});
+}
+// отряд на карте: стоит на текущем узле или идёт по пути (MV) с пылью из-под ног
+function dMapParty(lead) {
+	let x = N[G.cur].x,
+		y = N[G.cur].y,
+		an = "idle",
+		face = 1;
+	if (MV) {
+		const k = ez.io(clamp((t - MV.t0) / MV.d, 0, 1)),
+			A = N[MV.a],
+			B = N[MV.b];
+		x = lerp(A.x, B.x, k);
+		y = lerp(A.y, B.y, k) - Math.abs(Math.sin(k * Math.PI * 5)) * 4;
+		an = "walk";
+		face = B.x >= A.x ? 1 : -1;
+		if (Rand.next() < 0.4) Parts.add({ x, y: y + 6, vx: -face * 20, vy: -14, life: 0.4, c: "rgba(230,220,200,.6)", s: 5, k: 5, e: 2, l: 2 });
+	}
+	ctx.fillStyle = "rgba(10,8,20,.4)";
+	ctx.beginPath();
+	ctx.ellipse(x, y + 8, 16, 6, 0, 0, TAU);
+	ctx.fill();
+	uIdle(lead, Math.round(x), Math.round(y + 8), AP, face, G.w, an);
+	// флажок отряда
+	if (!MV) arrowDown(x, y - 78 - 4 * Math.sin(t * 4));
+}
+// интерфейс карты: ресурсы, заголовок мира, шкала шагов до босса, реликвии, магазин, подсказки узла и реликвии
+function dMapHud(w) {
 	resBar();
 	const ttl = "Мир " + (G.w + 1) + " · " + w.n;
 	ctx.font = font(20);
@@ -179,6 +176,21 @@ function dMap() {
 		tip(n.x, n.y - 30, k === "boss" ? w.boss.n : k === "start" ? "Лагерь" : NODE_LB[k] || "Неизвестность", k === "start" ? "Отсюда начался поход" : (NODE_TIP[k] || "") + (G.vis.has(TIPN.i) ? " (пройдено)" : ""), "#ffe27a");
 	}
 	relicTip();
+}
+// экран карты: готовая земля (MAPC) → вода, пути, узлы, отряд, частицы, виньетка, интерфейс
+function dMap() {
+	if (MAPJ) return dMapLoading();
+	const w = WORLDS[G.w],
+		av = MV ? [] : avail(),
+		lead = G.slots.find(Boolean);
+	ctx.drawImage(MAPC, 0, 0, W, H);
+	dMapWater();
+	dMapPaths(av);
+	N.forEach((n, i) => dMapNode(n, i, av, w));
+	if (lead) dMapParty(lead);
+	Parts.draw(2);
+	vignette(0.8);
+	dMapHud(w);
 }
 
 // ---------- событие: сундук, карточки с эффектом редкости ----------
@@ -963,13 +975,10 @@ function devGate() {
 	if (window.mxGate) window.mxGate(true);
 	else toast("Редактор не подключён");
 }
-function dSet() {
-	menuBG(false);
-	ctx.fillStyle = "rgba(10,8,18,.6)";
-	ctx.fillRect(0, 0, W, H);
-	panel(209, 74, 800, 392);
-	title("Настройки", 76);
-	const rows = [
+// строки настроек: [подпись, значение, действие, включено?, цвет кнопки?]
+// звук: музыка, её громкость, громкость звуков
+function setAudioRows() {
+	return [
 		[
 			"Музыка",
 			Music.on ? "Вкл" : "Выкл",
@@ -1000,6 +1009,11 @@ function dSet() {
 			},
 			CFG.sfx !== 0,
 		],
+	];
+}
+// игра: графика, тряска, ульты героев, счётчик FPS, удаление сохранения (с подтверждением)
+function setGameRows() {
+	return [
 		[
 			"Графика",
 			QL.auto ? "Авто (" + ["низк.", "средн.", "выс."][QL.lv] + ")" : ["Низкая", "Средняя", "Высокая"][QL.lv],
@@ -1054,6 +1068,14 @@ function dSet() {
 			SAVED ? "#c62828" : "#555",
 		],
 	];
+}
+function dSet() {
+	menuBG(false);
+	ctx.fillStyle = "rgba(10,8,18,.6)";
+	ctx.fillRect(0, 0, W, H);
+	panel(209, 74, 800, 392);
+	title("Настройки", 76);
+	const rows = setAudioRows().concat(setGameRows());
 	rows.forEach(([lb, val, f, on, col], i) => {
 		const x = 233 + (i % 2) * 390,
 			y = 128 + ((i / 2) | 0) * 66;

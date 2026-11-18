@@ -1340,7 +1340,7 @@ const Music = (() => {
 // ловится по отдельности, пишется в кольцевой журнал, а три подряд идущих сбоя
 // переводят игру в безопасный режим с понятным окном вместо мёртвого экрана.
 // версия исходников подставляется сборкой (короткий хеш src/ + ассетов)
-let GAME_BUILD = "e7487a44a70b";
+let GAME_BUILD = "4f8f3f703f03";
 const ERRS = [];
 const ERR_MAX = 200;
 // имя экрана для журнала: S объявлена раньше этого файла, но до 12_state.js ещё не задана
@@ -3431,19 +3431,10 @@ function fogSpr() {
 	return (FOGC = c);
 }
 
-function mkArena(seed, wi, kind) {
-	const R = rng32(seed),
-		w = WORLDS[wi],
-		y0 = w.fy0,
+// кандидаты в препятствия по схеме расстановки (lay): [x, y, вид], вид B/S — большое/малое, L — свет, D — разрушаемое
+function arenaCand(A, R, kind, cx, cy, hh) {
+	const { y0 } = A,
 		y1 = FLD.y1,
-		A = { seed, wi, w, y0, obs: [], dec: [], patches: [], pools: [], gv: 0, nf: new Map(), em: {}, ev: 3, kind };
-	A.tod = R() < 0.45 ? 0 : R() < 0.55 ? 1 : 2;
-	A.wx = kind === "boss" ? w.wx[1] : R() < 0.4 ? w.wx[0] : w.wx[1 + ((R() * (w.wx.length - 1)) | 0)];
-	if (A.wx === "eclipse" || A.wx === "storm") A.tod = 2;
-	A.flip = R() < 0.5;
-	const cx = 609,
-		cy = (y0 + y1) / 2,
-		hh = (y1 - y0) / 2,
 		cand = [];
 	const lay = kind === "boss" ? "ring" : ["open", "lanes", "choke", "scatter", "ring", "diag"][(R() * 6) | 0];
 	A.lay = lay;
@@ -3469,6 +3460,12 @@ function mkArena(seed, wi, kind) {
 	cand.push([330 + R() * 560, y0 + 16 + R() * (y1 - y0 - 28), "D"]);
 	if (R() < 0.6) cand.push([330 + R() * 560, y0 + 16 + R() * (y1 - y0 - 28), "D"]);
 	if (A.tod === 2 && R() < 0.7) cand.push([R() < 0.5 ? 180 + R() * 200 : 840 + R() * 200, cy + (R() - 0.5) * hh * 1.6, "L"]);
+	return cand;
+}
+// препятствия из кандидатов (без наложений) + сетка; проход между сторонами обязан существовать
+function arenaObstacles(A, R, cand, cy) {
+	const { w, y0 } = A,
+		y1 = FLD.y1;
 	for (const [x0, yy, kd] of cand) {
 		const list = kd === "B" ? w.big : kd === "S" ? w.small : kd === "L" ? w.light : w.destr,
 			spr = list[(R() * list.length) | 0],
@@ -3479,14 +3476,17 @@ function mkArena(seed, wi, kind) {
 		A.obs.push(o);
 	}
 	buildGrid(A);
-	// проход между сторонами обязан существовать
 	let guard = 0;
 	while (!navReach(A, 150, cy, 1070, cy) && A.obs.length && guard++ < 12) {
 		A.obs.splice((R() * A.obs.length) | 0, 1);
 		buildGrid(A);
 	}
-	// покрытия
-	const np = 2 + ((R() * 3) | 0);
+}
+// покрытия (2–4): замедляющие/опасные не засоряют зону расстановки, без наложений
+function arenaPatches(A, R) {
+	const { w, y0 } = A,
+		y1 = FLD.y1,
+		np = 2 + ((R() * 3) | 0);
 	for (let i = 0; i < np; i++) {
 		const k = w.patch[R() < 0.6 ? 0 : 1],
 			P = PATCH[k],
@@ -3495,8 +3495,12 @@ function mkArena(seed, wi, kind) {
 		if (A.patches.some((q) => Math.abs(q.x - p.x) < q.rx + p.rx && Math.abs(q.y - p.y) < q.ry + p.ry)) continue;
 		A.patches.push(p);
 	}
-	// мелкий декор
-	const nd = 5 + ((R() * 5) | 0);
+}
+// мелкий декор (5–9): крупный (папоротник, грибы) — по краям, остальной — где нет препятствий
+function arenaDecor(A, R) {
+	const { w, y0 } = A,
+		y1 = FLD.y1,
+		nd = 5 + ((R() * 5) | 0);
 	for (let i = 0; i < nd; i++) {
 		const spr = w.decor[(R() * w.decor.length) | 0];
 		if (!ATL.props[spr]) continue;
@@ -3506,6 +3510,25 @@ function mkArena(seed, wi, kind) {
 		if (A.obs.some((q) => Math.abs(q.x - x) < q.rx + 30 && Math.abs(q.y - y) < q.ry + 16)) continue;
 		A.dec.push({ spr, x, y, fl: R() < 0.5 });
 	}
+}
+// арена боя по сиду: время суток, погода, схема, препятствия, покрытия, декор, искры фона, запечённый пол.
+// Порядок вызовов R() фиксирован (golden): tod → wx → flip → схема/кандидаты → препятствия → покрытия → декор → искры
+function mkArena(seed, wi, kind) {
+	const R = rng32(seed),
+		w = WORLDS[wi],
+		y0 = w.fy0,
+		y1 = FLD.y1,
+		A = { seed, wi, w, y0, obs: [], dec: [], patches: [], pools: [], gv: 0, nf: new Map(), em: {}, ev: 3, kind };
+	A.tod = R() < 0.45 ? 0 : R() < 0.55 ? 1 : 2;
+	A.wx = kind === "boss" ? w.wx[1] : R() < 0.4 ? w.wx[0] : w.wx[1 + ((R() * (w.wx.length - 1)) | 0)];
+	if (A.wx === "eclipse" || A.wx === "storm") A.tod = 2;
+	A.flip = R() < 0.5;
+	const cx = 609,
+		cy = (y0 + y1) / 2,
+		hh = (y1 - y0) / 2;
+	arenaObstacles(A, R, arenaCand(A, R, kind, cx, cy, hh), cy);
+	arenaPatches(A, R);
+	arenaDecor(A, R);
 	// искры на заднем плане (кристаллы, звёзды) — фиксированный набор точек
 	A.tw = Array.from({ length: 14 }, () => [R() * W, 20 + R() * (y0 - 60), R() * 6]);
 	bakeFloor(A);
@@ -6659,29 +6682,15 @@ function popLines(s, w, sz) {
 	});
 	return n;
 }
-function dPop() {
-	if (!pop) return;
-	const u = pop.u,
-		mine = pop.mine && !Machine.is("fight") && !u.team,
-		K = KIT[u.k],
-		x = 826,
-		y = 84,
-		w = 372,
-		h = u.team
-			? u.boss ? 262 : 214
-			: (() => {
-					// панель растягивается под длину описаний навыка и ульты
-					const need = 190 + 17 + popLines(K.ab.d, w - 28, 12) * 15 + 8 + 17 + popLines(K.ult.d, w - 28, 12) * 15;
-					return Math.min(H - y - 26, Math.max(mine ? 348 : 300, need + (mine ? 62 : 16)));
-				})();
-	area(0, 0, W, H, () => (pop = null));
-	ctx.fillStyle = "rgba(8,6,14,.45)";
-	ctx.fillRect(0, 0, W, H);
-	panel(x, y, w, h);
-	area(x - 12, y - 12, w + 24, h + 24, () => {});
-	// портрет в рамке редкости
-	const r = u.r || 0,
-		up = pop.up ? Math.max(0, 1 - (t - pop.up) * 2.5) : 0;
+// высота карточки: у врагов фиксированная, у своих — под длину описаний навыка и ульты (+ место под кнопку)
+function popHeight(u, K, mine, w, y) {
+	if (u.team) return u.boss ? 262 : 214;
+	const need = 190 + 17 + popLines(K.ab.d, w - 28, 12) * 15 + 8 + 17 + popLines(K.ult.d, w - 28, 12) * 15;
+	return Math.min(H - y - 26, Math.max(mine ? 348 : 300, need + (mine ? 62 : 16)));
+}
+// шапка карточки: портрет в рамке редкости (у врагов — рамка по типу), вспышка повышения, имя, тип/редкость, стихия/роль
+function dPopHead(u, K, x, y, up) {
+	const r = u.r || 0;
 	ctx.fillStyle = "#2a2238";
 	ctx.fillRect(x + 12, y + 12, 68, 68);
 	ctx.save();
@@ -6702,7 +6711,9 @@ function dPop() {
 		txo(RAR[r].n, x + 96, y + 47, 14, RAR[r].c, "left");
 		tx(K.role + " · ур. " + (u.lv || 1), x + 96, y + 68, 13, "#d9d4e8");
 	}
-	// характеристики
+}
+// характеристики в два столбца; при вспышке повышения здоровье и атака подсвечены зелёным
+function dPopStats(u, x, y, up) {
 	const st = [
 		["hp", fmt(Math.max(0, Math.round(u.hp))) + " / " + fmt(u.max), "Здоровье"],
 		["atk", fmt(u.atk), "Атака"],
@@ -6719,6 +6730,9 @@ function dPop() {
 		tx(q[2], cx + 28, cy + 13, 12, "#b9b3c8");
 		txo("" + q[1], cx + 164, cy + 13, 14, up > 0 && i < 2 ? "#aaff9a" : "#fff", "right");
 	});
+}
+// низ карточки: подсказка по врагу или навык + ульта своего бойца и кнопка (кормление / просмотр анимаций в коллекции)
+function dPopBody(u, K, mine, x, y, w, h) {
 	let yy = y + 190;
 	if (u.team) {
 		const tips = u.boss
@@ -6729,17 +6743,37 @@ function dPop() {
 					? "Плюётся издалека и накладывает эффект своей стихии."
 					: "Медленный, но их бывает много.";
 		txw(tips, x + 14, yy, w - 28, 16, 13, "#e8e2f4");
-	} else {
-		txo(K.ab.n, x + 14, yy, 14, EL[K.el].c, "left");
-		tx("каждые " + K.ab.cd + " с", x + w - 14, yy, 12, "#b9b3c8", "right");
-		yy += 17;
-		yy += txw(K.ab.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15 + 8;
-		txo("Ульта: " + K.ult.n, x + 14, yy, 14, "#ffd27a", "left");
-		yy += 17;
-		yy += txw(K.ult.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15;
-		if (mine && Machine.is("codex")) btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
-		else if (mine) btn(x + 14, y + h - 50, w - 28, 42, "Накормить: +10% здоровья, +8% атаки", () => feed(u), "#2e7d32", { dis: G.meat <= 0, sz: 14, ic: "meat_s" });
+		return;
 	}
+	txo(K.ab.n, x + 14, yy, 14, EL[K.el].c, "left");
+	tx("каждые " + K.ab.cd + " с", x + w - 14, yy, 12, "#b9b3c8", "right");
+	yy += 17;
+	yy += txw(K.ab.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15 + 8;
+	txo("Ульта: " + K.ult.n, x + 14, yy, 14, "#ffd27a", "left");
+	yy += 17;
+	yy += txw(K.ult.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15;
+	if (mine && Machine.is("codex")) btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
+	else if (mine) btn(x + 14, y + h - 50, w - 28, 42, "Накормить: +10% здоровья, +8% атаки", () => feed(u), "#2e7d32", { dis: G.meat <= 0, sz: 14, ic: "meat_s" });
+}
+// карточка юнита (pop): затемнение, панель, шапка, характеристики, низ; нажатие вне панели закрывает
+function dPop() {
+	if (!pop) return;
+	const u = pop.u,
+		mine = pop.mine && !Machine.is("fight") && !u.team,
+		K = KIT[u.k],
+		x = 826,
+		y = 84,
+		w = 372,
+		h = popHeight(u, K, mine, w, y),
+		up = pop.up ? Math.max(0, 1 - (t - pop.up) * 2.5) : 0;
+	area(0, 0, W, H, () => (pop = null));
+	ctx.fillStyle = "rgba(8,6,14,.45)";
+	ctx.fillRect(0, 0, W, H);
+	panel(x, y, w, h);
+	area(x - 12, y - 12, w + 24, h + 24, () => {});
+	dPopHead(u, K, x, y, up);
+	dPopStats(u, x, y, up);
+	dPopBody(u, K, mine, x, y, w, h);
 }
 // обновление визуальной части (вне симуляции): частицы, таймеры эффектов, погода
 const fxAlive = (f) => f.t < f.d,
@@ -7142,23 +7176,8 @@ function bakeGround(J, y0, y1) {
 		}
 	}
 }
-// озёра, дороги, площадки под значками, лес и мелочи — поверх готовой земли
-function bakeDecor(J) {
-	const { x, im, AM, R, P, seed } = J;
-	x.putImageData(J.id, 0, 0);
-	const nodes = N.map((n) => [n.x / 2, n.y / 2]),
-		edges = E.map(([a, b]) => [nodes[a][0], nodes[a][1], nodes[b][0], nodes[b][1]]),
-		roadD = (px, py) => {
-			let d = 1e9;
-			for (const e of edges) d = Math.min(d, segD(px, py, e[0], e[1], e[2], e[3]));
-			return d;
-		},
-		nodeD = (px, py) => {
-			let d = 1e9;
-			for (const n of nodes) d = Math.min(d, Math.hypot(px - n[0], (py - n[1]) * 1.3));
-			return d;
-		};
-	// озёра
+// озёра: 1–2 штуки, не ближе 9 px к дороге и 18 к узлу, не вплотную друг к другу; список — в MAPL (для бликов)
+function bakeLakes(x, im, AM, R, roadD, nodeD) {
 	MAPL = [];
 	const nl = 1 + ((R() * 2) | 0);
 	for (let i = 0, tr = 0; i < nl && tr < 60; tr++) {
@@ -7174,7 +7193,9 @@ function bakeDecor(J) {
 		MAPL.push([lx, ly2, r[2], r[3]]);
 		i++;
 	}
-	// дороги: тёмная кайма + светлая середина, по пикселям
+}
+// дороги (тёмная кайма + светлая пунктирная середина, по пикселям) и площадки под значками узлов
+function bakeRoads(x, P, edges, nodes) {
 	for (let pass = 0; pass < 2; pass++) {
 		x.fillStyle = P.road[pass ? 0 : 1];
 		for (const e of edges) {
@@ -7188,7 +7209,6 @@ function bakeDecor(J) {
 			}
 		}
 	}
-	// площадки под значками
 	for (const n of nodes) {
 		x.fillStyle = P.road[1];
 		x.beginPath();
@@ -7199,7 +7219,9 @@ function bakeDecor(J) {
 		x.ellipse(n[0], n[1] + 3, 13, 7, 0, 0, TAU);
 		x.fill();
 	}
-	// лес и мелочи: рощи по шуму, поляны вокруг дорог
+}
+// лес и мелочи: 900 проб, рощи по шуму (dn), поляны вокруг дорог/узлов/озёр; рисуются снизу вверх по y
+function bakeForest(x, im, AM, R, P, seed, roadD, nodeD) {
 	const items = [];
 	for (let i = 0; i < 900; i++) {
 		const px = -8 + R() * 625,
@@ -7228,6 +7250,26 @@ function bakeDecor(J) {
 		x.fill();
 		x.drawImage(im, q[0], q[1], q[2], q[3], Math.round(o.x - q[2] / 2), Math.round(o.y - q[3]), q[2], q[3]);
 	}
+}
+// озёра, дороги, площадки под значками, лес и мелочи — поверх готовой земли (порядок = порядок вызовов R())
+function bakeDecor(J) {
+	const { x, im, AM, R, P, seed } = J;
+	x.putImageData(J.id, 0, 0);
+	const nodes = N.map((n) => [n.x / 2, n.y / 2]),
+		edges = E.map(([a, b]) => [nodes[a][0], nodes[a][1], nodes[b][0], nodes[b][1]]),
+		roadD = (px, py) => {
+			let d = 1e9;
+			for (const e of edges) d = Math.min(d, segD(px, py, e[0], e[1], e[2], e[3]));
+			return d;
+		},
+		nodeD = (px, py) => {
+			let d = 1e9;
+			for (const n of nodes) d = Math.min(d, Math.hypot(px - n[0], (py - n[1]) * 1.3));
+			return d;
+		};
+	bakeLakes(x, im, AM, R, roadD, nodeD);
+	bakeRoads(x, P, edges, nodes);
+	bakeForest(x, im, AM, R, P, seed, roadD, nodeD);
 }
 // порция работы: не дольше ms миллисекунд (земля — по строкам), затем декор одним куском.
 // Возвращает true, когда карта готова.
@@ -7984,6 +8026,87 @@ function importSaveText(text) {
 	SAVE_WARN = "";
 	return { ok: true, ver: u.ver };
 }
+// разметка окна: заголовок, пояснение, выбор файла (импорт), текстовое поле, строка сообщения, кнопки
+function saveDialogHtml(exp) {
+	const bt = (id, label, bg) => '<button id="' + id + '" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:' + bg + ';color:#fff;font-weight:700;cursor:pointer">' + label + "</button>";
+	return (
+		'<div style="font-weight:800;font-size:17px;margin-bottom:6px">' + (exp ? "Экспорт сохранения" : "Импорт сохранения") + "</div>" +
+		'<div style="color:#b9b3c8;margin-bottom:10px">' +
+		(exp ? "Скачайте файл или скопируйте текст — его можно загрузить через «Импорт» на другом устройстве или в другом браузере." : "Выберите файл сохранения или вставьте его текст. Текущее сохранение уйдёт в резерв.") +
+		"</div>" +
+		(exp ? "" : '<input id="mx-save-file" type="file" accept=".json,.txt,application/json,text/plain" style="display:block;margin-bottom:10px;color:#eee">') +
+		'<textarea id="mx-save-text" ' + (exp ? "readonly " : "") + 'spellcheck="false" style="width:100%;height:120px;box-sizing:border-box;background:#120e19;color:#d9d2e8;border:1px solid #3a2f4d;border-radius:8px;padding:8px;font:12px/1.4 ui-monospace,monospace;resize:vertical"></textarea>' +
+		'<div id="mx-save-msg" style="min-height:20px;margin:8px 0;color:#ffb3b3"></div>' +
+		'<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+		(exp ? bt("mx-save-dl", "Скачать файл", "#2e7d32") + bt("mx-save-copy", "Копировать", "#455a64") : bt("mx-save-load", "Загрузить", "#2e7d32")) +
+		bt("mx-save-close", "Закрыть", "#8e24aa") +
+		"</div>"
+	);
+}
+// экспорт: текст сохранения в поле, кнопки «Скачать файл» (Blob + ссылка) и «Копировать» (clipboard → execCommand → вручную)
+function saveDialogExport($, say) {
+	const text = exportSaveText();
+	$("mx-save-text").value = text || "";
+	if (!text) say("Сохранения пока нет — нечего экспортировать.");
+	$("mx-save-dl").onclick = () => {
+		if (!text) return;
+		try {
+			const a = document.createElement("a");
+			a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+			a.download = "probuzhdenie-monstrov-save-" + new Date().toISOString().slice(0, 10) + ".json";
+			document.body.appendChild(a);
+			a.click();
+			setTimeout(() => {
+				URL.revokeObjectURL(a.href);
+				a.remove();
+			}, 2000);
+			say("Файл скачан.", true);
+		} catch (e) {
+			say("Браузер не дал скачать файл — скопируйте текст вручную.");
+		}
+	};
+	$("mx-save-copy").onclick = () => {
+		if (!text) return;
+		const ta = $("mx-save-text");
+		try {
+			ta.focus();
+			ta.select();
+		} catch (_) {}
+		const done = () => say("Скопировано.", true);
+		try {
+			if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => say("Выделите текст и скопируйте вручную."));
+			else if (document.execCommand && document.execCommand("copy")) done();
+			else say("Выделите текст и скопируйте вручную.");
+		} catch (e) {
+			say("Выделите текст и скопируйте вручную.");
+		}
+	};
+}
+// импорт: файл (≤ 2 МБ) читается в поле, «Загрузить» проверяет и применяет текст через importSaveText
+function saveDialogImport($, say) {
+	const fileEl = $("mx-save-file");
+	if (fileEl)
+		fileEl.onchange = () => {
+			const f = fileEl.files && fileEl.files[0];
+			if (!f) return;
+			if (f.size > 2000000) return say("Файл слишком большой для сохранения игры.");
+			const rd = new FileReader();
+			rd.onload = () => {
+				$("mx-save-text").value = String(rd.result || "");
+				say("Файл прочитан — нажмите «Загрузить».", true);
+			};
+			rd.onerror = () => say("Не удалось прочитать файл.");
+			rd.readAsText(f);
+		};
+	$("mx-save-load").onclick = () => {
+		const r = importSaveText($("mx-save-text").value);
+		if (!r.ok) return say("Не загружено: " + r.why);
+		say("Сохранение загружено" + (r.ver !== SAVE_VER ? " (старый формат v" + r.ver + " поднят до v" + SAVE_VER + ")" : "") + ". Нажмите «Продолжить» в меню.", true);
+		try {
+			toast("Сохранение загружено");
+		} catch (_) {}
+	};
+}
 // окно экспорта/импорта — на DOM (как аварийное окно, см. DECISIONS D7): нужны настоящие
 // текстовое поле, кнопка скачивания и выбор файла, которых у холста нет
 function saveDialog(mode) {
@@ -7997,20 +8120,8 @@ function saveDialog(mode) {
 		"position:fixed;inset:0;z-index:99998;background:rgba(6,4,10,.8);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif;color:#eee;padding:16px";
 	const box = document.createElement("div");
 	box.style.cssText = "max-width:560px;width:100%;background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:18px 20px";
-	const bt = (id, label, bg) => '<button id="' + id + '" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:' + bg + ';color:#fff;font-weight:700;cursor:pointer">' + label + "</button>";
 	const exp = mode === "export";
-	box.innerHTML =
-		'<div style="font-weight:800;font-size:17px;margin-bottom:6px">' + (exp ? "Экспорт сохранения" : "Импорт сохранения") + "</div>" +
-		'<div style="color:#b9b3c8;margin-bottom:10px">' +
-		(exp ? "Скачайте файл или скопируйте текст — его можно загрузить через «Импорт» на другом устройстве или в другом браузере." : "Выберите файл сохранения или вставьте его текст. Текущее сохранение уйдёт в резерв.") +
-		"</div>" +
-		(exp ? "" : '<input id="mx-save-file" type="file" accept=".json,.txt,application/json,text/plain" style="display:block;margin-bottom:10px;color:#eee">') +
-		'<textarea id="mx-save-text" ' + (exp ? "readonly " : "") + 'spellcheck="false" style="width:100%;height:120px;box-sizing:border-box;background:#120e19;color:#d9d2e8;border:1px solid #3a2f4d;border-radius:8px;padding:8px;font:12px/1.4 ui-monospace,monospace;resize:vertical"></textarea>' +
-		'<div id="mx-save-msg" style="min-height:20px;margin:8px 0;color:#ffb3b3"></div>' +
-		'<div style="display:flex;flex-wrap:wrap;gap:8px">' +
-		(exp ? bt("mx-save-dl", "Скачать файл", "#2e7d32") + bt("mx-save-copy", "Копировать", "#455a64") : bt("mx-save-load", "Загрузить", "#2e7d32")) +
-		bt("mx-save-close", "Закрыть", "#8e24aa") +
-		"</div>";
+	box.innerHTML = saveDialogHtml(exp);
 	wrap.appendChild(box);
 	try {
 		document.body.appendChild(wrap);
@@ -8024,74 +8135,14 @@ function saveDialog(mode) {
 			$("mx-save-msg").style.color = ok ? "#9be7a4" : "#ffb3b3";
 		} catch (_) {}
 	};
-	const close = () => {
-		try {
-			wrap.remove();
-		} catch (_) {}
-	};
 	try {
-		$("mx-save-close").onclick = close;
-		if (exp) {
-			const text = exportSaveText();
-			$("mx-save-text").value = text || "";
-			if (!text) say("Сохранения пока нет — нечего экспортировать.");
-			$("mx-save-dl").onclick = () => {
-				if (!text) return;
-				try {
-					const a = document.createElement("a");
-					a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
-					a.download = "probuzhdenie-monstrov-save-" + new Date().toISOString().slice(0, 10) + ".json";
-					document.body.appendChild(a);
-					a.click();
-					setTimeout(() => {
-						URL.revokeObjectURL(a.href);
-						a.remove();
-					}, 2000);
-					say("Файл скачан.", true);
-				} catch (e) {
-					say("Браузер не дал скачать файл — скопируйте текст вручную.");
-				}
-			};
-			$("mx-save-copy").onclick = () => {
-				if (!text) return;
-				const ta = $("mx-save-text");
-				try {
-					ta.focus();
-					ta.select();
-				} catch (_) {}
-				const done = () => say("Скопировано.", true);
-				try {
-					if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => say("Выделите текст и скопируйте вручную."));
-					else if (document.execCommand && document.execCommand("copy")) done();
-					else say("Выделите текст и скопируйте вручную.");
-				} catch (e) {
-					say("Выделите текст и скопируйте вручную.");
-				}
-			};
-		} else {
-			const fileEl = $("mx-save-file");
-			if (fileEl)
-				fileEl.onchange = () => {
-					const f = fileEl.files && fileEl.files[0];
-					if (!f) return;
-					if (f.size > 2000000) return say("Файл слишком большой для сохранения игры.");
-					const rd = new FileReader();
-					rd.onload = () => {
-						$("mx-save-text").value = String(rd.result || "");
-						say("Файл прочитан — нажмите «Загрузить».", true);
-					};
-					rd.onerror = () => say("Не удалось прочитать файл.");
-					rd.readAsText(f);
-				};
-			$("mx-save-load").onclick = () => {
-				const r = importSaveText($("mx-save-text").value);
-				if (!r.ok) return say("Не загружено: " + r.why);
-				say("Сохранение загружено" + (r.ver !== SAVE_VER ? " (старый формат v" + r.ver + " поднят до v" + SAVE_VER + ")" : "") + ". Нажмите «Продолжить» в меню.", true);
-				try {
-					toast("Сохранение загружено");
-				} catch (_) {}
-			};
-		}
+		$("mx-save-close").onclick = () => {
+			try {
+				wrap.remove();
+			} catch (_) {}
+		};
+		if (exp) saveDialogExport($, say);
+		else saveDialogImport($, say);
 	} catch (_) {}
 	return wrap;
 }
@@ -8178,13 +8229,8 @@ function dMapLoading() {
 	pbar(409, 280, 400, 12, bakeProgress(), "#ffd23c");
 	tx("Рисую карту…", 609, 316, 14, "#b9b3c8", "center");
 }
-function dMap() {
-	if (MAPJ) return dMapLoading();
-	const w = WORLDS[G.w],
-		av = MV ? [] : avail(),
-		lead = G.slots.find(Boolean);
-	ctx.drawImage(MAPC, 0, 0, W, H);
-	// блики воды
+// блики воды на озёрах
+function dMapWater() {
 	for (const q of MAPL)
 		for (let j = 0; j < 6; j++) {
 			const a = Math.sin(t * 2.2 + j * 1.9 + q[0]);
@@ -8193,82 +8239,84 @@ function dMap() {
 				ctx.fillRect(Math.round(q[0] + q[2] * (0.24 + 0.52 * ((j * 0.37 + 0.13) % 1))) * 2, Math.round(q[1] + q[3] * (0.3 + 0.4 * ((j * 0.61 + 0.2) % 1))) * 2, 6, 2);
 			}
 		}
-	// доступные пути — бегущие огоньки
-	if (!MV)
-		for (const b of av) {
-			const A = N[G.cur],
-				B = N[b],
-				l = Math.hypot(B.x - A.x, B.y - A.y);
-			for (let s = (t * 46) % 22; s < l - 20; s += 22) {
-				if (s < 22) continue;
-				const px = A.x + ((B.x - A.x) * s) / l,
-					py = A.y + ((B.y - A.y) * s) / l + 6;
-				ctx.fillStyle = "#3a2408";
-				ctx.fillRect(Math.round(px / 2) * 2 - 4, Math.round(py / 2) * 2 - 4, 8, 8);
-				ctx.fillStyle = "#ffe27a";
-				ctx.fillRect(Math.round(px / 2) * 2 - 2, Math.round(py / 2) * 2 - 2, 4, 4);
-			}
+}
+// доступные пути — бегущие огоньки от текущего узла к каждому из av
+function dMapPaths(av) {
+	if (MV) return;
+	for (const b of av) {
+		const A = N[G.cur],
+			B = N[b],
+			l = Math.hypot(B.x - A.x, B.y - A.y);
+		for (let s = (t * 46) % 22; s < l - 20; s += 22) {
+			if (s < 22) continue;
+			const px = A.x + ((B.x - A.x) * s) / l,
+				py = A.y + ((B.y - A.y) * s) / l + 6;
+			ctx.fillStyle = "#3a2408";
+			ctx.fillRect(Math.round(px / 2) * 2 - 4, Math.round(py / 2) * 2 - 4, 8, 8);
+			ctx.fillStyle = "#ffe27a";
+			ctx.fillRect(Math.round(px / 2) * 2 - 2, Math.round(py / 2) * 2 - 2, 4, 4);
 		}
-	// узлы
-	N.forEach((n, i) => {
-		const k = nodeKind(n, i),
-			cur = i === G.cur,
-			vis = G.vis.has(i),
-			can = av.includes(i),
-			y = Math.round(n.y + (can ? -4 * Math.abs(Math.sin(t * 3 + i)) : 0)),
-			x = Math.round(n.x);
-		if (can) glow(x, n.y, 50, "#ffe27a", 0.4 + 0.2 * Math.sin(t * 4 + i));
-		if (k === "boss") glow(x, n.y, 64, "#ff3a4a", 0.3 + 0.15 * Math.sin(t * 2.4));
-		ctx.globalAlpha = vis && !cur ? 0.6 : 1;
-		if (ATL.map["i_" + k]) uc("map", "i_" + k, x, y, AP);
-		else {
-			uc("ui", can ? "node_hi" : vis ? "node_off" : "node", x, y, AP);
-			if (k === "chest") uc("ui", "chest0", x, y - 2, 1);
-			else if (k === "secret") uc("ui", "g_secret", x, y, AP);
-			else if (k === "rand") uc("ui", "g_rand", x, y, AP);
-			else if (k === "start") uc("ui", "g_star", x, y, AP);
-		}
-		ctx.globalAlpha = 1;
-		if (vis && !cur && i) uc("ui", "g_check", x + 16, y + 16, AP);
-		if (k === "secret" && !vis && Rand.next() < 0.05) Parts.add({ x: x + rr(-20, 20), y: y + rr(-20, 10), vy: -20, life: 0.7, c: "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
-		const lb = k === "boss" ? w.boss.n : NODE_LB[k];
-		if (lb) txo(lb, x, y + 38, k === "boss" ? 14 : 12, k === "boss" ? "#ffb0a0" : vis ? "#b9b3c8" : "#fff", "center");
-		area(x - 32, n.y - 32, 64, 72, () => {
-			if (MV) return;
-			if (can) walkTo(i);
-			else {
-				TIPN = { i, t0: t };
-				TIPR = null;
-			}
-		});
-	});
-	// отряд на карте
-	if (lead) {
-		let x = N[G.cur].x,
-			y = N[G.cur].y,
-			an = "idle",
-			face = 1;
-		if (MV) {
-			const k = ez.io(clamp((t - MV.t0) / MV.d, 0, 1)),
-				A = N[MV.a],
-				B = N[MV.b];
-			x = lerp(A.x, B.x, k);
-			y = lerp(A.y, B.y, k) - Math.abs(Math.sin(k * Math.PI * 5)) * 4;
-			an = "walk";
-			face = B.x >= A.x ? 1 : -1;
-			if (Rand.next() < 0.4) Parts.add({ x, y: y + 6, vx: -face * 20, vy: -14, life: 0.4, c: "rgba(230,220,200,.6)", s: 5, k: 5, e: 2, l: 2 });
-		}
-		ctx.fillStyle = "rgba(10,8,20,.4)";
-		ctx.beginPath();
-		ctx.ellipse(x, y + 8, 16, 6, 0, 0, TAU);
-		ctx.fill();
-		uIdle(lead, Math.round(x), Math.round(y + 8), AP, face, G.w, an);
-		// флажок отряда
-		if (!MV) arrowDown(x, y - 78 - 4 * Math.sin(t * 4));
 	}
-	Parts.draw(2);
-	vignette(0.8);
-	// интерфейс
+}
+// узел карты: подсветка доступного, значок по виду узла, галочка пройденного, подпись, зона нажатия
+function dMapNode(n, i, av, w) {
+	const k = nodeKind(n, i),
+		cur = i === G.cur,
+		vis = G.vis.has(i),
+		can = av.includes(i),
+		y = Math.round(n.y + (can ? -4 * Math.abs(Math.sin(t * 3 + i)) : 0)),
+		x = Math.round(n.x);
+	if (can) glow(x, n.y, 50, "#ffe27a", 0.4 + 0.2 * Math.sin(t * 4 + i));
+	if (k === "boss") glow(x, n.y, 64, "#ff3a4a", 0.3 + 0.15 * Math.sin(t * 2.4));
+	ctx.globalAlpha = vis && !cur ? 0.6 : 1;
+	if (ATL.map["i_" + k]) uc("map", "i_" + k, x, y, AP);
+	else {
+		uc("ui", can ? "node_hi" : vis ? "node_off" : "node", x, y, AP);
+		if (k === "chest") uc("ui", "chest0", x, y - 2, 1);
+		else if (k === "secret") uc("ui", "g_secret", x, y, AP);
+		else if (k === "rand") uc("ui", "g_rand", x, y, AP);
+		else if (k === "start") uc("ui", "g_star", x, y, AP);
+	}
+	ctx.globalAlpha = 1;
+	if (vis && !cur && i) uc("ui", "g_check", x + 16, y + 16, AP);
+	if (k === "secret" && !vis && Rand.next() < 0.05) Parts.add({ x: x + rr(-20, 20), y: y + rr(-20, 10), vy: -20, life: 0.7, c: "#fff3a0", s: 4, k: 0, l: 2, fi: 0.3 });
+	const lb = k === "boss" ? w.boss.n : NODE_LB[k];
+	if (lb) txo(lb, x, y + 38, k === "boss" ? 14 : 12, k === "boss" ? "#ffb0a0" : vis ? "#b9b3c8" : "#fff", "center");
+	area(x - 32, n.y - 32, 64, 72, () => {
+		if (MV) return;
+		if (can) walkTo(i);
+		else {
+			TIPN = { i, t0: t };
+			TIPR = null;
+		}
+	});
+}
+// отряд на карте: стоит на текущем узле или идёт по пути (MV) с пылью из-под ног
+function dMapParty(lead) {
+	let x = N[G.cur].x,
+		y = N[G.cur].y,
+		an = "idle",
+		face = 1;
+	if (MV) {
+		const k = ez.io(clamp((t - MV.t0) / MV.d, 0, 1)),
+			A = N[MV.a],
+			B = N[MV.b];
+		x = lerp(A.x, B.x, k);
+		y = lerp(A.y, B.y, k) - Math.abs(Math.sin(k * Math.PI * 5)) * 4;
+		an = "walk";
+		face = B.x >= A.x ? 1 : -1;
+		if (Rand.next() < 0.4) Parts.add({ x, y: y + 6, vx: -face * 20, vy: -14, life: 0.4, c: "rgba(230,220,200,.6)", s: 5, k: 5, e: 2, l: 2 });
+	}
+	ctx.fillStyle = "rgba(10,8,20,.4)";
+	ctx.beginPath();
+	ctx.ellipse(x, y + 8, 16, 6, 0, 0, TAU);
+	ctx.fill();
+	uIdle(lead, Math.round(x), Math.round(y + 8), AP, face, G.w, an);
+	// флажок отряда
+	if (!MV) arrowDown(x, y - 78 - 4 * Math.sin(t * 4));
+}
+// интерфейс карты: ресурсы, заголовок мира, шкала шагов до босса, реликвии, магазин, подсказки узла и реликвии
+function dMapHud(w) {
 	resBar();
 	const ttl = "Мир " + (G.w + 1) + " · " + w.n;
 	ctx.font = font(20);
@@ -8294,6 +8342,21 @@ function dMap() {
 		tip(n.x, n.y - 30, k === "boss" ? w.boss.n : k === "start" ? "Лагерь" : NODE_LB[k] || "Неизвестность", k === "start" ? "Отсюда начался поход" : (NODE_TIP[k] || "") + (G.vis.has(TIPN.i) ? " (пройдено)" : ""), "#ffe27a");
 	}
 	relicTip();
+}
+// экран карты: готовая земля (MAPC) → вода, пути, узлы, отряд, частицы, виньетка, интерфейс
+function dMap() {
+	if (MAPJ) return dMapLoading();
+	const w = WORLDS[G.w],
+		av = MV ? [] : avail(),
+		lead = G.slots.find(Boolean);
+	ctx.drawImage(MAPC, 0, 0, W, H);
+	dMapWater();
+	dMapPaths(av);
+	N.forEach((n, i) => dMapNode(n, i, av, w));
+	if (lead) dMapParty(lead);
+	Parts.draw(2);
+	vignette(0.8);
+	dMapHud(w);
 }
 
 // ---------- событие: сундук, карточки с эффектом редкости ----------
@@ -9078,13 +9141,10 @@ function devGate() {
 	if (window.mxGate) window.mxGate(true);
 	else toast("Редактор не подключён");
 }
-function dSet() {
-	menuBG(false);
-	ctx.fillStyle = "rgba(10,8,18,.6)";
-	ctx.fillRect(0, 0, W, H);
-	panel(209, 74, 800, 392);
-	title("Настройки", 76);
-	const rows = [
+// строки настроек: [подпись, значение, действие, включено?, цвет кнопки?]
+// звук: музыка, её громкость, громкость звуков
+function setAudioRows() {
+	return [
 		[
 			"Музыка",
 			Music.on ? "Вкл" : "Выкл",
@@ -9115,6 +9175,11 @@ function dSet() {
 			},
 			CFG.sfx !== 0,
 		],
+	];
+}
+// игра: графика, тряска, ульты героев, счётчик FPS, удаление сохранения (с подтверждением)
+function setGameRows() {
+	return [
 		[
 			"Графика",
 			QL.auto ? "Авто (" + ["низк.", "средн.", "выс."][QL.lv] + ")" : ["Низкая", "Средняя", "Высокая"][QL.lv],
@@ -9169,6 +9234,14 @@ function dSet() {
 			SAVED ? "#c62828" : "#555",
 		],
 	];
+}
+function dSet() {
+	menuBG(false);
+	ctx.fillStyle = "rgba(10,8,18,.6)";
+	ctx.fillRect(0, 0, W, H);
+	panel(209, 74, 800, 392);
+	title("Настройки", 76);
+	const rows = setAudioRows().concat(setGameRows());
 	rows.forEach(([lb, val, f, on, col], i) => {
 		const x = 233 + (i % 2) * 390,
 			y = 128 + ((i / 2) | 0) * 66;

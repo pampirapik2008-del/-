@@ -120,19 +120,10 @@ function fogSpr() {
 	return (FOGC = c);
 }
 
-function mkArena(seed, wi, kind) {
-	const R = rng32(seed),
-		w = WORLDS[wi],
-		y0 = w.fy0,
+// кандидаты в препятствия по схеме расстановки (lay): [x, y, вид], вид B/S — большое/малое, L — свет, D — разрушаемое
+function arenaCand(A, R, kind, cx, cy, hh) {
+	const { y0 } = A,
 		y1 = FLD.y1,
-		A = { seed, wi, w, y0, obs: [], dec: [], patches: [], pools: [], gv: 0, nf: new Map(), em: {}, ev: 3, kind };
-	A.tod = R() < 0.45 ? 0 : R() < 0.55 ? 1 : 2;
-	A.wx = kind === "boss" ? w.wx[1] : R() < 0.4 ? w.wx[0] : w.wx[1 + ((R() * (w.wx.length - 1)) | 0)];
-	if (A.wx === "eclipse" || A.wx === "storm") A.tod = 2;
-	A.flip = R() < 0.5;
-	const cx = 609,
-		cy = (y0 + y1) / 2,
-		hh = (y1 - y0) / 2,
 		cand = [];
 	const lay = kind === "boss" ? "ring" : ["open", "lanes", "choke", "scatter", "ring", "diag"][(R() * 6) | 0];
 	A.lay = lay;
@@ -158,6 +149,12 @@ function mkArena(seed, wi, kind) {
 	cand.push([330 + R() * 560, y0 + 16 + R() * (y1 - y0 - 28), "D"]);
 	if (R() < 0.6) cand.push([330 + R() * 560, y0 + 16 + R() * (y1 - y0 - 28), "D"]);
 	if (A.tod === 2 && R() < 0.7) cand.push([R() < 0.5 ? 180 + R() * 200 : 840 + R() * 200, cy + (R() - 0.5) * hh * 1.6, "L"]);
+	return cand;
+}
+// препятствия из кандидатов (без наложений) + сетка; проход между сторонами обязан существовать
+function arenaObstacles(A, R, cand, cy) {
+	const { w, y0 } = A,
+		y1 = FLD.y1;
 	for (const [x0, yy, kd] of cand) {
 		const list = kd === "B" ? w.big : kd === "S" ? w.small : kd === "L" ? w.light : w.destr,
 			spr = list[(R() * list.length) | 0],
@@ -168,14 +165,17 @@ function mkArena(seed, wi, kind) {
 		A.obs.push(o);
 	}
 	buildGrid(A);
-	// проход между сторонами обязан существовать
 	let guard = 0;
 	while (!navReach(A, 150, cy, 1070, cy) && A.obs.length && guard++ < 12) {
 		A.obs.splice((R() * A.obs.length) | 0, 1);
 		buildGrid(A);
 	}
-	// покрытия
-	const np = 2 + ((R() * 3) | 0);
+}
+// покрытия (2–4): замедляющие/опасные не засоряют зону расстановки, без наложений
+function arenaPatches(A, R) {
+	const { w, y0 } = A,
+		y1 = FLD.y1,
+		np = 2 + ((R() * 3) | 0);
 	for (let i = 0; i < np; i++) {
 		const k = w.patch[R() < 0.6 ? 0 : 1],
 			P = PATCH[k],
@@ -184,8 +184,12 @@ function mkArena(seed, wi, kind) {
 		if (A.patches.some((q) => Math.abs(q.x - p.x) < q.rx + p.rx && Math.abs(q.y - p.y) < q.ry + p.ry)) continue;
 		A.patches.push(p);
 	}
-	// мелкий декор
-	const nd = 5 + ((R() * 5) | 0);
+}
+// мелкий декор (5–9): крупный (папоротник, грибы) — по краям, остальной — где нет препятствий
+function arenaDecor(A, R) {
+	const { w, y0 } = A,
+		y1 = FLD.y1,
+		nd = 5 + ((R() * 5) | 0);
 	for (let i = 0; i < nd; i++) {
 		const spr = w.decor[(R() * w.decor.length) | 0];
 		if (!ATL.props[spr]) continue;
@@ -195,6 +199,25 @@ function mkArena(seed, wi, kind) {
 		if (A.obs.some((q) => Math.abs(q.x - x) < q.rx + 30 && Math.abs(q.y - y) < q.ry + 16)) continue;
 		A.dec.push({ spr, x, y, fl: R() < 0.5 });
 	}
+}
+// арена боя по сиду: время суток, погода, схема, препятствия, покрытия, декор, искры фона, запечённый пол.
+// Порядок вызовов R() фиксирован (golden): tod → wx → flip → схема/кандидаты → препятствия → покрытия → декор → искры
+function mkArena(seed, wi, kind) {
+	const R = rng32(seed),
+		w = WORLDS[wi],
+		y0 = w.fy0,
+		y1 = FLD.y1,
+		A = { seed, wi, w, y0, obs: [], dec: [], patches: [], pools: [], gv: 0, nf: new Map(), em: {}, ev: 3, kind };
+	A.tod = R() < 0.45 ? 0 : R() < 0.55 ? 1 : 2;
+	A.wx = kind === "boss" ? w.wx[1] : R() < 0.4 ? w.wx[0] : w.wx[1 + ((R() * (w.wx.length - 1)) | 0)];
+	if (A.wx === "eclipse" || A.wx === "storm") A.tod = 2;
+	A.flip = R() < 0.5;
+	const cx = 609,
+		cy = (y0 + y1) / 2,
+		hh = (y1 - y0) / 2;
+	arenaObstacles(A, R, arenaCand(A, R, kind, cx, cy, hh), cy);
+	arenaPatches(A, R);
+	arenaDecor(A, R);
 	// искры на заднем плане (кристаллы, звёзды) — фиксированный набор точек
 	A.tw = Array.from({ length: 14 }, () => [R() * W, 20 + R() * (y0 - 60), R() * 6]);
 	bakeFloor(A);

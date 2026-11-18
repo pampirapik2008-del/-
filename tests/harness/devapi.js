@@ -111,7 +111,7 @@
 				fx: F && F.fx ? F.fx.length : 0,
 				nums: F && F.nums ? F.nums.length : 0,
 				proj: F && F.proj ? F.proj.length : 0,
-				parts: typeof Parts !== "undefined" && Parts && Parts.list ? Parts.list.length : -1,
+				parts: typeof Parts !== "undefined" && Parts && Parts.a ? Parts.a.length : -1,
 				errs: ERRS.length,
 			};
 		},

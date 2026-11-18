@@ -1085,29 +1085,15 @@ function popLines(s, w, sz) {
 	});
 	return n;
 }
-function dPop() {
-	if (!pop) return;
-	const u = pop.u,
-		mine = pop.mine && !Machine.is("fight") && !u.team,
-		K = KIT[u.k],
-		x = 826,
-		y = 84,
-		w = 372,
-		h = u.team
-			? u.boss ? 262 : 214
-			: (() => {
-					// панель растягивается под длину описаний навыка и ульты
-					const need = 190 + 17 + popLines(K.ab.d, w - 28, 12) * 15 + 8 + 17 + popLines(K.ult.d, w - 28, 12) * 15;
-					return Math.min(H - y - 26, Math.max(mine ? 348 : 300, need + (mine ? 62 : 16)));
-				})();
-	area(0, 0, W, H, () => (pop = null));
-	ctx.fillStyle = "rgba(8,6,14,.45)";
-	ctx.fillRect(0, 0, W, H);
-	panel(x, y, w, h);
-	area(x - 12, y - 12, w + 24, h + 24, () => {});
-	// портрет в рамке редкости
-	const r = u.r || 0,
-		up = pop.up ? Math.max(0, 1 - (t - pop.up) * 2.5) : 0;
+// высота карточки: у врагов фиксированная, у своих — под длину описаний навыка и ульты (+ место под кнопку)
+function popHeight(u, K, mine, w, y) {
+	if (u.team) return u.boss ? 262 : 214;
+	const need = 190 + 17 + popLines(K.ab.d, w - 28, 12) * 15 + 8 + 17 + popLines(K.ult.d, w - 28, 12) * 15;
+	return Math.min(H - y - 26, Math.max(mine ? 348 : 300, need + (mine ? 62 : 16)));
+}
+// шапка карточки: портрет в рамке редкости (у врагов — рамка по типу), вспышка повышения, имя, тип/редкость, стихия/роль
+function dPopHead(u, K, x, y, up) {
+	const r = u.r || 0;
 	ctx.fillStyle = "#2a2238";
 	ctx.fillRect(x + 12, y + 12, 68, 68);
 	ctx.save();
@@ -1128,7 +1114,9 @@ function dPop() {
 		txo(RAR[r].n, x + 96, y + 47, 14, RAR[r].c, "left");
 		tx(K.role + " · ур. " + (u.lv || 1), x + 96, y + 68, 13, "#d9d4e8");
 	}
-	// характеристики
+}
+// характеристики в два столбца; при вспышке повышения здоровье и атака подсвечены зелёным
+function dPopStats(u, x, y, up) {
 	const st = [
 		["hp", fmt(Math.max(0, Math.round(u.hp))) + " / " + fmt(u.max), "Здоровье"],
 		["atk", fmt(u.atk), "Атака"],
@@ -1145,6 +1133,9 @@ function dPop() {
 		tx(q[2], cx + 28, cy + 13, 12, "#b9b3c8");
 		txo("" + q[1], cx + 164, cy + 13, 14, up > 0 && i < 2 ? "#aaff9a" : "#fff", "right");
 	});
+}
+// низ карточки: подсказка по врагу или навык + ульта своего бойца и кнопка (кормление / просмотр анимаций в коллекции)
+function dPopBody(u, K, mine, x, y, w, h) {
 	let yy = y + 190;
 	if (u.team) {
 		const tips = u.boss
@@ -1155,17 +1146,37 @@ function dPop() {
 					? "Плюётся издалека и накладывает эффект своей стихии."
 					: "Медленный, но их бывает много.";
 		txw(tips, x + 14, yy, w - 28, 16, 13, "#e8e2f4");
-	} else {
-		txo(K.ab.n, x + 14, yy, 14, EL[K.el].c, "left");
-		tx("каждые " + K.ab.cd + " с", x + w - 14, yy, 12, "#b9b3c8", "right");
-		yy += 17;
-		yy += txw(K.ab.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15 + 8;
-		txo("Ульта: " + K.ult.n, x + 14, yy, 14, "#ffd27a", "left");
-		yy += 17;
-		yy += txw(K.ult.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15;
-		if (mine && Machine.is("codex")) btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
-		else if (mine) btn(x + 14, y + h - 50, w - 28, 42, "Накормить: +10% здоровья, +8% атаки", () => feed(u), "#2e7d32", { dis: G.meat <= 0, sz: 14, ic: "meat_s" });
+		return;
 	}
+	txo(K.ab.n, x + 14, yy, 14, EL[K.el].c, "left");
+	tx("каждые " + K.ab.cd + " с", x + w - 14, yy, 12, "#b9b3c8", "right");
+	yy += 17;
+	yy += txw(K.ab.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15 + 8;
+	txo("Ульта: " + K.ult.n, x + 14, yy, 14, "#ffd27a", "left");
+	yy += 17;
+	yy += txw(K.ult.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15;
+	if (mine && Machine.is("codex")) btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
+	else if (mine) btn(x + 14, y + h - 50, w - 28, 42, "Накормить: +10% здоровья, +8% атаки", () => feed(u), "#2e7d32", { dis: G.meat <= 0, sz: 14, ic: "meat_s" });
+}
+// карточка юнита (pop): затемнение, панель, шапка, характеристики, низ; нажатие вне панели закрывает
+function dPop() {
+	if (!pop) return;
+	const u = pop.u,
+		mine = pop.mine && !Machine.is("fight") && !u.team,
+		K = KIT[u.k],
+		x = 826,
+		y = 84,
+		w = 372,
+		h = popHeight(u, K, mine, w, y),
+		up = pop.up ? Math.max(0, 1 - (t - pop.up) * 2.5) : 0;
+	area(0, 0, W, H, () => (pop = null));
+	ctx.fillStyle = "rgba(8,6,14,.45)";
+	ctx.fillRect(0, 0, W, H);
+	panel(x, y, w, h);
+	area(x - 12, y - 12, w + 24, h + 24, () => {});
+	dPopHead(u, K, x, y, up);
+	dPopStats(u, x, y, up);
+	dPopBody(u, K, mine, x, y, w, h);
 }
 // обновление визуальной части (вне симуляции): частицы, таймеры эффектов, погода
 const fxAlive = (f) => f.t < f.d,

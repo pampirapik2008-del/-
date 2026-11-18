@@ -5,7 +5,7 @@
 //   - запрет eval / new Function в игровом коде;
 //   - запрет неявных глобалов: после запуска игры в обвязке в глобальной области
 //     не должно появиться имён, кроме объявленных function/var/class верхнего уровня;
-//   - длина функций: предупреждение > 120 строк (не ошибка — список в отчёте);
+//   - длина функций: ошибка > 80 строк (жёсткий предел), предупреждение > 60 (цель);
 //     модуль-замыкание `const X = (() => { … })()` — пространство имён, а не функция:
 //     его не меряем целиком, а проверяем функции внутри него;
 //   - мёртвый код: объявление верхнего уровня в src/game, на которое нет ни одной
@@ -18,7 +18,8 @@ import { fileURLToPath } from "node:url";
 import { boot, ROOT } from "../tests/harness/boot.mjs";
 
 const SRC = path.join(ROOT, "src/game");
-const LIMIT = 120;
+const LIMIT = 80; // жёсткий предел длины функции (ошибка)
+const SOFT = 60; // цель (предупреждение)
 const STATE_FILE = "12_state.js"; // единственный файл, где разрешены S === "…" и S = "…"
 const args = process.argv.slice(2);
 
@@ -53,7 +54,7 @@ for (const f of files) {
 }
 
 /* ---------- длина функций (по объявлениям верхнего уровня и методам объектов) ---------- */
-export function longFunctions(text, limit = LIMIT) {
+export function longFunctions(text, limit = SOFT) {
 	const lines = text.split("\n");
 	const out = [];
 	const re = /^(?:\t| {0,4})?(?:async\s+)?(?:function\s*\*?\s*([A-Za-z_$][\w$]*)\s*\(|(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:function\b|\([^)]*\)\s*=>\s*\{|[A-Za-z_$][\w$]*\s*=>\s*\{)|([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{\s*$)/;
@@ -87,7 +88,7 @@ export function longFunctions(text, limit = LIMIT) {
 
 for (const f of files) {
 	const text = fs.readFileSync(path.join(SRC, f), "utf8");
-	for (const fn of longFunctions(text)) warnings.push(`${f}:${fn.line}: функция ${fn.name} — ${fn.len} строк (лимит ${LIMIT})`);
+	for (const fn of longFunctions(text)) (fn.len > LIMIT ? errors : warnings).push(`${f}:${fn.line}: функция ${fn.name} — ${fn.len} строк (${fn.len > LIMIT ? "предел " + LIMIT : "цель " + SOFT})`);
 }
 
 /* ---------- мёртвый код: объявления верхнего уровня без единой ссылки ---------- */
