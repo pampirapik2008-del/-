@@ -15,6 +15,8 @@
 		"release": "npm run build:dist && npm run check && node tools/golden.mjs --check --battles 60 --maps 150 --html dist/game.html && node tools/golden.mjs --check --battles 60 --maps 150 --html dist/game-public.html && node tools/e2e.mjs --html dist/game.html && node tools/e2e.mjs --html dist/game-public.html",
 		"fuzz": "node tools/fuzz-saves.mjs",
 		"soak": "node tools/soak.mjs",
+		"soak:gc": "node --expose-gc tools/soak.mjs",
+		"serve": "node tools/serve.mjs",
 		"perf": "node tools/perf.mjs",
 		"hot": "node tools/hot.mjs",
 		"docs": "node tools/modgraph.mjs --write",
