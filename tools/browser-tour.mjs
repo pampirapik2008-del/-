@@ -205,22 +205,29 @@ async function desktop(browser) {
 	await g.click("Настройки");
 	await g.until("__dev.S === 'settings'", 5000);
 	await g.shot("09_settings");
-	// Настоящие 20 секунд: начать в настройках, выйти в меню и дождаться DOM-отчёта.
+	// Настоящий двухминутный замер, смена экрана и скачивание отчёта.
+	const cdp = await browser.target().createCDPSession();
+	await cdp.send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: OUT, browserContextId: g.page.browserContext().id });
 	await g.click("Отчёт");
 	await g.click("Назад");
 	await g.until("__dev.S === 'menu'", 5000);
-	await g.until("!!document.querySelector('#mx-perf-text')", 25000, "отчёт не появился через 20 секунд");
+	await g.until("!!document.querySelector('#mx-perf-text')", 130000, "отчёт не появился через 2 минуты");
 	const perf = await g.ev("document.querySelector('#mx-perf-text').value");
-	ok(/FPS: медиана/.test(perf) && /Update: медиана/.test(perf) && /Draw: медиана/.test(perf) && /экран menu/.test(perf) && /User-Agent:/.test(perf), "отчёт: 20 секунд в меню, статистика и условия");
+	ok(/Длительность: 12[0-9]/.test(perf) && /ПО СЕКУНДАМ/.test(perf) && /20 САМЫХ ДОЛГИХ КАДРОВ/.test(perf) && /экран menu/.test(perf) && /User-Agent:/.test(perf), "отчёт: 2 минуты, хронология, пики и условия");
+	await g.page.click("#mx-perf-dl");
+	await g.until("/скачан/.test(document.querySelector('#mx-perf-msg').textContent)", 5000, "отчёт не скачан");
+	let perfFile = null;
+	for (let i = 0; i < 20 && !perfFile; i++) {
+		await sleep(100);
+		perfFile = fs.readdirSync(OUT).find((f) => /^otchyot-proizvoditelnosti-.*\.txt$/.test(f));
+	}
+	ok(perfFile && fs.readFileSync(path.join(OUT, perfFile), "utf8") === perf, "скачанный отчёт совпадает с текстом");
 	await g.page.click("#mx-perf-copy");
 	await g.until("!!document.querySelector('#mx-perf-msg').textContent", 5000, "кнопка копирования не ответила");
 	await g.page.click("#mx-perf-close");
 	await g.until("!document.querySelector('#mx-perf')", 3000, "отчёт не закрылся");
 	await g.click("Настройки");
 	await g.until("__dev.S === 'settings'", 5000);
-	// разрешить скачивание в OUT: только через сессию браузера с browserContextId (сессия вкладки молчит)
-	const cdp = await browser.target().createCDPSession();
-	await cdp.send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: OUT, browserContextId: g.page.browserContext().id });
 	await g.click("Экспорт");
 	await g.until("document.querySelector('#mx-save-text') && document.querySelector('#mx-save-text').value.length > 20", 5000, "окно экспорта не показало сохранение");
 	const save = JSON.parse(await g.ev("document.querySelector('#mx-save-text').value"));

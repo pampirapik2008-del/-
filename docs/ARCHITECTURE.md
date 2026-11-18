@@ -98,6 +98,7 @@ flowchart TB
     60_game --> 20_data
     60_game --> 30_arena
     62_save --> 01_head
+    63_perf_report --> 01_head
     65_screens --> 01_head
     65_screens --> 10_core
     65_screens --> 12_state
@@ -156,7 +157,7 @@ flowchart TB
 | `50_draw` | 1280 | 64 | 01_head 428, 10_core 195, 15_ui 61, 30_arena 28, 20_data 25, 12_state 13, 40_fight 11, 00_rand 7, 65_screens 1 |
 | `60_game` | 910 | 67 | 01_head 105, 20_data 31, 10_core 28, 30_arena 11, 12_state 10, 00_rand 9, 62_save 5, 40_fight 4, 15_ui 2, 65_screens 2 |
 | `62_save` | 428 | 20 | 01_head 29, 10_core 6, 60_game 5, 05_err 4, 20_data 3, 12_state 3, 40_fight 2, 15_ui 2 |
-| `63_perf_report` | 93 | 10 | 01_head 5, 60_game 3, 15_ui 2, 10_core 2, 20_data 1 |
+| `63_perf_report` | 159 | 18 | 01_head 20, 60_game 7, 15_ui 3, 10_core 3, 12_state 3, 20_data 1 |
 | `65_screens` | 1286 | 78 | 01_head 355, 10_core 174, 15_ui 140, 20_data 50, 60_game 35, 50_draw 28, 12_state 28, 00_rand 9, 62_save 6, 30_arena 3, 13_input 2, 40_fight 2, 63_perf_report 2, 90_boot 1 |
 | `70_audio` | 119 | 5 | 10_core 9, 01_head 8, 12_state 2 |
 | `90_boot` | 154 | 12 | 01_head 20, 10_core 11, 12_state 9, 05_err 9, 60_game 6, 65_screens 5, 20_data 3, 15_ui 3, 30_arena 2, 50_draw 2, 70_audio 2, 13_input 2, 63_perf_report 1, 00_rand 1 |

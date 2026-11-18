@@ -39,7 +39,7 @@ test("статистика: медиана, p95, худшие 5% FPS, строг
 	assert.deepEqual(JSON.parse(g.dev.run('JSON.stringify(perfReportStats([], [], []))')), { fps: 0, worstFps: 0, update: 0, update95: 0, draw: 0, draw95: 0, slow16: 0, slow33: 0 });
 });
 
-test("замер через loop: 20 секунд, условия, окно, копирование и закрытие", async () => {
+test("замер через loop: 120 секунд, условия, окно, копирование и закрытие", async () => {
 	const dom = createDom(), g = boot({ dom });
 	assert.ok(await g.ready());
 	const elements = reportDom(dom);
@@ -48,14 +48,21 @@ test("замер через loop: 20 секунд, условия, окно, к�
 	g.step(600);
 	assert.equal(elements.has('mx-perf'), false);
 	g.dev.run('setQ(0); Machine.go("settings")');
-	g.step(610);
+	g.step(6590);
+	assert.equal(elements.has("mx-perf"), false, "раньше двух минут окно не появляется");
+	g.step(20);
 	assert.equal(g.fatal, null);
 	const wrap = elements.get('mx-perf');
 	assert.ok(wrap);
 	const box = wrap.children[0], text = box.querySelector('#mx-perf-text').value;
-	assert.match(text, /FPS: медиана/);
-	assert.match(text, /Update: медиана/);
-	assert.match(text, /Draw: медиана/);
+	assert.match(text, /Длительность: 120\./);
+	assert.match(text, /FPS средний/);
+	assert.match(text, /update медиана\/p95/);
+	assert.match(text, /draw [0-9]/);
+	assert.match(text, /ПО ЭКРАНАМ И МИРАМ/);
+	assert.match(text, /ПО СЕКУНДАМ/);
+	assert.match(text, /\[0–1 с\] экран menu/);
+	assert.match(text, /20 САМЫХ ДОЛГИХ КАДРОВ/);
 	assert.match(text, /экран menu/);
 	assert.match(text, /экран settings/);
 	assert.match(text, /качество 0 \(ручное\)/);
@@ -75,4 +82,37 @@ test("сворачивание отменяет замер", async () => {
 	dom.document.hidden = true;
 	for (const f of dom.docListeners.visibilitychange) f();
 	assert.equal(g.dev.run('PERF_REPORT === null'), true);
+});
+
+
+test("хронология относит задержку к предыдущему кадру и показывает переход и признаки события", async () => {
+	const g = boot();
+	assert.ok(await g.ready());
+	g.dev.S = "map";
+	g.dev.run(`PERF_REPORT = { start: 0, prev: null, samples: [] };
+		perfReportFrame(100, 2, 3);
+		ev({ title: "Находка", chest: 0 });
+		perfReportFrame(150, 4, 5);
+		EV.open = 1;
+		perfReportFrame(180, 6, 7);`);
+	const text = g.dev.run('perfReportText(PERF_REPORT)');
+	assert.match(text, /50\.00 мс \(20\.00 FPS\); update 2\.00 мс, draw 3\.00 мс; экран map.*→ экран msg/);
+	assert.match(text, /событие: Находка, сундук закрыт/);
+	assert.match(text, /\[0–1 с\] экран map/);
+	assert.match(text, /\[0–1 с\] экран msg/);
+	assert.equal(g.dev.run('PERF_REPORT.samples.length'), 2);
+});
+
+test("признаки боя: победа и название способности, этап сборки карты", async () => {
+	const g = boot();
+	assert.ok(await g.ready());
+	g.dev.newGame();
+	g.dev.setSlot(0, g.dev.HEROES[0]);
+	g.dev.fight("fight");
+	g.dev.startFight();
+	g.dev.run('F.out = { win: true, t: 1, d: 9 }; F.fx.push({ k: "cut", s: "Молния" });');
+	assert.match(g.dev.run('perfReportActivity()'), /плашка победы/);
+	assert.match(g.dev.run('perfReportActivity()'), /способность: Молния/);
+	g.dev.run('bakeMap(123456)');
+	assert.match(g.dev.run('perfReportActivity()'), /сборка карты: земля/);
 });
