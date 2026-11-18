@@ -1080,7 +1080,8 @@ function dSet() {
 			y = 128 + ((i / 2) | 0) * 66;
 		chip(x, y, 368, 54, "rgba(20,16,28,.6)");
 		tx(lb, x + 16, y + 28, 16, "#fff");
-		btn(x + 196, y + 7, 164, 40, val, f, col || (on === undefined || on ? "#2e7d32" : "#555"), { sz: 15 });
+		btn(x + 196, y + 7, lb === "Счётчик FPS" ? 72 : 164, 40, val, f, col || (on === undefined || on ? "#2e7d32" : "#555"), { sz: 15 });
+		if (lb === "Счётчик FPS") btn(x + 272, y + 7, 88, 40, PERF_REPORT ? "Замер…" : "Отчёт", perfReportStart, "#455a64", { sz: 14 });
 	});
 	if (CFG.autoUlt === false) tx("Ручные ульты: нажми на портрет бойца, когда полоска энергии полная", 609, 400, 12, "#b9b3c8", "center");
 	// в сборке без редактора (dist/game-public.html, src/runner.js) кнопки разработчика нет

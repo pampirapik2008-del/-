@@ -74,6 +74,7 @@ function loop(ts) {
 	const raw = ts - last,
 		dt = Math.min(0.05, Math.max(0, raw / 1000));
 	last = ts;
+	const reportActive = !!PERF_REPORT, reportStart = reportActive ? performance.now() : 0;
 	if (READY && G) {
 		if (raw < 250) perfTick(raw);
 		t += dt;
@@ -99,15 +100,20 @@ function loop(ts) {
 			logErr("update", e);
 		}
 	}
+	const reportUpdate = reportActive ? performance.now() - reportStart : 0;
+	let reportDraw = 0;
 	try {
 		const t1 = performance.now();
 		draw();
-		dbgMark("draw", performance.now() - t1);
+		const drawTime = performance.now() - t1;
+		reportDraw = drawTime;
+		dbgMark("draw", drawTime);
 		dbgDraw();
 		errFrameOk();
 	} catch (e) {
 		logErr("draw", e);
 	}
+	if (reportActive && PERF_REPORT) perfReportFrame(ts, reportUpdate, reportDraw);
 	requestAnimationFrame(loop);
 }
 // касания, клавиатура и отмена указателей — в Input (13_input.js)
@@ -118,6 +124,10 @@ document.addEventListener("visibilitychange", () => {
 	Music.pause(document.hidden || paused);
 	// свёрнутая вкладка: время не копится, бой встаёт на паузу — без скачка после возврата
 	if (document.hidden) {
+		if (PERF_REPORT) {
+			PERF_REPORT = null;
+			toast("Замер отменён: игра была свёрнута");
+		}
 		Loop.reset();
 		Input.reset();
 		if (Machine.is("fight", "prep")) paused = true;
