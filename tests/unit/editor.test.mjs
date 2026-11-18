@@ -222,7 +222,7 @@ function loadLoader(opts) {
 	const scripts = []; // тексты скриптов, добавленных в body (так загрузчик запускает код игры)
 	dom.document.body.appendChild = (el) => { if (el && el.tagName === "SCRIPT") scripts.push(String(el.textContent)); };
 	dom.document.getElementById = (i) => byId.get(i) || null;
-	dom.document.querySelector = (sel) => byId.get(sel.slice(1)) || patchEl(Object.assign(mk("div"), { textContent: sel === "#game-src" ? "/*game*/" : sel === "#game-assets" ? "/*assets*/" : "" }));
+	dom.document.querySelector = (sel) => byId.get(sel.slice(1)) || patchEl(Object.assign(mk("div"), { textContent: sel === "#game-src" ? (opts.source || "/*game*/") : sel === "#game-assets" ? "/*assets*/" : "" }));
 	const warns = [];
 	const reloads = [];
 	Object.assign(win, {
@@ -254,6 +254,7 @@ function loadLoader(opts) {
 		Uint8Array,
 	});
 	for (const [k, v] of Object.entries(opts.ls || {})) win.localStorage.setItem(k, v);
+	if (opts.failWrites) win.localStorage.setItem = () => { throw new Error("QuotaExceededError"); };
 	if (opts.game) Object.assign(win, opts.game);
 	vm.createContext(win);
 	vm.runInContext(CORE_SRC, win, { filename: "core.js" });
@@ -592,4 +593,56 @@ test("мусорный ответ ИИ: не JSON, null, текст без бл�
 		assert.equal(r.L.ls.getItem("mx_active"), null, "игра не изменена");
 		assert.ok(!r.log.includes("sk-testkey123456"), "ключ не светится");
 	}
+});
+
+
+test("обновление: старая правка без отчёта не перекрывает новую игру, история и сохранение целы", async () => {
+	const version = { id: 900, code: "/* старая игра без отчёта */", good: true };
+	const source = "/* новая игра */ function perfReportStart() {}";
+	const L = loadLoader({ source, versions: [version], ls: { mx_active: "900", mx_good: "900", mx_pending: "900", monsterAwakeningSave: "сохранение" } });
+	await L.settle();
+	assert.match(L.scripts[0], /новая игра/);
+	assert.equal(L.ls.getItem("mx_active"), "orig");
+	assert.equal(L.ls.getItem("mx_good"), "orig");
+	assert.equal(L.ls.getItem("mx_pending"), null);
+	assert.equal(L.ls.getItem("mx_bad"), null, "правка не объявляется сломанной из-за обновления");
+	assert.equal(L.ls.getItem("monsterAwakeningSave"), "сохранение");
+	assert.equal(L.win.indexedDB.rows.get(900).code, version.code, "история не удалена");
+	assert.equal(L.ls.getItem("mx_original_hash"), MXCore.hash(source));
+});
+
+test("обновление основы: новый оригинал, а осознанный откат через историю возможен", async () => {
+	const source = "/* новая основа */", version = { id: 901, code: "/* старая правка */", good: true };
+	const L = loadLoader({ source, versions: [version], ls: { mx_active: "901", mx_good: "901", mx_original_hash: "старый-хеш" } });
+	await L.settle();
+	assert.match(L.scripts[0], /новая основа/);
+	assert.equal(L.ls.getItem("mx_active"), "orig");
+	assert.equal(L.win.indexedDB.rows.get(901).code, version.code);
+	// Выбор версии в истории редактора намеренно возможен, пока основа не поменялась вновь.
+	const R = loadLoader({ source, versions: [version], ls: { mx_active: "901", mx_good: "orig", mx_original_hash: MXCore.hash(source) } });
+	await R.settle();
+	assert.match(R.scripts[0], /старая правка/);
+	assert.equal(R.ls.getItem("mx_pending"), "901");
+});
+
+test("первая загрузка: совместимая правка не отключается; отказ IndexedDB не скрывает последующую проверку", async () => {
+	const source = "function perfReportStart() {} /* новая игра */";
+	const L = loadLoader({ source, versions: [{ id: 902, code: "function perfReportStart() {} /* своя правка */" }], ls: { mx_active: "902", mx_good: "902" } });
+	await L.settle();
+	assert.match(L.scripts[0], /своя правка/);
+	assert.equal(L.ls.getItem("mx_active"), "902");
+	const F = loadLoader({ source, idbFail: "error", ls: { mx_active: "903", mx_good: "903" } });
+	await F.settle();
+	assert.match(F.scripts[0], /новая игра/);
+	assert.equal(F.ls.getItem("mx_original_hash"), null, "не запоминаем успешную проверку, пока база недоступна");
+});
+
+
+test("ошибка записи хранилища при обновлении не мешает запуску оригинала", async () => {
+	const source = "function perfReportStart() {} /* обновлённая игра */";
+	const L = loadLoader({ source, versions: [{ id: 904, code: "/* старое */" }], ls: { mx_active: "904", mx_good: "904" }, failWrites: true });
+	await L.settle();
+	assert.match(L.scripts[0], /обновлённая игра/);
+	assert.ok(L.win.indexedDB.rows.has(904));
+	assert.deepEqual(L.warns, []);
 });

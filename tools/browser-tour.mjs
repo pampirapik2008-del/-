@@ -23,7 +23,7 @@ const opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const HTML = path.resolve(ROOT, opt("--html", "index.html"));
 const PUBLIC = path.resolve(ROOT, opt("--public", "dist/game-public.html"));
 const OUT = opt("--out", fs.mkdtempSync(path.join(os.tmpdir(), "browser-tour-")));
-const ONLY = opt("--only", "desktop,mobile,public,editor").split(",");
+const ONLY = opt("--only", "desktop,mobile,public,editor,upgrade").split(",");
 const SEED = 777;
 const DEVAPI = fs.readFileSync(path.join(ROOT, "tests/harness/devapi.js"), "utf8");
 fs.mkdirSync(OUT, { recursive: true });
@@ -337,6 +337,53 @@ async function mobile(browser) {
 	await g.page.browserContext().close();
 }
 
+// ---------- обновление: сохранённая старая правка не должна скрывать новый отчёт ----------
+async function upgrade(browser) {
+	stage("upgrade — старая версия редактора и новая игра");
+	const g = new Game(await page(browser, { width: 1280, height: 720 }), { tag: "u" });
+	await g.open(HTML);
+	await g.ev('__dev.newGame(); __dev.setSlot(0, __dev.HEROES[0]); __dev.S = "map"; __dev.saveGame(); __dev.S = "menu"');
+	await g.ev(`(async () => {
+		const save = localStorage.getItem("monsterAwakeningSave");
+		if (!save) throw new Error("тестовое сохранение не создано");
+		localStorage.setItem("mx_test_save", save);
+		const source = document.querySelector('#game-src').textContent;
+		const legacy = source.replace('function perfReportStart(', 'function oldPerfReportStart(')
+			.split(String.fromCharCode(10)).filter(line => !(line.includes('Счётчик FPS') && line.includes('perfReportStart'))).join(String.fromCharCode(10));
+		if (legacy.includes('function perfReportStart(')) throw new Error('старую версию не удалось подготовить');
+		const db = await new Promise((resolve, reject) => {
+			const r = indexedDB.open('mx_versions', 1);
+			r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error);
+		});
+		await new Promise((resolve, reject) => {
+			const t = db.transaction('v', 'readwrite');
+			t.objectStore('v').put({ id: 900, code: legacy, good: true, note: 'старая правка' });
+			t.oncomplete = resolve; t.onerror = () => reject(t.error);
+		});
+		db.close();
+		localStorage.setItem('mx_active', '900'); localStorage.setItem('mx_good', '900');
+		localStorage.setItem('mx_test_sentinel', 'не удалять'); localStorage.removeItem('mx_original_hash');
+	})()`);
+	await g.page.reload({ waitUntil: "load" });
+	await g.until("typeof READY !== 'undefined' && READY && typeof G !== 'undefined' && G", 30000, "игра после обновления не загрузилась");
+	await g.page.addScriptTag({ content: DEVAPI });
+	await g.ev("__dev.labelButtons()");
+	await g.click("Настройки");
+	await g.until("__dev.S === 'settings'", 5000);
+	const labels = await g.labels();
+	ok(labels.includes("Отчёт"), "старый код в IndexedDB не скрывает кнопку отчёта");
+	const preserved = await g.ev(`(async () => {
+		const r = indexedDB.open('mx_versions', 1);
+		const db = await new Promise((resolve, reject) => { r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+		const q = db.transaction('v').objectStore('v').get(900);
+		const v = await new Promise((resolve, reject) => { q.onsuccess = () => resolve(q.result); q.onerror = () => reject(q.error); });
+		return localStorage.getItem('mx_active') === 'orig' && localStorage.getItem('mx_good') === 'orig' && localStorage.getItem('mx_test_sentinel') === 'не удалять' && localStorage.getItem('monsterAwakeningSave') === localStorage.getItem('mx_test_save') && !!v && v.note === 'старая правка';
+	})()`);
+	ok(preserved, "старая правка и данные хранилища сохранены");
+	await g.clean("upgrade");
+	await g.page.browserContext().close();
+}
+
 // ---------- публичная сборка: без редактора и кнопки разработчика ----------
 async function pub(browser) {
 	if (!fs.existsSync(PUBLIC)) return report.push("public: нет " + path.relative(ROOT, PUBLIC) + " — пропуск (npm run build:dist)");
@@ -387,7 +434,7 @@ async function editor(browser) {
 	await g.page.browserContext().close();
 }
 
-const PASSES = { desktop, mobile, public: pub, editor };
+const PASSES = { desktop, mobile, public: pub, editor, upgrade };
 const t0 = Date.now();
 let browser;
 try {
