@@ -11,37 +11,155 @@ src/game/*.js         код игры, порядок подключения = �
 assets/img/*.png      арты (19 шт.), в сборке кодируются в base64
 assets/atlas.json     атлас кадров — текстом: в нём есть числа вида 46.0
 assets/font.woff2     шрифт игры
-tools/                extract / build / golden / fuzz / soak / heapdiff / perf / lint / shots / shotdiff / e2e / abcmd
+tools/                extract / build / golden / fuzz / soak / heapdiff / perf / hot / entry / lint / shots / shotdiff / e2e / abcmd / modgraph
 tests/harness/        заглушка DOM + запуск игры в node:vm (в сборку не попадает)
 tests/unit/           unit-тесты (node:test)
 tests/golden/         эталон поведения (200 боёв + 500 карт)
 tests/e2e/baseline/   эталонные снимки тура по экранам (настоящий холст @napi-rs/canvas)
-docs/                 эта документация
+docs/                 эта документация; как добавить героя, реликвию или мир — docs/HOWTO.md
 ```
 
 ## Слои кода игры
 
-| Файл | Что внутри | Строк |
-|---|---|---|
-| `00_font.js` | data-URI шрифта (подставляется сборкой) | 1 |
-| `00_rand.js` | `Rand` — детерминированная случайность (mulberry32) | 33 |
-| `01_head.js` | canvas, палитра, `area()`, `mkC`, реколор, сохранения-константы, звук-хелперы | 1934 |
-| `05_err.js` | журнал ошибок, аварийное окно, отчёт, скрытый экран отладки | 210 |
-| `10_core.js` | ассеты, спрайты на сетке 609×270, `num`, `Events`, `Timers`, `Loop`, частицы, свет, качество | 614 |
-| `12_state.js` | `Machine` — машина экранов: таблица переходов, enter/update/draw/exit, алиас `S` | 92 |
-| `13_input.js` | `Input` — слои касаний, указатели, клавиатура, `lp(e)` | 108 |
-| `15_ui.js` | шрифт, панели, кнопки, рамки редкости, полосы, тосты, переходы | 289 |
-| `20_data.js` | редкости, стихии, реликвии, герои, 10 миров, враги | 512 |
-| `30_arena.js` | арена по сиду, препятствия, навигация, свет, погода | 555 |
-| `40_fight.js` | бой: расстановка, движение, удары, статусы, боссы; `upd`/`idleUpd` | 1673 |
-| `50_draw.js` | отрисовка боя, HUD, расстановка; подписчики `Events` (частицы, числа) | 1218 |
-| `60_game.js` | миры, карта (`genMap`, `bakeMap`), события, магазин, арена | 772 |
-| `62_save.js` | сохранения v3: конверт, сумма, резерв, миграции | 265 |
-| `65_screens.js` | экраны: карта, события, лавка, меню, выбор героя, настройки, итоги; таблица экранов `Machine.reg` | 1256 |
-| `70_audio.js` | синтез звука и музыка по мирам; подписчики `Events` (sfx) | 104 |
-| `90_boot.js` | масштаб экрана, цикл кадра, запуск | 130 |
+| Файл | Что внутри |
+|---|---|
+| `00_font.js` | data-URI шрифта (подставляется сборкой) |
+| `00_rand.js` | `Rand` — детерминированная случайность (mulberry32) |
+| `01_head.js` | canvas, палитра, `area()`, `mkC`, реколор, сохранения-константы, звук-хелперы |
+| `05_err.js` | журнал ошибок, аварийное окно, отчёт, скрытый экран отладки |
+| `10_core.js` | ассеты, спрайты на сетке 609×270, `num`, `Events`, `Timers`, `Loop`, частицы, свет, качество |
+| `12_state.js` | `Machine` — машина экранов: таблица переходов, enter/update/draw/exit, алиас `S` |
+| `13_input.js` | `Input` — слои касаний, указатели, клавиатура, `lp(e)` |
+| `15_ui.js` | шрифт, панели, кнопки, рамки редкости, полосы, тосты, переходы |
+| `20_data.js` | редкости, стихии, реликвии, герои, 10 миров, враги |
+| `30_arena.js` | арена по сиду, препятствия, навигация, свет, погода |
+| `40_fight.js` | бой: расстановка, движение, удары, статусы, боссы; `upd`/`idleUpd` |
+| `50_draw.js` | отрисовка боя, HUD, расстановка; подписчики `Events` (частицы, числа) |
+| `60_game.js` | миры, карта (`genMap`, `bakeMap`), события, магазин, арена |
+| `62_save.js` | сохранения v3: конверт, сумма, резерв, миграции |
+| `65_screens.js` | экраны: карта, события, лавка, меню, выбор героя, настройки, итоги; таблица экранов `Machine.reg` |
+| `70_audio.js` | синтез звука и музыка по мирам; подписчики `Events` (sfx) |
+| `90_boot.js` | масштаб экрана, цикл кадра, запуск |
 
 Порядок важен: файлы — это одна область видимости (как было в монолите), поэтому `const`/`let` из ранних файлов доступны поздним, а не наоборот. Функции поднимаются (hoisting) на весь скрипт.
+
+### Схема модулей
+
+<!-- modgraph:start — блок порождается `npm run docs` (tools/modgraph.mjs); правки руками затрёт -->
+Стрелка «A → B» — модуль A использует имена, объявленные в B (на схеме — от 10 ссылок; все зависимости — в таблице ниже). Все файлы — одна область видимости, поэтому поздний файл свободно пользуется ранними; стрелок «снизу вверх» (ранний файл → поздний) на схеме нет, а полный их список — ниже: это состояние и хуки, объявленные позже, но читаемые ранними функциями.
+
+```mermaid
+flowchart TB
+    00_rand["00_rand<br/><i>Rand</i>"]
+    01_head["01_head<br/><i>палитра, холст, спрайты</i>"]
+    05_err["05_err<br/><i>ошибки, аварийное окно</i>"]
+    10_core["10_core<br/><i>Events/Timers/Loop, частицы, свет</i>"]
+    12_state["12_state<br/><i>Machine (экраны)</i>"]
+    13_input["13_input<br/><i>Input</i>"]
+    15_ui["15_ui<br/><i>кнопки, панели, шрифт</i>"]
+    20_data["20_data<br/><i>герои, реликвии, миры</i>"]
+    30_arena["30_arena<br/><i>арена, навигация, погода</i>"]
+    40_fight["40_fight<br/><i>бой: шаги, удары, боссы</i>"]
+    50_draw["50_draw<br/><i>отрисовка боя и HUD</i>"]
+    60_game["60_game<br/><i>карта, события, лавка</i>"]
+    62_save["62_save<br/><i>сохранения</i>"]
+    65_screens["65_screens<br/><i>экраны и таблица Machine.reg</i>"]
+    70_audio["70_audio<br/><i>звук и музыка</i>"]
+    90_boot["90_boot<br/><i>цикл кадра, запуск</i>"]
+    05_err --> 01_head
+    05_err --> 10_core
+    10_core --> 01_head
+    12_state --> 01_head
+    13_input --> 01_head
+    15_ui --> 01_head
+    15_ui --> 10_core
+    20_data --> 01_head
+    30_arena --> 01_head
+    30_arena --> 10_core
+    40_fight --> 00_rand
+    40_fight --> 01_head
+    40_fight --> 10_core
+    40_fight --> 12_state
+    40_fight --> 20_data
+    40_fight --> 30_arena
+    50_draw --> 01_head
+    50_draw --> 10_core
+    50_draw --> 12_state
+    50_draw --> 15_ui
+    50_draw --> 20_data
+    50_draw --> 30_arena
+    50_draw --> 40_fight
+    60_game --> 01_head
+    60_game --> 10_core
+    60_game --> 12_state
+    60_game --> 20_data
+    60_game --> 30_arena
+    62_save --> 01_head
+    65_screens --> 00_rand
+    65_screens --> 01_head
+    65_screens --> 10_core
+    65_screens --> 12_state
+    65_screens --> 15_ui
+    65_screens --> 20_data
+    65_screens --> 50_draw
+    65_screens --> 60_game
+    90_boot --> 01_head
+    90_boot --> 10_core
+```
+
+Ссылки ранних файлов на поздние (29):
+
+- `01_head` → `10_core`: `Timers`
+- `01_head` → `12_state`: `Machine`
+- `01_head` → `13_input`: `lp`
+- `01_head` → `90_boot`: `FV`, `last`
+- `05_err` → `10_core`: `Loop`, `Parts`, `QL`, `Seq`, `Timers`
+- `05_err` → `12_state`: `Machine`
+- `05_err` → `13_input`: `Input`
+- `05_err` → `30_arena`: `cacheStats`
+- `05_err` → `60_game`: `EV`
+- `05_err` → `90_boot`: `FV`
+- `10_core` → `90_boot`: `hiDpi`
+- `12_state` → `15_ui`: `TRT`
+- `12_state` → `40_fight`: `idleUpd`
+- `12_state` → `50_draw`: `CAM`
+- `12_state` → `60_game`: `TIPN`
+- `12_state` → `65_screens`: `TIPR`
+- `13_input` → `40_fight`: `startFight`
+- `13_input` → `50_draw`: `autoPlace`
+- `13_input` → `60_game`: `EV`, `evClose`
+- `13_input` → `65_screens`: `CODEX_TEST`
+- `15_ui` → `20_data`: `RAR`
+- `30_arena` → `50_draw`: `DT`
+- `30_arena` → `65_screens`: `BGA`
+- `40_fight` → `50_draw`: `autoPlace`, `lerpRemember`
+- `40_fight` → `60_game`: `lose`, `win`
+- `50_draw` → `65_screens`: `codexTestOpen`
+- `60_game` → `62_save`: `autosave`
+- `60_game` → `65_screens`: `BGA`
+- `65_screens` → `90_boot`: `hiDpi`
+
+| модуль | строк | объявлений | использует имена из (число ссылок) |
+|---|---:|---:|---|
+| `00_rand` | 39 | 1 | — |
+| `01_head` | 976 | 65 | 90_boot 6, 00_rand 5, 13_input 4, 10_core 3, 12_state 1 |
+| `05_err` | 227 | 21 | 01_head 34, 10_core 12, 12_state 6, 13_input 4, 60_game 1, 90_boot 1, 30_arena 1 |
+| `10_core` | 698 | 53 | 01_head 11, 00_rand 9, 90_boot 4, 05_err 2, 00_font 1 |
+| `12_state` | 108 | 3 | 01_head 16, 05_err 2, 10_core 2, 15_ui 1, 50_draw 1, 60_game 1, 65_screens 1, 40_fight 1 |
+| `13_input` | 108 | 2 | 01_head 12, 12_state 6, 10_core 3, 60_game 3, 65_screens 2, 05_err 1, 40_fight 1, 50_draw 1 |
+| `15_ui` | 289 | 25 | 01_head 126, 10_core 39, 20_data 1 |
+| `20_data` | 575 | 21 | 01_head 11, 10_core 1 |
+| `30_arena` | 627 | 46 | 10_core 157, 01_head 110, 20_data 7, 65_screens 2, 50_draw 1 |
+| `40_fight` | 1686 | 72 | 10_core 190, 20_data 80, 30_arena 47, 01_head 31, 00_rand 18, 12_state 11, 50_draw 4, 60_game 2, 15_ui 1 |
+| `50_draw` | 1280 | 64 | 01_head 428, 10_core 195, 15_ui 61, 30_arena 28, 20_data 25, 12_state 13, 40_fight 11, 00_rand 7, 65_screens 1 |
+| `60_game` | 910 | 67 | 01_head 105, 20_data 31, 10_core 28, 30_arena 11, 12_state 10, 00_rand 9, 62_save 5, 40_fight 4, 15_ui 2, 65_screens 2 |
+| `62_save` | 428 | 20 | 01_head 29, 10_core 6, 60_game 5, 05_err 4, 20_data 3, 12_state 3, 40_fight 2, 15_ui 2 |
+| `65_screens` | 1292 | 77 | 01_head 356, 10_core 174, 15_ui 139, 20_data 50, 60_game 36, 12_state 29, 50_draw 28, 00_rand 10, 62_save 6, 30_arena 3, 13_input 2, 40_fight 2, 90_boot 1 |
+| `70_audio` | 119 | 5 | 10_core 9, 01_head 8, 12_state 2 |
+| `90_boot` | 144 | 12 | 01_head 20, 10_core 11, 12_state 9, 05_err 9, 60_game 6, 65_screens 5, 20_data 3, 30_arena 2, 50_draw 2, 15_ui 2, 70_audio 2, 13_input 2, 00_rand 1 |
+<!-- modgraph:end -->
+
+Блок выше сверяется тестом `tests/unit/docs.test.mjs`: если схема отстала от исходников, тест говорит «выполните `npm run docs`». Точки расширения кода — герой (`regHero`), реликвия (`RELIC`), мир (`WORLDS` + `MAPT` + `AMBI` + `Tune.T`) — расписаны по шагам в `docs/HOWTO.md`.
 
 ## Поток кадра
 

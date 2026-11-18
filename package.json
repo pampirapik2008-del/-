@@ -16,6 +16,7 @@
 		"soak": "node tools/soak.mjs",
 		"perf": "node tools/perf.mjs",
 		"hot": "node tools/hot.mjs",
+		"docs": "node tools/modgraph.mjs --write",
 		"entry": "node tools/entry.mjs",
 		"shots": "node tools/shots.mjs",
 		"lint": "node tools/lint.mjs",

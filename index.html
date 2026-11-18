@@ -1032,7 +1032,7 @@ const Music = (() => {
 // ловится по отдельности, пишется в кольцевой журнал, а три подряд идущих сбоя
 // переводят игру в безопасный режим с понятным окном вместо мёртвого экрана.
 // версия исходников подставляется сборкой (короткий хеш src/ + ассетов)
-let GAME_BUILD = "7efcf31242a4";
+let GAME_BUILD = "ae5dc233e77f";
 const ERRS = [];
 const ERR_MAX = 200;
 // имя экрана для журнала: S объявлена раньше этого файла, но до 12_state.js ещё не задана
@@ -4418,6 +4418,9 @@ function sprBig(rows, pal) {
 function regHero(def) {
 	if (!def || !def.k || !def.n || !def.rows || !def.rows.length) throw new Error("regHero: нужны k, n, rows");
 	if (HEROES.some((h) => h.k === def.k)) throw new Error("regHero: ключ " + def.k + " уже есть");
+	// сохранения находят героя по имени (62_save.js), а цвет урона и статус — по стихии из EL: ошибка здесь, а не в бою
+	if (HEROES.some((h) => h.n === def.n)) throw new Error("regHero: имя «" + def.n + "» уже есть");
+	if (def.el && !EL[def.el]) throw new Error("regHero: неизвестная стихия " + def.el + " (есть: " + Object.keys(EL).join(", ") + ")");
 	const base = sprBig(def.rows, def.pal || {});
 	const w = base.width, h = base.height;
 	const c = document.createElement("canvas");

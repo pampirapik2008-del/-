@@ -758,6 +758,9 @@ function sprBig(rows, pal) {
 function regHero(def) {
 	if (!def || !def.k || !def.n || !def.rows || !def.rows.length) throw new Error("regHero: нужны k, n, rows");
 	if (HEROES.some((h) => h.k === def.k)) throw new Error("regHero: ключ " + def.k + " уже есть");
+	// сохранения находят героя по имени (62_save.js), а цвет урона и статус — по стихии из EL: ошибка здесь, а не в бою
+	if (HEROES.some((h) => h.n === def.n)) throw new Error("regHero: имя «" + def.n + "» уже есть");
+	if (def.el && !EL[def.el]) throw new Error("regHero: неизвестная стихия " + def.el + " (есть: " + Object.keys(EL).join(", ") + ")");
 	const base = sprBig(def.rows, def.pal || {});
 	const w = base.width, h = base.height;
 	const c = document.createElement("canvas");
