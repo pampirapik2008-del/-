@@ -472,3 +472,270 @@ test("saveDialogImport: «Загрузить» применяет текст, о
 	assert.equal(g.fatal, null);
 	assert.equal(g.dev.errs().length, 0);
 });
+
+/* ---------- второй проход: функции 60–80 строк ---------- */
+test("crashHtml и crashWire: четыре кнопки; «Продолжить» снимает аварийный режим, «В меню» уводит из боя, отчёт копируется", async () => {
+	const { g, json } = await game(null);
+	const html = g.dev.run("crashHtml()");
+	for (const id of ["mx-crash-msg", "mx-crash-go", "mx-crash-menu", "mx-crash-roll", "mx-crash-copy"]) assert.ok(html.includes('id="' + id + '"'), id);
+	assert.match(html, /Что-то пошло не так/);
+	assert.equal((html.match(/<button /g) || []).length, 4);
+	// бой → аварийный режим → «В меню»
+	g.dev.fight("norm");
+	g.dev.autoPlace();
+	g.dev.startFight();
+	g.step(3);
+	assert.equal(g.dev.S, "fight");
+	g.dev.run('ERR_CRASH = true; ERR_STREAK = 3; var __removed = 0; var __wrap = { remove() { __removed++; } }; ' + fakeUi + " crashWire(__$, __wrap)");
+	assert.equal(g.dev.crash(), true);
+	g.dev.run('__els["mx-crash-menu"].onclick()');
+	assert.equal(g.dev.S, "menu");
+	assert.equal(g.dev.F, null);
+	assert.equal(g.dev.paused, false);
+	assert.equal(g.dev.crash(), false, "окно закрыто, аварийный режим снят");
+	assert.equal(g.dev.run("ERR_STREAK"), 0);
+	assert.equal(g.dev.run("__removed"), 1);
+	// «Продолжить» — только закрыть
+	g.dev.run("ERR_CRASH = true; ERR_STREAK = 3");
+	g.dev.run('__els["mx-crash-go"].onclick()');
+	assert.equal(g.dev.crash(), false);
+	assert.equal(g.dev.run("__removed"), 2);
+	// «Скопировать отчёт» — в заглушке без буфера обмена всё равно без исключения
+	g.dev.run('__els["mx-crash-copy"].onclick()');
+	assert.equal(g.dev.run('__els["mx-crash-copy"].textContent'), "Скопировано");
+	assert.equal(g.fatal, null);
+	void json;
+});
+
+// арена нужного мира (по id) — для тестов фона
+const arenaOf = (id, extra = "") => `(() => { const wi = WORLDS.findIndex((w) => w.id === ${JSON.stringify(id)}); const A = mkArena(3, wi, "norm"); ${extra}; return A; })()`;
+
+test("stageFog: туман только в тайге/болоте/мёртвых землях или при погоде «туман» — шесть полос и свечение", async () => {
+	const { g, rec } = await game(null);
+	g.dev.run("var __A = " + arenaOf("swamp", 'A.wx = "clear"'));
+	const swamp = rec("stageFog(__A, fogSpr())");
+	assert.equal(count(swamp, "drawImage"), 6 + 1, "6 полос тумана + свечение");
+	g.dev.run("var __A = " + arenaOf("taiga", 'A.wx = "clear"'));
+	assert.equal(count(rec("stageFog(__A, fogSpr())"), "drawImage"), 6, "в тайге без свечения");
+	g.dev.run("var __A = " + arenaOf("desert", 'A.wx = "clear"'));
+	assert.equal(rec("stageFog(__A, fogSpr())").length, 0, "в пустыне тумана нет");
+	g.dev.run('__A.wx = "fog"');
+	assert.ok(count(rec("stageFog(__A, fogSpr())"), "drawImage") >= 6, "погода «туман» — есть везде");
+});
+
+test("stageRays/stageFinal/stageWorldFx: у каждого мира своя особенность, все рисуются без ошибок", async () => {
+	const { g, rec } = await game(null);
+	const rays = rec("stageRays(228)");
+	assert.equal(count(rays, "fill"), 4);
+	assert.ok(rays.some((l) => /globalCompositeOperation="lighter"/.test(l)));
+	assert.equal(count(rays, "save"), count(rays, "restore"));
+	const fin = rec("stageFinal(240)");
+	assert.equal(count(fin, "ellipse"), 1);
+	assert.equal(count(fin, "stroke"), 1);
+	assert.equal(count(fin, "createLinearGradient"), 1);
+	const ids = JSON.parse(g.dev.run("JSON.stringify(WORLDS.map((w) => w.id))"));
+	for (const id of ids) {
+		g.dev.run("var __A = " + arenaOf(id, "A.tod = 0"));
+		const lines = rec("stageWorldFx(__A)");
+		if (id === "sky" || id === "desert" || id === "ice" || id === "fire") assert.ok(count(lines, "drawImage") >= 1, id + ": свечение");
+		if (id === "chaos") assert.ok(lines.some((l) => /globalCompositeOperation="hue"/.test(l)), "хаос: перелив");
+		if (id === "final") assert.equal(count(lines, "ellipse"), 1);
+		if (id === "taiga") assert.equal(count(lines, "fill"), 4, "тайга на закате: лучи");
+	}
+	// stageFx целиком = туман + особенность + свечение покрытий
+	g.dev.run("var __A = " + arenaOf("swamp", 'A.wx = "clear"; A.patches = [{ x: 500, y: 300, rx: 40, s: 1, P: { glow: "#3c8a50" } }]'));
+	const all = rec("stageFx(__A)");
+	assert.ok(count(all, "drawImage") >= 8, "туман (6) + свечение болота + свечение покрытия");
+	assert.equal(g.dev.errs().length, 0);
+});
+
+// бой на экране: отряд расставлен, симуляция запущена
+async function inFight(kind = "norm") {
+	const ctx = await game(null);
+	ctx.g.dev.fight(kind);
+	ctx.g.dev.autoPlace();
+	ctx.g.dev.startFight();
+	ctx.g.step(3);
+	assert.equal(ctx.g.dev.S, "fight");
+	return ctx;
+}
+
+test("hurtProcs: вампиризм лечит, яд/заморозка вешают статусы, крит с цепью бьёт соседей; враг накладывает эффект стихии", async () => {
+	const { g } = await inFight();
+	g.dev.run("var __h = F.pl[0], __e = F.en[0]; __h.hp = Math.round(__h.max / 2); F.rb.ls = 0.5; F.rb.psn = 0; F.rb.frz = 0; F.rb.chain = 0");
+	const hp0 = g.dev.run("__h.hp");
+	g.dev.run("hurtProcs(__h, __e, 40, false, __e.y - 28, {})");
+	assert.equal(g.dev.run("__h.hp"), Math.min(g.dev.run("__h.max"), hp0 + 20), "вампиризм 50 % от 40");
+	g.dev.run("F.rb.ls = 0; F.rb.psn = 0.1; F.rb.frz = 1");
+	g.dev.run("hurtProcs(__h, __e, 40, false, 0, {})");
+	assert.ok(g.dev.run("!!__e.st.poison"), "яд");
+	assert.ok(g.dev.run("!!(__e.st.stun && __e.st.stun.ice)"), "ледяное оглушение");
+	// цепная молния: соседи рядом получают долю урона
+	// соседи: два клона рядом и один далеко (в начале боя на поле может быть один враг)
+	g.dev.run("F.rb.psn = 0; F.rb.frz = 0; F.rb.chain = 0.5; F.en.length = 1; for (let i = 1; i <= 3; i++) F.en.push(Object.assign({}, __e, { st: {}, hp: 500, max: 500, sh: 0, inv: 0, x: __e.x + (i === 3 ? 400 : i * 30), y: __e.y }))");
+	const before = JSON.parse(g.dev.run("JSON.stringify(F.en.map((e) => e.hp))"));
+	g.dev.run("hurtProcs(__h, __e, 40, true, 0, {})");
+	const after = JSON.parse(g.dev.run("JSON.stringify(F.en.map((e) => e.hp))"));
+	const hitOthers = before.filter((h, i) => i > 0 && after[i] < h).length;
+	assert.equal(hitOthers, 2, "цепь задела ровно двух ближних соседей: " + hitOthers);
+	assert.equal(after[3], before[3], "дальний (400 px) не задет");
+	assert.equal(after[0], before[0], "цель цепь не бьёт повторно");
+	// враг: эффект стихии с шансом stc
+	g.dev.run('var __foe = { team: 1, el: "fire", atk: 10 }; hurtProcs(__foe, __h, 5, false, 0, { stc: 1 })');
+	assert.ok(g.dev.run("!!__h.st.burn"), "ожог от огненного врага");
+	g.dev.run('var __foe2 = { team: 1, el: "phys", atk: 10 }; delete __h.st.chill; hurtProcs(__foe2, __h, 5, false, 0, { stc: 1 })');
+	assert.equal(g.dev.run("!!__h.st.chill"), false, "у физической стихии эффекта нет");
+	assert.equal(g.dev.errs().length, 0);
+});
+
+test("wxBolt/wxBomb: ставят метки у случайных бойцов и перезаводят таймер; срабатывание метки бьёт тех, кто рядом", async () => {
+	const { g } = await inFight();
+	g.dev.run("var __all = liv(F.pl).concat(liv(F.en)); F.tele = []");
+	g.dev.run("wxBolt(F.A, __all)");
+	assert.equal(g.dev.run("F.tele.length"), 1);
+	assert.equal(g.dev.run("F.tele[0].r"), 50);
+	const ev = g.dev.run("F.A.ev");
+	assert.ok(ev >= 4 && ev <= 6, "таймер грозы " + ev);
+	// все бойцы в точку удара — все получают урон и шок
+	g.dev.run("__all.forEach((u) => { u.x = F.tele[0].x; u.y = F.tele[0].y; u.inv = 0; u.sh = 0; })");
+	const hp0 = JSON.parse(g.dev.run("JSON.stringify(__all.map((u) => u.hp))"));
+	g.dev.run("F.tele[0].fn()");
+	const hp1 = JSON.parse(g.dev.run("JSON.stringify(__all.map((u) => u.hp))"));
+	for (let i = 0; i < hp0.length; i++) assert.ok(hp1[i] < hp0[i], "молния задела бойца " + i);
+	assert.ok(g.dev.run("__all.every((u) => u.hp <= 0 || !!u.st.stun)"), "шок — оглушение");
+	assert.ok(g.dev.run("F.A.fl") > 0, "вспышка");
+	g.dev.run("F.tele = []; wxBomb(F.A, __all)");
+	assert.equal(g.dev.run("F.tele.length"), 2);
+	assert.ok(g.dev.run("F.tele.every((q) => q.drop === 1 && q.r === 56)"));
+	const ev2 = g.dev.run("F.A.ev");
+	assert.ok(ev2 >= 3.6 && ev2 <= 5, "таймер бомб " + ev2);
+	g.dev.run("F.tele[0].fn()");
+	assert.ok(g.dev.run("__all.some((u) => u.st.burn)"), "поджог");
+	// без бойцов — меток нет, таймер всё равно перезаведён
+	g.dev.run("F.tele = []; F.A.ev = 0; wxBolt(F.A, []); var __e1 = F.A.ev; F.A.ev = 0; wxBomb(F.A, [])");
+	assert.equal(g.dev.run("F.tele.length"), 0);
+	assert.ok(g.dev.run("__e1") > 0 && g.dev.run("F.A.ev") > 0);
+	assert.equal(g.dev.errs().length, 0);
+});
+
+test("uOutline/uTints: обводка 4 силуэтами для выбранного и неуязвимого; подкраска по статусам и вспышка удара", async () => {
+	const { g, rec } = await game();
+	g.dev.run("var __u = G.slots[0]; var __set = uSet(__u, 0); var __img = __set[1]; var __f = uFrame(__u, __set[0]); __u.inv = 0; __u.hitT = 0; __u.st = {}");
+	// первый вызов с новым цветом строит силуэт в кэше (лишний drawImage на оффскрине) — считаем второй
+	const warm = (code) => (rec(code), rec(code));
+	assert.equal(count(rec("uOutline(__u, {}, __img, __f, 300, 300, 1, AP, 1)"), "drawImage"), 0);
+	assert.equal(count(warm("uOutline(__u, { sel: 1 }, __img, __f, 300, 300, 1, AP, 1)"), "drawImage"), 4);
+	g.dev.run("__u.inv = 1");
+	const inv = warm("uOutline(__u, {}, __img, __f, 300, 300, 1, AP, 1)");
+	assert.equal(count(inv, "drawImage"), 4);
+	assert.ok(inv.some((l) => /globalAlpha=0\./.test(l)) && /globalAlpha=1$/.test(inv[inv.length - 1]), "мигание и возврат прозрачности");
+	g.dev.run("__u.inv = 0");
+	assert.equal(count(rec("uTints(__u, {}, __img, __f, 300, 300, 1, AP, 1)"), "drawImage"), 0);
+	g.dev.run("__u.st = { poison: { t: 1 }, burn: { t: 1 }, curse: { t: 1 } }");
+	assert.equal(count(warm("uTints(__u, {}, __img, __f, 300, 300, 1, AP, 1)"), "drawImage"), 3);
+	g.dev.run("__u.st = { stun: { t: 1, ice: 1 }, chill: { t: 1 } }");
+	assert.equal(count(warm("uTints(__u, {}, __img, __f, 300, 300, 1, AP, 1)"), "drawImage"), 1, "лёд перекрывает холод");
+	g.dev.run("__u.st = {}; __u.hitT = 0.1");
+	const hit = warm("uTints(__u, { a: 0.5 }, __img, __f, 300, 300, 1, AP, 1)");
+	assert.equal(count(hit, "drawImage"), 1);
+	assert.ok(hit.some((l) => /globalAlpha=0\.4/.test(l)), "вспышка с учётом прозрачности o.a: 0.83·0.5");
+	g.dev.run("__u.hitT = 0");
+	// dUnit целиком рисует кадр бойца
+	assert.ok(count(rec("dUnit(__u, 0, {})"), "drawImage") >= 1);
+});
+
+test("teleLine/teleBand/teleRing: формы меток; dTele рисует каждую метку своей формой", async () => {
+	const { g, rec } = await inFight();
+	const line = rec('teleLine({ x: 600, y: 300, a: 0.3, len: 120, c: "#f00" }, 0.5, 0.5)');
+	assert.equal(count(line, "fillRect"), 4);
+	assert.equal(count(line, "rotate"), 1);
+	assert.equal(count(line, "save"), count(line, "restore"));
+	const band = rec('teleBand({ y: 300, h: 40, c: "#f00" }, 0.5, 0.5)');
+	assert.equal(count(band, "fillRect"), 4);
+	assert.equal(count(band, "stroke"), 9, "девять стрелок");
+	const ring = rec('teleRing({ x: 600, y: 300, r: 50, c: "#f00" }, 0.5, 0.5)');
+	assert.equal(count(ring, "ellipse"), 3);
+	assert.equal(count(ring, "fill"), 2);
+	assert.equal(count(ring, "stroke"), 1);
+	assert.equal(count(ring, "setLineDash"), 2, "пунктир включён и снят");
+	g.dev.run('F.tele = [{ shape: "line", x: 600, y: 300, a: 0, len: 100, c: "#f00", t: 0.5, d: 1 }, { shape: "band", y: 300, h: 40, c: "#0f0", t: 0.5, d: 1 }, { x: 600, y: 300, r: 50, c: "#00f", t: 0.5, d: 1 }]');
+	const all = rec("dTele(F.A)");
+	assert.equal(count(all, "fillRect"), 8);
+	assert.equal(count(all, "ellipse"), 3);
+	assert.equal(count(all, "stroke"), 10, "лента 9 стрелок + круг 1");
+	assert.equal(all.filter((l) => /globalAlpha=1$/.test(l)).length, 3, "после каждой метки прозрачность возвращается");
+	g.dev.run("F.tele = []");
+});
+
+test("bakeRow: заполняет только свою строку цветами палитры; bakeGround — это строки подряд", async () => {
+	const { g } = await game(null);
+	g.dev.run("var __J = { id: { data: new Uint8ClampedArray(609 * 270 * 4) }, cols: [[10, 20, 30], [40, 50, 60], [70, 80, 90]], R2: rng32(5), seed: 42 }; bakeRow(__J, 10)");
+	const rows = JSON.parse(g.dev.run("JSON.stringify([9, 10, 11].map((py) => { let a = 0, ok = 0; for (let px = 0; px < 609; px++) { const i = (py * 609 + px) * 4, d = __J.id.data; if (d[i + 3] === 255) a++; const c = [[10, 20, 30], [40, 50, 60], [70, 80, 90]].find((cc) => (cc[0] === d[i] && cc[1] === d[i + 1] && cc[2] === d[i + 2]) || (Math.round(cc[0] * 0.9) === d[i] && Math.round(cc[1] * 0.9) === d[i + 1] && Math.round(cc[2] * 0.9) === d[i + 2])); if (c) ok++; } return [a, ok]; }))"));
+	assert.deepEqual(rows[0], [0, 0], "строка выше пуста");
+	assert.deepEqual(rows[2], [0, 0], "строка ниже пуста");
+	assert.deepEqual(rows[1], [609, 609], "вся строка непрозрачна и из цветов палитры (или их тени 0.9)");
+	// три тона встречаются (пятна по шуму)
+	const tones = JSON.parse(g.dev.run("JSON.stringify((() => { const s = new Set(); for (let px = 0; px < 609; px++) s.add(__J.id.data[(10 * 609 + px) * 4]); return [...s]; })())"));
+	assert.ok(tones.length >= 2, "в строке несколько тонов: " + tones);
+	// bakeGround(J, 0, 270) == bakeRow по всем строкам с тем же R2
+	const sum = (code) => g.dev.run("(() => { " + code + " let h = 0; for (let i = 0; i < __J.id.data.length; i++) h = (h * 31 + __J.id.data[i]) >>> 0; return h; })()");
+	const a = sum("__J = { id: { data: new Uint8ClampedArray(609 * 270 * 4) }, cols: __J.cols, R2: rng32(5), seed: 42 }; bakeGround(__J, 0, 270);");
+	const b = sum("__J = { id: { data: new Uint8ClampedArray(609 * 270 * 4) }, cols: __J.cols, R2: rng32(5), seed: 42 }; for (let py = 0; py < 270; py++) bakeRow(__J, py);");
+	assert.equal(a, b);
+});
+
+test("sfxH/sfxFight/sfxUi: генераторы корректны, банк звуков строится в прежнем порядке и выдаёт конечные отсчёты", async () => {
+	const { g, json } = await game(null);
+	assert.equal(g.dev.run("sfxH.sq(0.3)"), 1);
+	assert.equal(g.dev.run("sfxH.sq(-2)"), -1);
+	assert.equal(g.dev.run("sfxH.seq(0.25, [1, 2, 3], 0.1)"), 3);
+	assert.equal(g.dev.run("sfxH.seq(0, [1, 2, 3], 0.1)"), 1);
+	assert.ok(Math.abs(g.dev.run('(() => { const s = {}; let v = 0; for (let i = 0; i < 100; i++) v = sfxH.lp(s, "l", 1, 0.5); return v; })()') - 1) < 1e-6, "фильтр сходится к входу");
+	assert.ok(Math.abs(g.dev.run('(() => { const s = {}; sfxH.o2(s, "b", 100); return s.b - (6.2832 * 100) / 22050; })()')) < 1e-12, "фаза накапливается");
+	const build = (fn) => json(`(() => { const B = {}; ${fn}(B, (d, f) => ({ d, f }), (s, f) => Math.sin((s.p = (s.p || 0) + f / 22050)), () => 0.5); return Object.keys(B).map((k) => [k, B[k].d, [0, 0.01, 0.1, B[k].d * 0.9].map((t) => B[k].f(t, {})).every((v) => Number.isFinite(v))]); })()`);
+	const fight = build("sfxFight"),
+		ui = build("sfxUi");
+	assert.deepEqual(
+		fight.map((r) => r[0]),
+		["crit", "crack", "roar", "spawn", "start", "abil", "ult", "holy", "ice", "fire", "poison", "bolt", "dark", "prism", "chaos", "slime", "spit", "dash", "bossdie"]
+	);
+	assert.deepEqual(
+		ui.map((r) => r[0]),
+		["pick", "place", "lvl", "chest", "step", "fanfare", "rev0", "rev1", "rev2", "rev3", "rev4", "rev5"]
+	);
+	for (const [k, d, fin] of fight.concat(ui)) {
+		assert.ok(d > 0 && d <= 2, k + ": длительность " + d);
+		assert.equal(fin, true, k + ": конечные отсчёты");
+	}
+	// раскрытие карты: чем выше редкость, тем длиннее
+	const rev = ui.filter((r) => r[0].startsWith("rev")).map((r) => r[1]);
+	for (let i = 1; i < rev.length; i++) assert.ok(rev[i] > rev[i - 1], "rev" + i + " длиннее rev" + (i - 1));
+});
+
+test("ambientTick/simTick: погода мира на карте и в следующем мире, снег в меню; сбой симуляции попадает в журнал, а не наружу", async () => {
+	const { g } = await game();
+	g.dev.run("Parts.clear(); MAPA.w = null");
+	for (let i = 0; i < 60; i++) g.dev.run("ambientTick(1 / 60)");
+	assert.equal(g.dev.run("MAPA.w === WORLDS[G.w]"), true);
+	assert.ok(g.dev.run("Parts.a.length") > 0, "частицы погоды на карте");
+	g.dev.S = "world";
+	g.dev.run("ambientTick(1 / 60)");
+	assert.equal(g.dev.run("MAPA.w === WORLDS[Math.min(WORLDS.length - 1, G.w + 1)]"), true, "на экране «мир пройден» — погода следующего мира");
+	g.dev.S = "menu";
+	g.dev.run("ambientTick(1 / 60)");
+	assert.equal(g.dev.run("MAPA.w === WORLDS[0]"), true);
+	g.dev.S = "fight";
+	g.dev.run("MAPA.w = null; ambientTick(1 / 60)");
+	assert.equal(g.dev.run("MAPA.w"), null, "в бою атмосфера карты не трогается");
+	// симуляция: в бою таймер боя идёт; брошенная ошибка — в журнал
+	const f = await inFight();
+	const t0 = f.g.dev.run("F.timer");
+	f.g.dev.run("Loop.reset(); simTick(1000 / 60, 1 / 60)");
+	assert.ok(f.g.dev.run("F.timer") < t0, "шаг симуляции выполнен (таймер боя идёт вниз)");
+	f.g.dev.makeUpdateThrow(1);
+	f.g.dev.run("simTick(1000 / 60, 1 / 60)");
+	const errs = f.g.dev.errs();
+	assert.equal(errs.length, 1);
+	assert.equal(errs[0].kind, "update");
+	assert.equal(f.g.fatal, null);
+});

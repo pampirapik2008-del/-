@@ -459,41 +459,68 @@ function wxEmit(A, dt, scale = 1) {
 		A.em[id] = acc;
 	}
 }
-// «живые» детали фона — у каждого мира свои
-function stageFx(A) {
+// туман двумя слоями, ползущими в разные стороны (тайга, болото, мёртвые земли и погода «туман»)
+function stageFog(A, fog) {
 	const id = A.w.id,
-		y0 = A.y0,
-		fog = fogSpr();
-	if (id === "taiga" || id === "swamp" || id === "dead" || A.wx === "fog") {
-		const al = (A.wx === "fog" ? 0.55 : 0.3) * (id === "taiga" ? 0.8 : 1);
-		ctx.globalAlpha = al;
-		for (let i = 0; i < 2; i++) {
-			const sp = i ? 14 : -9,
-				ox = (((t * sp) % 1024) + 1024) % 1024;
-			ctx.drawImage(fog, ox - 1024, y0 - 130 + i * 26, 1024, 150);
-			ctx.drawImage(fog, ox, y0 - 130 + i * 26, 1024, 150);
-			ctx.drawImage(fog, ox + 1024, y0 - 130 + i * 26, 1024, 150);
-		}
-		ctx.globalAlpha = 1;
-		if (id !== "taiga") glow(609, y0 - 40, 520, id === "swamp" ? "#3c8a50" : "#58a870", 0.1 + 0.04 * Math.sin(t * 0.7));
+		y0 = A.y0;
+	if (!(id === "taiga" || id === "swamp" || id === "dead" || A.wx === "fog")) return;
+	const al = (A.wx === "fog" ? 0.55 : 0.3) * (id === "taiga" ? 0.8 : 1);
+	ctx.globalAlpha = al;
+	for (let i = 0; i < 2; i++) {
+		const sp = i ? 14 : -9,
+			ox = (((t * sp) % 1024) + 1024) % 1024;
+		ctx.drawImage(fog, ox - 1024, y0 - 130 + i * 26, 1024, 150);
+		ctx.drawImage(fog, ox, y0 - 130 + i * 26, 1024, 150);
+		ctx.drawImage(fog, ox + 1024, y0 - 130 + i * 26, 1024, 150);
 	}
-	if (id === "taiga" && A.tod === 0) {
-		// косые лучи заката
-		ctx.save();
-		ctx.globalCompositeOperation = "lighter";
-		for (let i = 0; i < 4; i++) {
-			const x = 180 + i * 250 + Math.sin(t * 0.3 + i) * 20;
-			ctx.globalAlpha = 0.05 + 0.025 * Math.sin(t * 0.8 + i * 2);
-			ctx.fillStyle = "#ffd9a0";
-			ctx.beginPath();
-			ctx.moveTo(x, 0);
-			ctx.lineTo(x + 70, 0);
-			ctx.lineTo(x - 130, y0 + 60);
-			ctx.lineTo(x - 260, y0 + 60);
-			ctx.fill();
-		}
-		ctx.restore();
-	} else if (id === "desert") glow(A.flip ? 600 : 618, 96, 230, "#fff0b0", 0.16 + 0.05 * Math.sin(t * 1.3));
+	ctx.globalAlpha = 1;
+	if (id !== "taiga") glow(609, y0 - 40, 520, id === "swamp" ? "#3c8a50" : "#58a870", 0.1 + 0.04 * Math.sin(t * 0.7));
+}
+// косые лучи заката (тайга на закате)
+function stageRays(y0) {
+	ctx.save();
+	ctx.globalCompositeOperation = "lighter";
+	for (let i = 0; i < 4; i++) {
+		const x = 180 + i * 250 + Math.sin(t * 0.3 + i) * 20;
+		ctx.globalAlpha = 0.05 + 0.025 * Math.sin(t * 0.8 + i * 2);
+		ctx.fillStyle = "#ffd9a0";
+		ctx.beginPath();
+		ctx.moveTo(x, 0);
+		ctx.lineTo(x + 70, 0);
+		ctx.lineTo(x - 130, y0 + 60);
+		ctx.lineTo(x - 260, y0 + 60);
+		ctx.fill();
+	}
+	ctx.restore();
+}
+// финальный мир: столб света сверху и мерцающее золотое кольцо на полу
+function stageFinal(y0) {
+	const a = 0.12 + 0.06 * Math.sin(t * 1.1);
+	ctx.save();
+	ctx.globalCompositeOperation = "lighter";
+	const g = ctx.createLinearGradient(0, 0, 0, y0 + 40);
+	g.addColorStop(0, "rgba(190,230,255," + a * 2 + ")");
+	g.addColorStop(1, "rgba(190,230,255,0)");
+	ctx.fillStyle = g;
+	ctx.beginPath();
+	ctx.moveTo(569, 0);
+	ctx.lineTo(649, 0);
+	ctx.lineTo(719, y0 + 40);
+	ctx.lineTo(499, y0 + 40);
+	ctx.fill();
+	ctx.restore();
+	ctx.strokeStyle = "rgba(255,214,120," + (0.25 + 0.2 * Math.sin(t * 1.6)) + ")";
+	ctx.lineWidth = 3;
+	ctx.beginPath();
+	ctx.ellipse(609, (y0 + FLD.y1) / 2 + 10, 250, 78, 0, 0, TAU);
+	ctx.stroke();
+}
+// особенность каждого мира: лучи, солнце, сияние, огонь, искры кристаллов, хаос-перелив, финал, небо
+function stageWorldFx(A) {
+	const id = A.w.id,
+		y0 = A.y0;
+	if (id === "taiga" && A.tod === 0) stageRays(y0);
+	else if (id === "desert") glow(A.flip ? 600 : 618, 96, 230, "#fff0b0", 0.16 + 0.05 * Math.sin(t * 1.3));
 	else if (id === "ice") for (let i = 0; i < 4; i++) glow(200 + i * 270 + Math.sin(t * 0.4 + i * 1.7) * 90, 60 + Math.sin(t * 0.6 + i) * 14, 170, i & 1 ? "#a070ff" : "#50ffb0", 0.1 + 0.06 * Math.sin(t * 0.9 + i * 2.1));
 	else if (id === "fire") {
 		glow(609, y0 - 30, 620, "#ff5a1c", 0.1 + 0.05 * Math.sin(t * 2.1));
@@ -511,27 +538,14 @@ function stageFx(A) {
 		ctx.fillRect(0, 0, W, H);
 		ctx.restore();
 		for (let i = 0; i < 3; i++) glow(240 + i * 370 + Math.sin(t * 0.5 + i) * 60, 90 + Math.cos(t * 0.7 + i) * 30, 120, i & 1 ? "#ff4fd8" : "#5ff0e0", 0.16);
-	} else if (id === "final") {
-		const a = 0.12 + 0.06 * Math.sin(t * 1.1);
-		ctx.save();
-		ctx.globalCompositeOperation = "lighter";
-		const g = ctx.createLinearGradient(0, 0, 0, y0 + 40);
-		g.addColorStop(0, "rgba(190,230,255," + a * 2 + ")");
-		g.addColorStop(1, "rgba(190,230,255,0)");
-		ctx.fillStyle = g;
-		ctx.beginPath();
-		ctx.moveTo(569, 0);
-		ctx.lineTo(649, 0);
-		ctx.lineTo(719, y0 + 40);
-		ctx.lineTo(499, y0 + 40);
-		ctx.fill();
-		ctx.restore();
-		ctx.strokeStyle = "rgba(255,214,120," + (0.25 + 0.2 * Math.sin(t * 1.6)) + ")";
-		ctx.lineWidth = 3;
-		ctx.beginPath();
-		ctx.ellipse(609, (y0 + FLD.y1) / 2 + 10, 250, 78, 0, 0, TAU);
-		ctx.stroke();
-	} else if (id === "sky") glow(609, 60, 420, "#ffffff", 0.08);
+	} else if (id === "final") stageFinal(y0);
+	else if (id === "sky") glow(609, 60, 420, "#ffffff", 0.08);
+}
+// «живые» детали фона — у каждого мира свои: туман → особенность мира → свечение покрытий
+function stageFx(A) {
+	const fog = fogSpr();
+	stageFog(A, fog);
+	stageWorldFx(A);
 	// светящиеся покрытия и лужи
 	for (const p of A.patches) if (p.P.glow) glow(p.x, p.y, p.rx * 1.3, p.P.glow, 0.2 + 0.1 * Math.sin(t * 3 + p.s));
 }

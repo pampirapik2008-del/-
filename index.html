@@ -1340,7 +1340,7 @@ const Music = (() => {
 // ловится по отдельности, пишется в кольцевой журнал, а три подряд идущих сбоя
 // переводят игру в безопасный режим с понятным окном вместо мёртвого экрана.
 // версия исходников подставляется сборкой (короткий хеш src/ + ассетов)
-let GAME_BUILD = "4f8f3f703f03";
+let GAME_BUILD = "93a607ce8f22";
 const ERRS = [];
 const ERR_MAX = 200;
 // имя экрана для журнала: S объявлена раньше этого файла, но до 12_state.js ещё не задана
@@ -1413,37 +1413,24 @@ function errReport() {
 	);
 }
 
-function crashScreen(rec) {
-	ERR_CRASH = true;
-	try {
-		if (document.getElementById("mx-crash")) return;
-	} catch (_) {}
-	const wrap = document.createElement("div");
-	wrap.id = "mx-crash";
-	wrap.style.cssText =
-		"position:fixed;inset:0;z-index:99999;background:rgba(6,4,10,.86);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif;color:#eee;padding:16px";
-	const box = document.createElement("div");
-	box.style.cssText = "max-width:560px;width:100%;background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:20px 22px";
-	box.innerHTML =
+// разметка аварийного окна: заголовок, пояснение, строка ошибки и четыре кнопки
+function crashHtml() {
+	const bt = (id, label, bg, border = "0") => '<button id="' + id + '" style="flex:1 1 120px;padding:10px;border:' + border + ";border-radius:8px;background:" + bg + ';color:#fff;font-weight:700;cursor:pointer">' + label + "</button>";
+	return (
 		'<div style="font-weight:800;font-size:17px;margin-bottom:6px">Что-то пошло не так</div>' +
 		'<div style="color:#b9b3c8;margin-bottom:12px">Игра поймала сбой три кадра подряд, но не остановилась. Можно продолжить, вернуться в меню или откатить версию кода.</div>' +
 		'<div id="mx-crash-msg" style="font:12px/1.4 ui-monospace,monospace;color:#ff9c9c;background:#120e19;border-radius:8px;padding:8px;margin-bottom:12px;word-break:break-word"></div>' +
 		'<div style="display:flex;flex-wrap:wrap;gap:8px">' +
-		'<button id="mx-crash-go" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:#2e7d32;color:#fff;font-weight:700;cursor:pointer">Продолжить</button>' +
-		'<button id="mx-crash-menu" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:#455a64;color:#fff;font-weight:700;cursor:pointer">В меню</button>' +
-		'<button id="mx-crash-roll" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:#8e24aa;color:#fff;font-weight:700;cursor:pointer">Откатить версию</button>' +
-		'<button id="mx-crash-copy" style="flex:1 1 120px;padding:10px;border:1px solid #555;border-radius:8px;background:#2a2238;color:#fff;font-weight:700;cursor:pointer">Скопировать отчёт</button>' +
-		'</div>';
-	wrap.appendChild(box);
-	try {
-		document.body.appendChild(wrap);
-	} catch (_) {
-		return;
-	}
-	const $ = (id) => box.querySelector("#" + id);
-	try {
-		$("mx-crash-msg").textContent = (rec ? rec.kind + ": " + rec.msg : "нет данных") + " · кадр " + FRAME_N + " · экран " + (scrName());
-	} catch (_) {}
+		bt("mx-crash-go", "Продолжить", "#2e7d32") +
+		bt("mx-crash-menu", "В меню", "#455a64") +
+		bt("mx-crash-roll", "Откатить версию", "#8e24aa") +
+		bt("mx-crash-copy", "Скопировать отчёт", "#2a2238", "1px solid #555") +
+		"</div>"
+	);
+}
+// кнопки окна: «Продолжить» — закрыть и сбросить счётчик сбоев; «В меню» — сбросить бой/событие и уйти в меню
+// (переход в меню разрешён из любого экрана, см. Machine.can); «Откатить версию» — #orig и перезагрузка; «Скопировать отчёт»
+function crashWire($, wrap) {
 	const close = () => {
 		try {
 			wrap.remove();
@@ -1458,7 +1445,6 @@ function crashScreen(rec) {
 			EV = null;
 			pop = null;
 			paused = false;
-			// аварийный выход минует машину экранов: окно должно работать, даже если сломана она сама
 			Machine.go("menu", "аварийное окно");
 		} catch (_) {}
 		close();
@@ -1484,6 +1470,31 @@ function crashScreen(rec) {
 		} catch (_) {}
 		$("mx-crash-copy").textContent = "Скопировано";
 	};
+}
+// аварийное окно (DOM поверх холста, см. DECISIONS D7): показывается один раз, пока открыто
+function crashScreen(rec) {
+	ERR_CRASH = true;
+	try {
+		if (document.getElementById("mx-crash")) return;
+	} catch (_) {}
+	const wrap = document.createElement("div");
+	wrap.id = "mx-crash";
+	wrap.style.cssText =
+		"position:fixed;inset:0;z-index:99999;background:rgba(6,4,10,.86);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif;color:#eee;padding:16px";
+	const box = document.createElement("div");
+	box.style.cssText = "max-width:560px;width:100%;background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:20px 22px";
+	box.innerHTML = crashHtml();
+	wrap.appendChild(box);
+	try {
+		document.body.appendChild(wrap);
+	} catch (_) {
+		return;
+	}
+	const $ = (id) => box.querySelector("#" + id);
+	try {
+		$("mx-crash-msg").textContent = (rec ? rec.kind + ": " + rec.msg : "нет данных") + " · кадр " + FRAME_N + " · экран " + scrName();
+	} catch (_) {}
+	crashWire($, wrap);
 }
 
 // глобальные перехватчики: сюда попадают и сбои вне кадра
@@ -3770,41 +3781,68 @@ function wxEmit(A, dt, scale = 1) {
 		A.em[id] = acc;
 	}
 }
-// «живые» детали фона — у каждого мира свои
-function stageFx(A) {
+// туман двумя слоями, ползущими в разные стороны (тайга, болото, мёртвые земли и погода «туман»)
+function stageFog(A, fog) {
 	const id = A.w.id,
-		y0 = A.y0,
-		fog = fogSpr();
-	if (id === "taiga" || id === "swamp" || id === "dead" || A.wx === "fog") {
-		const al = (A.wx === "fog" ? 0.55 : 0.3) * (id === "taiga" ? 0.8 : 1);
-		ctx.globalAlpha = al;
-		for (let i = 0; i < 2; i++) {
-			const sp = i ? 14 : -9,
-				ox = (((t * sp) % 1024) + 1024) % 1024;
-			ctx.drawImage(fog, ox - 1024, y0 - 130 + i * 26, 1024, 150);
-			ctx.drawImage(fog, ox, y0 - 130 + i * 26, 1024, 150);
-			ctx.drawImage(fog, ox + 1024, y0 - 130 + i * 26, 1024, 150);
-		}
-		ctx.globalAlpha = 1;
-		if (id !== "taiga") glow(609, y0 - 40, 520, id === "swamp" ? "#3c8a50" : "#58a870", 0.1 + 0.04 * Math.sin(t * 0.7));
+		y0 = A.y0;
+	if (!(id === "taiga" || id === "swamp" || id === "dead" || A.wx === "fog")) return;
+	const al = (A.wx === "fog" ? 0.55 : 0.3) * (id === "taiga" ? 0.8 : 1);
+	ctx.globalAlpha = al;
+	for (let i = 0; i < 2; i++) {
+		const sp = i ? 14 : -9,
+			ox = (((t * sp) % 1024) + 1024) % 1024;
+		ctx.drawImage(fog, ox - 1024, y0 - 130 + i * 26, 1024, 150);
+		ctx.drawImage(fog, ox, y0 - 130 + i * 26, 1024, 150);
+		ctx.drawImage(fog, ox + 1024, y0 - 130 + i * 26, 1024, 150);
 	}
-	if (id === "taiga" && A.tod === 0) {
-		// косые лучи заката
-		ctx.save();
-		ctx.globalCompositeOperation = "lighter";
-		for (let i = 0; i < 4; i++) {
-			const x = 180 + i * 250 + Math.sin(t * 0.3 + i) * 20;
-			ctx.globalAlpha = 0.05 + 0.025 * Math.sin(t * 0.8 + i * 2);
-			ctx.fillStyle = "#ffd9a0";
-			ctx.beginPath();
-			ctx.moveTo(x, 0);
-			ctx.lineTo(x + 70, 0);
-			ctx.lineTo(x - 130, y0 + 60);
-			ctx.lineTo(x - 260, y0 + 60);
-			ctx.fill();
-		}
-		ctx.restore();
-	} else if (id === "desert") glow(A.flip ? 600 : 618, 96, 230, "#fff0b0", 0.16 + 0.05 * Math.sin(t * 1.3));
+	ctx.globalAlpha = 1;
+	if (id !== "taiga") glow(609, y0 - 40, 520, id === "swamp" ? "#3c8a50" : "#58a870", 0.1 + 0.04 * Math.sin(t * 0.7));
+}
+// косые лучи заката (тайга на закате)
+function stageRays(y0) {
+	ctx.save();
+	ctx.globalCompositeOperation = "lighter";
+	for (let i = 0; i < 4; i++) {
+		const x = 180 + i * 250 + Math.sin(t * 0.3 + i) * 20;
+		ctx.globalAlpha = 0.05 + 0.025 * Math.sin(t * 0.8 + i * 2);
+		ctx.fillStyle = "#ffd9a0";
+		ctx.beginPath();
+		ctx.moveTo(x, 0);
+		ctx.lineTo(x + 70, 0);
+		ctx.lineTo(x - 130, y0 + 60);
+		ctx.lineTo(x - 260, y0 + 60);
+		ctx.fill();
+	}
+	ctx.restore();
+}
+// финальный мир: столб света сверху и мерцающее золотое кольцо на полу
+function stageFinal(y0) {
+	const a = 0.12 + 0.06 * Math.sin(t * 1.1);
+	ctx.save();
+	ctx.globalCompositeOperation = "lighter";
+	const g = ctx.createLinearGradient(0, 0, 0, y0 + 40);
+	g.addColorStop(0, "rgba(190,230,255," + a * 2 + ")");
+	g.addColorStop(1, "rgba(190,230,255,0)");
+	ctx.fillStyle = g;
+	ctx.beginPath();
+	ctx.moveTo(569, 0);
+	ctx.lineTo(649, 0);
+	ctx.lineTo(719, y0 + 40);
+	ctx.lineTo(499, y0 + 40);
+	ctx.fill();
+	ctx.restore();
+	ctx.strokeStyle = "rgba(255,214,120," + (0.25 + 0.2 * Math.sin(t * 1.6)) + ")";
+	ctx.lineWidth = 3;
+	ctx.beginPath();
+	ctx.ellipse(609, (y0 + FLD.y1) / 2 + 10, 250, 78, 0, 0, TAU);
+	ctx.stroke();
+}
+// особенность каждого мира: лучи, солнце, сияние, огонь, искры кристаллов, хаос-перелив, финал, небо
+function stageWorldFx(A) {
+	const id = A.w.id,
+		y0 = A.y0;
+	if (id === "taiga" && A.tod === 0) stageRays(y0);
+	else if (id === "desert") glow(A.flip ? 600 : 618, 96, 230, "#fff0b0", 0.16 + 0.05 * Math.sin(t * 1.3));
 	else if (id === "ice") for (let i = 0; i < 4; i++) glow(200 + i * 270 + Math.sin(t * 0.4 + i * 1.7) * 90, 60 + Math.sin(t * 0.6 + i) * 14, 170, i & 1 ? "#a070ff" : "#50ffb0", 0.1 + 0.06 * Math.sin(t * 0.9 + i * 2.1));
 	else if (id === "fire") {
 		glow(609, y0 - 30, 620, "#ff5a1c", 0.1 + 0.05 * Math.sin(t * 2.1));
@@ -3822,27 +3860,14 @@ function stageFx(A) {
 		ctx.fillRect(0, 0, W, H);
 		ctx.restore();
 		for (let i = 0; i < 3; i++) glow(240 + i * 370 + Math.sin(t * 0.5 + i) * 60, 90 + Math.cos(t * 0.7 + i) * 30, 120, i & 1 ? "#ff4fd8" : "#5ff0e0", 0.16);
-	} else if (id === "final") {
-		const a = 0.12 + 0.06 * Math.sin(t * 1.1);
-		ctx.save();
-		ctx.globalCompositeOperation = "lighter";
-		const g = ctx.createLinearGradient(0, 0, 0, y0 + 40);
-		g.addColorStop(0, "rgba(190,230,255," + a * 2 + ")");
-		g.addColorStop(1, "rgba(190,230,255,0)");
-		ctx.fillStyle = g;
-		ctx.beginPath();
-		ctx.moveTo(569, 0);
-		ctx.lineTo(649, 0);
-		ctx.lineTo(719, y0 + 40);
-		ctx.lineTo(499, y0 + 40);
-		ctx.fill();
-		ctx.restore();
-		ctx.strokeStyle = "rgba(255,214,120," + (0.25 + 0.2 * Math.sin(t * 1.6)) + ")";
-		ctx.lineWidth = 3;
-		ctx.beginPath();
-		ctx.ellipse(609, (y0 + FLD.y1) / 2 + 10, 250, 78, 0, 0, TAU);
-		ctx.stroke();
-	} else if (id === "sky") glow(609, 60, 420, "#ffffff", 0.08);
+	} else if (id === "final") stageFinal(y0);
+	else if (id === "sky") glow(609, 60, 420, "#ffffff", 0.08);
+}
+// «живые» детали фона — у каждого мира свои: туман → особенность мира → свечение покрытий
+function stageFx(A) {
+	const fog = fogSpr();
+	stageFog(A, fog);
+	stageWorldFx(A);
 	// светящиеся покрытия и лужи
 	for (const p of A.patches) if (p.P.glow) glow(p.x, p.y, p.rx * 1.3, p.P.glow, 0.2 + 0.1 * Math.sin(t * 3 + p.s));
 }
@@ -4188,7 +4213,32 @@ function heal(tg, v, src) {
 	Events.emit("unit:healed", tg, v, src);
 	return v;
 }
-// единая точка урона: броня, крит, щит, фазы босса, вампиризм, срабатывания реликвий, эффекты
+// срабатывания после удара: у героев — реликвии (вампиризм, яд, заморозка с шансом, цепная молния при крите,
+// до двух соседей на 240 px); у врагов — эффект своей стихии с шансом o.stc (по умолчанию 20 %)
+function hurtProcs(src, tg, dm, crit, hy, o) {
+	if (!src.team) {
+		if (F.rb.ls) heal(src, dm * F.rb.ls);
+		if (F.rb.psn) addSt(tg, "poison", 3, src.atk * F.rb.psn);
+		if (F.rb.frz && Rand.next() < F.rb.frz) {
+			addSt(tg, "stun", 1);
+			if (tg.st.stun) tg.st.stun.ice = 1;
+			sfx("ice");
+		}
+		if (crit && F.rb.chain) {
+			liv(F.en)
+				.filter((e) => e !== tg && dist(e, tg) < 240)
+				.slice(0, 2)
+				.forEach((e) => {
+					Fx.add({ k: "bolt", x0: tg.x, y0: hy, x1: e.x, y1: e.y - 28, c: "#fff27a", d: 0.18 });
+					hurt(src, e, dm * F.rb.chain, { pure: 1, proc: 1, nocrit: 1, el: "bolt" });
+				});
+		}
+	} else {
+		const stt = EL[src.el] && EL[src.el].st;
+		if (stt && Rand.next() < (o.stc || 0.2)) addSt(tg, stt, stt === "chill" ? 2.5 : stt === "curse" ? 4 : 3, src.atk * (stt === "poison" ? 0.1 : 0.12));
+	}
+}
+// единая точка урона: броня, крит, щит, фазы босса, статистика, энергия, событие unit:hit, срабатывания (hurtProcs)
 function hurt(src, tg, raw, o = {}) {
 	if (!tg || tg.hp <= 0 || tg.dead) return 0;
 	if (tg.inv > 0) {
@@ -4236,30 +4286,8 @@ function hurt(src, tg, raw, o = {}) {
 	// визуал и звук удара — подписчики события (50_draw.js, 70_audio.js)
 	const hy = tg.y - (tg.rad > 30 ? 60 : 28) - (tg.z || 0);
 	Events.emit("unit:hit", tg, { dm, crit, el, hy, dot: !!o.dot, quiet: !!o.quiet, snd: o.snd }, src);
-	// срабатывания
-	if (src && !o.dot && !o.proc) {
-		if (!src.team) {
-			if (F.rb.ls) heal(src, dm * F.rb.ls);
-			if (F.rb.psn) addSt(tg, "poison", 3, src.atk * F.rb.psn);
-			if (F.rb.frz && Rand.next() < F.rb.frz) {
-				addSt(tg, "stun", 1);
-				if (tg.st.stun) tg.st.stun.ice = 1;
-				sfx("ice");
-			}
-			if (crit && F.rb.chain) {
-				liv(F.en)
-					.filter((e) => e !== tg && dist(e, tg) < 240)
-					.slice(0, 2)
-					.forEach((e) => {
-						Fx.add({ k: "bolt", x0: tg.x, y0: hy, x1: e.x, y1: e.y - 28, c: "#fff27a", d: 0.18 });
-						hurt(src, e, dm * F.rb.chain, { pure: 1, proc: 1, nocrit: 1, el: "bolt" });
-					});
-			}
-		} else {
-			const stt = EL[src.el] && EL[src.el].st;
-			if (stt && Rand.next() < (o.stc || 0.2)) addSt(tg, stt, stt === "chill" ? 2.5 : stt === "curse" ? 4 : 3, src.atk * (stt === "poison" ? 0.1 : 0.12));
-		}
-	}
+	// срабатывания (не для яда и не для отражённых ударов)
+	if (src && !o.dot && !o.proc) hurtProcs(src, tg, dm, crit, hy, o);
 	return dm;
 }
 function knock(u, fx, fy, pow) {
@@ -5282,6 +5310,57 @@ function projStep(h) {
 	});
 	if (F.proj === projectiles) F.proj = remaining.concat(projectiles.slice(projectileCount));
 }
+// гроза: молния по метке рядом со случайным бойцом — урон долей здоровья, шок, вспышка, тряска
+function wxBolt(A, all) {
+	A.ev = rr(4, 6);
+	const v = pick(all);
+	if (!v) return;
+	const x = v.x + rr(-20, 20),
+		y = v.y + rr(-10, 10);
+	tele({
+		x,
+		y,
+		r: 50,
+		d: 1,
+		c: "#fff27a",
+		fn() {
+			A.fl = 0.22;
+			Fx.add({ k: "bolt", x0: x + rr(-80, 80), y0: -10, x1: x, y1: y, c: "#ffffff", d: 0.2, w: 5 });
+			ring(x, y, 80, "#fff27a", 0.3, 5);
+			for (const e of all) if (e.hp > 0 && Math.hypot(e.x - x, (e.y - y) * 1.6) < 50 + e.rad) (hurt(null, e, e.max * (e.boss ? 0.012 : 0.06), { pure: 1, el: "bolt", quiet: 1 }), addSt(e, "shock", 1));
+			hitProps(x, y, 40, 3);
+			shake(0.2);
+			sfx("bolt");
+		},
+	});
+}
+// метеоры/бомбы: две падающие метки рядом со случайными бойцами — урон, поджог, осколки
+function wxBomb(A, all) {
+	A.ev = rr(3.6, 5);
+	for (let i = 0; i < 2; i++) {
+		const v = pick(all);
+		if (!v) return;
+		const x = clamp(v.x + rr(-70, 70), FLD.x0, FLD.x1),
+			y = clamp(v.y + rr(-30, 30), A.y0, FLD.y1);
+		tele({
+			x,
+			y,
+			r: 56,
+			d: 1.3,
+			c: "#ff8a3c",
+			drop: 1,
+			fn() {
+				ring(x, y, 96, "#ff8a3c", 0.4, 6);
+				burst(x, y, 16, { c: ["#ff8a3c", "#ffe27a", "#3a2a2a"], sp: 260, s: 6, life: 0.6, up: 120, fl: y + 4, bn: 0.3 });
+				for (const e of all) if (e.hp > 0 && Math.hypot(e.x - x, (e.y - y) * 1.6) < 56 + e.rad) (hurt(null, e, e.max * (e.boss ? 0.012 : 0.07), { pure: 1, el: "fire", quiet: 1 }), addSt(e, "burn", 2, e.max * 0.01));
+				hitProps(x, y, 46, 3);
+				shake(0.25);
+				sfx("boom", 0.7);
+			},
+		});
+	}
+}
+// погода в бою: вспышка молнии (A.fl) гаснет, «поток» истекает; по таймеру A.ev — событие погоды арены
 function wxStep(h) {
 	const A = F.A,
 		q = WX[A.wx] || {};
@@ -5290,53 +5369,9 @@ function wxStep(h) {
 	A.ev -= h;
 	if (A.ev > 0) return;
 	const all = liv(F.pl).concat(liv(F.en));
-	if (q.bolt) {
-		A.ev = rr(4, 6);
-		const v = pick(all);
-		if (!v) return;
-		const x = v.x + rr(-20, 20),
-			y = v.y + rr(-10, 10);
-		tele({
-			x,
-			y,
-			r: 50,
-			d: 1,
-			c: "#fff27a",
-			fn() {
-				A.fl = 0.22;
-				Fx.add({ k: "bolt", x0: x + rr(-80, 80), y0: -10, x1: x, y1: y, c: "#ffffff", d: 0.2, w: 5 });
-				ring(x, y, 80, "#fff27a", 0.3, 5);
-				for (const e of all) if (e.hp > 0 && Math.hypot(e.x - x, (e.y - y) * 1.6) < 50 + e.rad) (hurt(null, e, e.max * (e.boss ? 0.012 : 0.06), { pure: 1, el: "bolt", quiet: 1 }), addSt(e, "shock", 1));
-				hitProps(x, y, 40, 3);
-				shake(0.2);
-				sfx("bolt");
-			},
-		});
-	} else if (q.bomb) {
-		A.ev = rr(3.6, 5);
-		for (let i = 0; i < 2; i++) {
-			const v = pick(all);
-			if (!v) return;
-			const x = clamp(v.x + rr(-70, 70), FLD.x0, FLD.x1),
-				y = clamp(v.y + rr(-30, 30), A.y0, FLD.y1);
-			tele({
-				x,
-				y,
-				r: 56,
-				d: 1.3,
-				c: "#ff8a3c",
-				drop: 1,
-				fn() {
-					ring(x, y, 96, "#ff8a3c", 0.4, 6);
-					burst(x, y, 16, { c: ["#ff8a3c", "#ffe27a", "#3a2a2a"], sp: 260, s: 6, life: 0.6, up: 120, fl: y + 4, bn: 0.3 });
-					for (const e of all) if (e.hp > 0 && Math.hypot(e.x - x, (e.y - y) * 1.6) < 56 + e.rad) (hurt(null, e, e.max * (e.boss ? 0.012 : 0.07), { pure: 1, el: "fire", quiet: 1 }), addSt(e, "burn", 2, e.max * 0.01));
-					hitProps(x, y, 46, 3);
-					shake(0.25);
-					sfx("boom", 0.7);
-				},
-			});
-		}
-	} else if (q.flux) {
+	if (q.bolt) wxBolt(A, all);
+	else if (q.bomb) wxBomb(A, all);
+	else if (q.flux) {
 		A.ev = 8;
 		F.flux = { k: pick(["haste", "might"]), t: 4 };
 		Fx.txt(609, 130, F.flux.k === "haste" ? "ПОТОК: все быстрее!" : "ПОТОК: все бьют сильнее!", "#ff9cf0", 24);
@@ -5714,6 +5749,45 @@ function spriteTransition(u, img, frame, now) {
 	if (!q.prev || mix >= 1) { q.prev = null; return [null, 1]; }
 	return [q.prev, 0.25 + 0.75 * mix];
 }
+// обводка силуэтом в четыре стороны: жёлтая — выбранный боец, мигающая светлая — неуязвимый
+function uOutline(u, o, img, f, x, y, fx, sc, sy) {
+	if (o.sel) {
+		for (const [ox, oy] of [
+			[-2, 0],
+			[2, 0],
+			[0, -2],
+			[0, 2],
+		])
+			frSil(img, f, "#ffe27a", x + ox, y + oy, fx, sc, sy);
+	} else if (u.inv > 0) {
+		ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 16);
+		for (const [ox, oy] of [
+			[-2, 0],
+			[2, 0],
+			[0, -2],
+			[0, 2],
+		])
+			frSil(img, f, "#fff3b0", x + ox, y + oy, fx, sc, sy);
+		ctx.globalAlpha = 1;
+	}
+}
+// подкраска силуэтом по состояниям (лёд, холод, яд, горение, проклятие, ярость) и белая вспышка удара
+function uTints(u, o, img, f, x, y, fx, sc, sy) {
+	const s = u.st || {},
+		tint = (c, a) => {
+			ctx.globalAlpha = a * (o.a === undefined ? 1 : o.a);
+			frSil(img, f, c, x, y, fx, sc, sy);
+		};
+	if (s.stun && s.stun.ice) tint("#bff0ff", 0.62);
+	else if (s.chill) tint("#6fd0ff", 0.36);
+	if (s.poison) tint("#7be04e", 0.22 + 0.08 * Math.sin(t * 6));
+	if (s.burn) tint("#ff7a2c", 0.22 + 0.12 * Math.sin(t * 14));
+	if (s.curse) tint("#8a4fd8", 0.3);
+	if (s.rage) tint("#ff3a2a", 0.2 + 0.14 * Math.sin(t * 9));
+	if (u.hitT > 0) tint("#ffffff", Math.min(0.92, u.hitT / 0.12));
+	ctx.globalAlpha = 1;
+}
+// юнит: появление (born), выпад при ударе, дыхание/шаг, дрожь от удара и оглушения, обводка, кадр (с плавной сменой набора), подкраска
 function dUnit(u, wi, o = {}) {
 	const bk = u.born !== undefined ? (t - u.born) / 0.32 : 1;
 	if (bk <= 0) return;
@@ -5739,25 +5813,7 @@ function dUnit(u, wi, o = {}) {
 	x = Math.round(x);
 	y = Math.round(y);
 	const fx = u.face;
-	if (o.sel) {
-		for (const [ox, oy] of [
-			[-2, 0],
-			[2, 0],
-			[0, -2],
-			[0, 2],
-		])
-			frSil(img, f, "#ffe27a", x + ox, y + oy, fx, sc, sy);
-	} else if (u.inv > 0) {
-		ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 16);
-		for (const [ox, oy] of [
-			[-2, 0],
-			[2, 0],
-			[0, -2],
-			[0, 2],
-		])
-			frSil(img, f, "#fff3b0", x + ox, y + oy, fx, sc, sy);
-		ctx.globalAlpha = 1;
-	}
+	uOutline(u, o, img, f, x, y, fx, sc, sy);
 	const baseAlpha = o.a === undefined ? 1 : o.a;
 	const [previous, mix] = !u.team && img === IMG.heroes3 ? spriteTransition(u, img, f, t) : [null, 1];
 	if (previous) {
@@ -5767,19 +5823,7 @@ function dUnit(u, wi, o = {}) {
 	ctx.globalAlpha = baseAlpha * mix;
 	fr(img, f, x, y, fx, sc, sy);
 	ctx.globalAlpha = baseAlpha;
-	const s = u.st || {},
-		tint = (c, a) => {
-			ctx.globalAlpha = a * (o.a === undefined ? 1 : o.a);
-			frSil(img, f, c, x, y, fx, sc, sy);
-		};
-	if (s.stun && s.stun.ice) tint("#bff0ff", 0.62);
-	else if (s.chill) tint("#6fd0ff", 0.36);
-	if (s.poison) tint("#7be04e", 0.22 + 0.08 * Math.sin(t * 6));
-	if (s.burn) tint("#ff7a2c", 0.22 + 0.12 * Math.sin(t * 14));
-	if (s.curse) tint("#8a4fd8", 0.3);
-	if (s.rage) tint("#ff3a2a", 0.2 + 0.14 * Math.sin(t * 9));
-	if (u.hitT > 0) tint("#ffffff", Math.min(0.92, u.hitT / 0.12));
-	ctx.globalAlpha = 1;
+	uTints(u, o, img, f, x, y, fx, sc, sy);
 }
 // ---------- полосы здоровья и статусы ----------
 function uBar(u, fight) {
@@ -5856,65 +5900,74 @@ function jag(x0, y0, x1, y1, amp, seed) {
 	ctx.lineTo(x1, y1);
 	ctx.stroke();
 }
+// метка-полоса под углом q.a: заливка, заполнение по готовности k, края
+function teleLine(q, k, pu) {
+	const wd = q.wd || 14;
+	ctx.save();
+	ctx.translate(q.x, q.y);
+	ctx.scale(1, 0.62);
+	ctx.rotate(Math.atan2(Math.sin(q.a) / 0.62, Math.cos(q.a)));
+	ctx.globalAlpha = 0.16 + 0.1 * pu;
+	ctx.fillRect(0, -wd, q.len, wd * 2);
+	ctx.globalAlpha = 0.5;
+	ctx.fillRect(0, -wd, q.len * k, wd * 2);
+	ctx.globalAlpha = 0.9;
+	ctx.fillRect(0, -wd - 2, q.len, 2);
+	ctx.fillRect(0, wd, q.len, 2);
+	ctx.restore();
+}
+// метка-лента во всю ширину поля: заполняется справа налево, стрелки показывают направление удара
+function teleBand(q, k, pu) {
+	const y = q.y - q.h / 2;
+	ctx.globalAlpha = 0.14 + 0.1 * pu;
+	ctx.fillRect(FLD.x0 - 40, y, FLD.x1 - FLD.x0 + 80, q.h);
+	ctx.globalAlpha = 0.45;
+	const w = (FLD.x1 - FLD.x0 + 80) * k;
+	ctx.fillRect(FLD.x1 + 40 - w, y, w, q.h);
+	ctx.globalAlpha = 0.9;
+	ctx.fillRect(FLD.x0 - 40, y - 2, FLD.x1 - FLD.x0 + 80, 2);
+	ctx.fillRect(FLD.x0 - 40, y + q.h, FLD.x1 - FLD.x0 + 80, 2);
+	for (let i = 0; i < 9; i++) {
+		// стрелки направления удара
+		const ax = FLD.x1 - ((t * 240 + i * 130) % (FLD.x1 - FLD.x0));
+		ctx.beginPath();
+		ctx.moveTo(ax, q.y - 10);
+		ctx.lineTo(ax - 14, q.y);
+		ctx.lineTo(ax, q.y + 10);
+		ctx.lineWidth = 4;
+		ctx.stroke();
+	}
+}
+// метка-круг (эллипс в перспективе): заливка, растущее заполнение, бегущий пунктир по краю
+function teleRing(q, k, pu) {
+	const rx = q.r,
+		ry = q.r / 1.6;
+	ctx.globalAlpha = 0.16 + 0.1 * pu;
+	ctx.beginPath();
+	ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
+	ctx.fill();
+	ctx.globalAlpha = 0.5;
+	ctx.beginPath();
+	ctx.ellipse(q.x, q.y, rx * k, ry * k, 0, 0, TAU);
+	ctx.fill();
+	ctx.globalAlpha = 0.95;
+	ctx.lineWidth = 4;
+	ctx.setLineDash([14, 8]);
+	ctx.lineDashOffset = -t * 60;
+	ctx.beginPath();
+	ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
+	ctx.stroke();
+	ctx.setLineDash([]);
+}
+// метки приёмов на земле: пульсируют тем чаще, чем ближе срабатывание (k — готовность 0..1)
 function dTele(A) {
 	for (const q of F.tele) {
 		const k = Math.min(1, q.t / q.d),
 			pu = 0.55 + 0.45 * Math.sin(t * 22 * (0.5 + k));
 		ctx.fillStyle = ctx.strokeStyle = q.c;
-		if (q.shape === "line") {
-			const wd = q.wd || 14;
-			ctx.save();
-			ctx.translate(q.x, q.y);
-			ctx.scale(1, 0.62);
-			ctx.rotate(Math.atan2(Math.sin(q.a) / 0.62, Math.cos(q.a)));
-			ctx.globalAlpha = 0.16 + 0.1 * pu;
-			ctx.fillRect(0, -wd, q.len, wd * 2);
-			ctx.globalAlpha = 0.5;
-			ctx.fillRect(0, -wd, q.len * k, wd * 2);
-			ctx.globalAlpha = 0.9;
-			ctx.fillRect(0, -wd - 2, q.len, 2);
-			ctx.fillRect(0, wd, q.len, 2);
-			ctx.restore();
-		} else if (q.shape === "band") {
-			const y = q.y - q.h / 2;
-			ctx.globalAlpha = 0.14 + 0.1 * pu;
-			ctx.fillRect(FLD.x0 - 40, y, FLD.x1 - FLD.x0 + 80, q.h);
-			ctx.globalAlpha = 0.45;
-			const w = (FLD.x1 - FLD.x0 + 80) * k;
-			ctx.fillRect(FLD.x1 + 40 - w, y, w, q.h);
-			ctx.globalAlpha = 0.9;
-			ctx.fillRect(FLD.x0 - 40, y - 2, FLD.x1 - FLD.x0 + 80, 2);
-			ctx.fillRect(FLD.x0 - 40, y + q.h, FLD.x1 - FLD.x0 + 80, 2);
-			for (let i = 0; i < 9; i++) {
-				// стрелки направления удара
-				const ax = FLD.x1 - ((t * 240 + i * 130) % (FLD.x1 - FLD.x0));
-				ctx.beginPath();
-				ctx.moveTo(ax, q.y - 10);
-				ctx.lineTo(ax - 14, q.y);
-				ctx.lineTo(ax, q.y + 10);
-				ctx.lineWidth = 4;
-				ctx.stroke();
-			}
-		} else {
-			const rx = q.r,
-				ry = q.r / 1.6;
-			ctx.globalAlpha = 0.16 + 0.1 * pu;
-			ctx.beginPath();
-			ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
-			ctx.fill();
-			ctx.globalAlpha = 0.5;
-			ctx.beginPath();
-			ctx.ellipse(q.x, q.y, rx * k, ry * k, 0, 0, TAU);
-			ctx.fill();
-			ctx.globalAlpha = 0.95;
-			ctx.lineWidth = 4;
-			ctx.setLineDash([14, 8]);
-			ctx.lineDashOffset = -t * 60;
-			ctx.beginPath();
-			ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
-			ctx.stroke();
-			ctx.setLineDash([]);
-		}
+		if (q.shape === "line") teleLine(q, k, pu);
+		else if (q.shape === "band") teleBand(q, k, pu);
+		else teleRing(q, k, pu);
 		ctx.globalAlpha = 1;
 	}
 }
@@ -7111,70 +7164,65 @@ function bakeMap(seed) {
 // на участок строки, а не на каждый пиксель (в 5 раз быстрее). Формулы и порядок операций с
 // плавающей точкой повторяют vnoise дословно, поэтому пиксели совпадают бит-в-бит
 // (контрольные суммы — в tests/unit/map.test.mjs).
-function bakeGround(J, y0, y1) {
+// Строки [y0, y1) — bakeGround, одна строка — bakeRow.
+// одна строка земли py: углы решётки обеих октав пересчитываются только при смене клетки
+function bakeRow(J, py) {
 	const p = J.id.data,
 		cols = J.cols,
 		R2 = J.R2,
 		s1 = J.seed,
-		s2 = J.seed + 1;
-	for (let py = y0; py < y1; py++) {
-		const ya = py * 0.034,
-			yi1 = Math.floor(ya),
-			fy1 = ya - yi1,
-			v1 = fy1 * fy1 * (3 - 2 * fy1),
-			yb = py * 0.11,
-			yi2 = Math.floor(yb),
-			fy2 = yb - yi2,
-			v2 = fy2 * fy2 * (3 - 2 * fy2);
-		let cx1 = -1,
-			a1 = 0,
-			b1 = 0,
-			c1 = 0,
-			d1 = 0,
-			cx2 = -1,
-			a2 = 0,
-			b2 = 0,
-			c2 = 0,
-			d2 = 0;
-		for (let px = 0; px < 609; px++) {
-			const xa = px * 0.021,
-				xi1 = Math.floor(xa),
-				fx1 = xa - xi1;
-			if (xi1 !== cx1) {
-				cx1 = xi1;
-				a1 = vhash(xi1, yi1, s1);
-				b1 = vhash(xi1 + 1, yi1, s1);
-				c1 = vhash(xi1, yi1 + 1, s1);
-				d1 = vhash(xi1 + 1, yi1 + 1, s1);
-			}
-			const u1 = fx1 * fx1 * (3 - 2 * fx1),
-				n1 = a1 + (b1 - a1) * u1 + (c1 - a1) * v1 + (a1 - b1 - c1 + d1) * u1 * v1,
-				xb = px * 0.08,
-				xi2 = Math.floor(xb),
-				fx2 = xb - xi2;
-			if (xi2 !== cx2) {
-				cx2 = xi2;
-				a2 = vhash(xi2, yi2, s2);
-				b2 = vhash(xi2 + 1, yi2, s2);
-				c2 = vhash(xi2, yi2 + 1, s2);
-				d2 = vhash(xi2 + 1, yi2 + 1, s2);
-			}
-			const u2 = fx2 * fx2 * (3 - 2 * fx2),
-				n2 = a2 + (b2 - a2) * u2 + (c2 - a2) * v2 + (a2 - b2 - c2 + d2) * u2 * v2,
-				n = n1 * 0.7 + n2 * 0.3;
-			let tn = n < 0.46 ? 0 : n < 0.6 ? 1 : 2;
-			if ((n > 0.44 && n < 0.46) || (n > 0.58 && n < 0.6)) tn = (px + py) & 1 ? tn : n < 0.5 ? 1 : 2;
-			let cc = cols[tn];
-			const sp = R2();
-			if (sp < 0.014) cc = cols[(tn + 1) % 3];
-			const i = (py * 609 + px) * 4,
-				sh = sp > 0.985 ? 0.9 : 1;
-			p[i] = cc[0] * sh;
-			p[i + 1] = cc[1] * sh;
-			p[i + 2] = cc[2] * sh;
-			p[i + 3] = 255;
+		s2 = J.seed + 1,
+		ya = py * 0.034,
+		yi1 = Math.floor(ya),
+		fy1 = ya - yi1,
+		v1 = fy1 * fy1 * (3 - 2 * fy1),
+		yb = py * 0.11,
+		yi2 = Math.floor(yb),
+		fy2 = yb - yi2,
+		v2 = fy2 * fy2 * (3 - 2 * fy2);
+	// текущая клетка (cx) и четыре угла решётки (a, b, c, d) для каждой октавы
+	let cx1 = -1, a1 = 0, b1 = 0, c1 = 0, d1 = 0, cx2 = -1, a2 = 0, b2 = 0, c2 = 0, d2 = 0;
+	for (let px = 0; px < 609; px++) {
+		const xa = px * 0.021,
+			xi1 = Math.floor(xa),
+			fx1 = xa - xi1;
+		if (xi1 !== cx1) {
+			cx1 = xi1;
+			a1 = vhash(xi1, yi1, s1);
+			b1 = vhash(xi1 + 1, yi1, s1);
+			c1 = vhash(xi1, yi1 + 1, s1);
+			d1 = vhash(xi1 + 1, yi1 + 1, s1);
 		}
+		const u1 = fx1 * fx1 * (3 - 2 * fx1),
+			n1 = a1 + (b1 - a1) * u1 + (c1 - a1) * v1 + (a1 - b1 - c1 + d1) * u1 * v1,
+			xb = px * 0.08,
+			xi2 = Math.floor(xb),
+			fx2 = xb - xi2;
+		if (xi2 !== cx2) {
+			cx2 = xi2;
+			a2 = vhash(xi2, yi2, s2);
+			b2 = vhash(xi2 + 1, yi2, s2);
+			c2 = vhash(xi2, yi2 + 1, s2);
+			d2 = vhash(xi2 + 1, yi2 + 1, s2);
+		}
+		const u2 = fx2 * fx2 * (3 - 2 * fx2),
+			n2 = a2 + (b2 - a2) * u2 + (c2 - a2) * v2 + (a2 - b2 - c2 + d2) * u2 * v2,
+			n = n1 * 0.7 + n2 * 0.3;
+		let tn = n < 0.46 ? 0 : n < 0.6 ? 1 : 2;
+		if ((n > 0.44 && n < 0.46) || (n > 0.58 && n < 0.6)) tn = (px + py) & 1 ? tn : n < 0.5 ? 1 : 2;
+		let cc = cols[tn];
+		const sp = R2();
+		if (sp < 0.014) cc = cols[(tn + 1) % 3];
+		const i = (py * 609 + px) * 4,
+			sh = sp > 0.985 ? 0.9 : 1;
+		p[i] = cc[0] * sh;
+		p[i + 1] = cc[1] * sh;
+		p[i + 2] = cc[2] * sh;
+		p[i + 3] = 255;
 	}
+}
+function bakeGround(J, y0, y1) {
+	for (let py = y0; py < y1; py++) bakeRow(J, py);
 }
 // озёра: 1–2 штуки, не ближе 9 px к дороге и 18 к узлу, не вплотную друг к другу; список — в MAPL (для бликов)
 function bakeLakes(x, im, AM, R, roadD, nodeD) {
@@ -9458,68 +9506,83 @@ Machine.reg("win", { scene: "end", draw: dEnd, enter: enterEnd, pausable: false,
 Machine.reg("lose", { scene: "end", draw: dEnd, enter: enterEnd, pausable: false, save: "none" });
 // ===== 70_audio.js =====
 // ===== ЗВУК: новые эффекты (синтез в браузере), настроение музыки по мирам =====
-// Каждый звук — функция (t, s) -> отсчёт; sw — синус с накоплением фазы, rd — шум. Буферы строятся один раз при запуске.
+// вспомогательные генераторы: o2 — второй осциллятор с накоплением фазы в s[k], sq — меандр, lp — простой фильтр,
+// ex — экспонента (огибающие), seq — нота из списка по времени
+const sfxH = {
+	o2: (s, k, f) => {
+		s[k] = (s[k] || 0) + (6.2832 * f) / 22050;
+		return Math.sin(s[k]);
+	},
+	sq: (v) => (v > 0 ? 1 : -1),
+	lp: (s, k, v, a) => (s[k] = (s[k] || 0) + (v - (s[k] || 0)) * a),
+	ex: Math.exp,
+	seq: (t, notes, step) => notes[Math.min(notes.length - 1, (t / step) | 0)],
+};
+// звуки боя: крит, треск, рык, появление, старт, навык, ульта, стихии, враги, смерть босса
+function sfxFight(B, mk, sw, rd) {
+	const { o2, sq, lp, ex, seq } = sfxH;
+	B.crit = mk(0.3, (t, s) => sw(s, 1760) * 0.28 * ex(-t * 26) + o2(s, "b", 70 + 160 * ex(-t * 22)) * 0.9 * ex(-t * 12) + rd() * 0.45 * ex(-t * 45));
+	B.crack = mk(0.4, (t, s) => lp(s, "l", rd(), 0.5 * ex(-t * 9) + 0.04) * 1.4 * ex(-t * 9) * (0.6 + 0.4 * sq(Math.sin(t * 190))) + o2(s, "b", 90 * ex(-t * 6) + 40) * 0.5 * ex(-t * 10));
+	B.roar = mk(1.1, (t, s) => {
+		const f = 62 + 26 * Math.sin(t * 17) + 30 * ex(-t * 3),
+			e = Math.min(1, t * 12) * ex(-t * 2.2);
+		return (sq(sw(s, f)) * 0.22 + o2(s, "b", f * 1.5) * 0.3 + o2(s, "c", f * 0.5) * 0.5 + lp(s, "l", rd(), 0.12) * 0.9) * e;
+	});
+	B.spawn = mk(0.26, (t, s) => sw(s, 260 + 1100 * t * t * 9) * 0.3 * ex(-t * 9) + rd() * 0.08 * ex(-t * 30));
+	B.start = mk(0.6, (t, s) => (sq(sw(s, seq(t, [330, 330, 440, 660], 0.11))) * 0.2 + o2(s, "b", seq(t, [165, 165, 220, 330], 0.11)) * 0.3) * ex(-(t % 0.11) * 4) * (1 - t / 0.6));
+	B.abil = mk(0.28, (t, s) => lp(s, "l", rd(), 0.08 + t * 1.6) * 0.8 * Math.sin((t / 0.28) * Math.PI) + sw(s, 420 + 1500 * t) * 0.16 * ex(-t * 6));
+	B.ult = mk(0.9, (t, s) => {
+		const k = 1 + t * 0.9;
+		return (sw(s, 220 * k) * 0.25 + o2(s, "b", 330 * k) * 0.2 + o2(s, "c", 440 * k) * 0.16 + sq(o2(s, "d", 110 * k)) * 0.08 + lp(s, "l", rd(), 0.3) * 0.25 * t) * Math.sin(Math.min(1, t / 0.9) * Math.PI) * 1.2;
+	});
+	B.holy = mk(0.7, (t, s) => (sw(s, 880) * 0.2 + o2(s, "b", 1320) * 0.16 + o2(s, "c", 1760) * 0.12 + o2(s, "d", 2640) * 0.06) * ex(-t * 5) + rd() * 0.05 * ex(-t * 30));
+	B.ice = mk(0.34, (t, s) => sw(s, 2300 + 900 * Math.sin(t * 70)) * 0.2 * ex(-t * 11) + o2(s, "b", 3400) * 0.1 * ex(-t * 18) + lp(s, "l", rd(), 0.9) * 0.2 * ex(-t * 30));
+	B.fire = mk(0.42, (t, s) => lp(s, "l", rd(), 0.16) * 1.5 * Math.min(1, t * 30) * ex(-t * 7) + o2(s, "b", 70 + 60 * ex(-t * 9)) * 0.4 * ex(-t * 8));
+	B.poison = mk(0.34, (t, s) => sw(s, 190 + 320 * Math.abs(Math.sin(t * 38))) * 0.34 * ex(-t * 8) + lp(s, "l", rd(), 0.05) * 0.5 * ex(-t * 12));
+	B.bolt = mk(0.34, (t, s) => rd() * 0.5 * ex(-t * 22) * (0.5 + 0.5 * sq(Math.sin(t * 310))) + sq(sw(s, 110)) * 0.22 * ex(-t * 9) + o2(s, "b", 2200 - 5200 * t) * 0.16 * ex(-t * 16));
+	B.dark = mk(0.5, (t, s) => (sw(s, 84 + 18 * Math.sin(t * 31)) * 0.6 + o2(s, "b", 126 - 40 * t) * 0.3 + lp(s, "l", rd(), 0.03) * 0.6) * Math.sin((t / 0.5) * Math.PI) * 0.9);
+	B.prism = mk(0.36, (t, s) => sw(s, seq(t, [1568, 2093, 2637, 3136], 0.06)) * 0.2 * ex(-(t % 0.06) * 22) * (1 - t / 0.36) + o2(s, "b", 5200) * 0.04 * ex(-t * 8));
+	B.chaos = mk(0.34, (t, s) => sq(sw(s, 180 + 1700 * ((Math.sin(((t * 44) | 0) * 91.7) * 43758.5) % 1) ** 2)) * 0.16 * ex(-t * 6) + rd() * 0.1 * ex(-t * 20));
+	B.slime = mk(0.2, (t, s) => sw(s, 150 * ex(-t * 13) + 80) * 0.7 * ex(-t * 13) + lp(s, "l", rd(), 0.06) * 0.8 * ex(-t * 18));
+	B.spit = mk(0.2, (t, s) => sw(s, 1300 - 4200 * t) * 0.24 * ex(-t * 13) + lp(s, "l", rd(), 0.3) * 0.2 * ex(-t * 25));
+	B.dash = mk(0.34, (t, s) => lp(s, "l", rd(), 0.04 + t * 1.2) * 1.1 * Math.sin((t / 0.34) * Math.PI) + sw(s, 140 + 260 * t) * 0.2);
+	B.bossdie = mk(1.5, (t, s) => (sw(s, 36 + 150 * ex(-t * 5)) * 0.9 + lp(s, "l", rd(), 0.2 * ex(-t * 2.4) + 0.02) * 1.3 + sq(o2(s, "b", 52 * ex(-t * 1.2))) * 0.12) * ex(-t * 2.4));
+}
+// звуки интерфейса и карты: выбор, расстановка, уровень, сундук, шаги, фанфары, раскрытие карты по редкости
+function sfxUi(B, mk, sw, rd) {
+	const { o2, sq, lp, ex, seq } = sfxH;
+	B.pick = mk(0.07, (t, s) => sw(s, 760 + 900 * t) * 0.3 * ex(-t * 40));
+	B.place = mk(0.14, (t, s) => sw(s, 210 * ex(-t * 16) + 90) * 0.6 * ex(-t * 20) + rd() * 0.25 * ex(-t * 60));
+	B.lvl = mk(0.5, (t, s) => (sq(sw(s, seq(t, [523, 659, 784, 1047], 0.09))) * 0.16 + o2(s, "b", seq(t, [523, 659, 784, 1047], 0.09) * 2) * 0.1) * ex(-(t % 0.09) * 6) * (1 - t / 0.5));
+	B.chest = mk(0.42, (t, s) => (t < 0.22 ? lp(s, "l", rd(), 0.2) * 0.5 * Math.sin((t / 0.22) * Math.PI) * (0.6 + 0.4 * Math.sin(t * 260)) : (sw(s, 180 * ex(-(t - 0.22) * 20) + 70) * 0.9 + rd() * 0.3) * ex(-(t - 0.22) * 16)));
+	B.step = mk(0.34, (t, s) => {
+		const q = t % 0.11;
+		return (lp(s, "l", rd(), 0.1) * 0.9 + sw(s, 120) * 0.3) * ex(-q * 40) * 0.6;
+	});
+	B.fanfare = mk(1.6, (t, s) => {
+		const n = seq(t, [523, 523, 659, 784, 1047, 1047, 1319, 1568], 0.16);
+		return (sq(sw(s, n)) * 0.16 + o2(s, "b", n / 2) * 0.22 + o2(s, "c", n * 1.5) * 0.08) * ex(-(t % 0.16) * 3) * (1 - t / 1.7);
+	});
+	// раскрытие карты: чем выше редкость, тем длиннее и ярче фраза
+	const SC = [523, 659, 784, 1047, 1319, 1568, 2093, 2637];
+	for (let r = 0; r < 6; r++) {
+		const n = 1 + r,
+			st = r >= 4 ? 0.075 : 0.085,
+			dur = n * st + 0.25 + r * 0.12;
+		B["rev" + r] = mk(dur, (t, s) => {
+			const i = Math.min(n - 1, (t / st) | 0),
+				f = SC[i + (r >= 3 ? 1 : 0)],
+				e = t < n * st ? ex(-(t % st) * 9) : ex(-(t - n * st) * (7 - r));
+			return (sw(s, f) * 0.22 + sq(o2(s, "b", f)) * (0.05 + r * 0.012) + o2(s, "c", f * 2) * (r >= 2 ? 0.1 : 0) + o2(s, "d", f * 1.5) * (r >= 4 ? 0.1 : 0) + (r >= 3 ? rd() * 0.05 * ex(-(t % st) * 30) : 0)) * e * (r >= 4 ? 1.15 : 1);
+		});
+	}
+}
+// Каждый звук — функция (t, s) -> отсчёт; sw — синус с накоплением фазы, rd — шум. Буферы строятся один раз при запуске
+// (порядок построения: бой, затем интерфейс).
 function sfxBank() {
 	Music.ext((B, mk, sw, rd) => {
-		const o2 = (s, k, f) => {
-				s[k] = (s[k] || 0) + (6.2832 * f) / 22050;
-				return Math.sin(s[k]);
-			},
-			sq = (v) => (v > 0 ? 1 : -1),
-			lp = (s, k, v, a) => (s[k] = (s[k] || 0) + (v - (s[k] || 0)) * a),
-			ex = Math.exp,
-			seq = (t, notes, step) => notes[Math.min(notes.length - 1, (t / step) | 0)];
-		B.crit = mk(0.3, (t, s) => sw(s, 1760) * 0.28 * ex(-t * 26) + o2(s, "b", 70 + 160 * ex(-t * 22)) * 0.9 * ex(-t * 12) + rd() * 0.45 * ex(-t * 45));
-		B.crack = mk(0.4, (t, s) => lp(s, "l", rd(), 0.5 * ex(-t * 9) + 0.04) * 1.4 * ex(-t * 9) * (0.6 + 0.4 * sq(Math.sin(t * 190))) + o2(s, "b", 90 * ex(-t * 6) + 40) * 0.5 * ex(-t * 10));
-		B.roar = mk(1.1, (t, s) => {
-			const f = 62 + 26 * Math.sin(t * 17) + 30 * ex(-t * 3),
-				e = Math.min(1, t * 12) * ex(-t * 2.2);
-			return (sq(sw(s, f)) * 0.22 + o2(s, "b", f * 1.5) * 0.3 + o2(s, "c", f * 0.5) * 0.5 + lp(s, "l", rd(), 0.12) * 0.9) * e;
-		});
-		B.spawn = mk(0.26, (t, s) => sw(s, 260 + 1100 * t * t * 9) * 0.3 * ex(-t * 9) + rd() * 0.08 * ex(-t * 30));
-		B.start = mk(0.6, (t, s) => (sq(sw(s, seq(t, [330, 330, 440, 660], 0.11))) * 0.2 + o2(s, "b", seq(t, [165, 165, 220, 330], 0.11)) * 0.3) * ex(-(t % 0.11) * 4) * (1 - t / 0.6));
-		B.abil = mk(0.28, (t, s) => lp(s, "l", rd(), 0.08 + t * 1.6) * 0.8 * Math.sin((t / 0.28) * Math.PI) + sw(s, 420 + 1500 * t) * 0.16 * ex(-t * 6));
-		B.ult = mk(0.9, (t, s) => {
-			const k = 1 + t * 0.9;
-			return (sw(s, 220 * k) * 0.25 + o2(s, "b", 330 * k) * 0.2 + o2(s, "c", 440 * k) * 0.16 + sq(o2(s, "d", 110 * k)) * 0.08 + lp(s, "l", rd(), 0.3) * 0.25 * t) * Math.sin(Math.min(1, t / 0.9) * Math.PI) * 1.2;
-		});
-		B.holy = mk(0.7, (t, s) => (sw(s, 880) * 0.2 + o2(s, "b", 1320) * 0.16 + o2(s, "c", 1760) * 0.12 + o2(s, "d", 2640) * 0.06) * ex(-t * 5) + rd() * 0.05 * ex(-t * 30));
-		B.ice = mk(0.34, (t, s) => sw(s, 2300 + 900 * Math.sin(t * 70)) * 0.2 * ex(-t * 11) + o2(s, "b", 3400) * 0.1 * ex(-t * 18) + lp(s, "l", rd(), 0.9) * 0.2 * ex(-t * 30));
-		B.fire = mk(0.42, (t, s) => lp(s, "l", rd(), 0.16) * 1.5 * Math.min(1, t * 30) * ex(-t * 7) + o2(s, "b", 70 + 60 * ex(-t * 9)) * 0.4 * ex(-t * 8));
-		B.poison = mk(0.34, (t, s) => sw(s, 190 + 320 * Math.abs(Math.sin(t * 38))) * 0.34 * ex(-t * 8) + lp(s, "l", rd(), 0.05) * 0.5 * ex(-t * 12));
-		B.bolt = mk(0.34, (t, s) => rd() * 0.5 * ex(-t * 22) * (0.5 + 0.5 * sq(Math.sin(t * 310))) + sq(sw(s, 110)) * 0.22 * ex(-t * 9) + o2(s, "b", 2200 - 5200 * t) * 0.16 * ex(-t * 16));
-		B.dark = mk(0.5, (t, s) => (sw(s, 84 + 18 * Math.sin(t * 31)) * 0.6 + o2(s, "b", 126 - 40 * t) * 0.3 + lp(s, "l", rd(), 0.03) * 0.6) * Math.sin((t / 0.5) * Math.PI) * 0.9);
-		B.prism = mk(0.36, (t, s) => sw(s, seq(t, [1568, 2093, 2637, 3136], 0.06)) * 0.2 * ex(-(t % 0.06) * 22) * (1 - t / 0.36) + o2(s, "b", 5200) * 0.04 * ex(-t * 8));
-		B.chaos = mk(0.34, (t, s) => sq(sw(s, 180 + 1700 * ((Math.sin(((t * 44) | 0) * 91.7) * 43758.5) % 1) ** 2)) * 0.16 * ex(-t * 6) + rd() * 0.1 * ex(-t * 20));
-		B.slime = mk(0.2, (t, s) => sw(s, 150 * ex(-t * 13) + 80) * 0.7 * ex(-t * 13) + lp(s, "l", rd(), 0.06) * 0.8 * ex(-t * 18));
-		B.spit = mk(0.2, (t, s) => sw(s, 1300 - 4200 * t) * 0.24 * ex(-t * 13) + lp(s, "l", rd(), 0.3) * 0.2 * ex(-t * 25));
-		B.dash = mk(0.34, (t, s) => lp(s, "l", rd(), 0.04 + t * 1.2) * 1.1 * Math.sin((t / 0.34) * Math.PI) + sw(s, 140 + 260 * t) * 0.2);
-		B.bossdie = mk(1.5, (t, s) => (sw(s, 36 + 150 * ex(-t * 5)) * 0.9 + lp(s, "l", rd(), 0.2 * ex(-t * 2.4) + 0.02) * 1.3 + sq(o2(s, "b", 52 * ex(-t * 1.2))) * 0.12) * ex(-t * 2.4));
-		B.pick = mk(0.07, (t, s) => sw(s, 760 + 900 * t) * 0.3 * ex(-t * 40));
-		B.place = mk(0.14, (t, s) => sw(s, 210 * ex(-t * 16) + 90) * 0.6 * ex(-t * 20) + rd() * 0.25 * ex(-t * 60));
-		B.lvl = mk(0.5, (t, s) => (sq(sw(s, seq(t, [523, 659, 784, 1047], 0.09))) * 0.16 + o2(s, "b", seq(t, [523, 659, 784, 1047], 0.09) * 2) * 0.1) * ex(-(t % 0.09) * 6) * (1 - t / 0.5));
-		B.chest = mk(0.42, (t, s) => (t < 0.22 ? lp(s, "l", rd(), 0.2) * 0.5 * Math.sin((t / 0.22) * Math.PI) * (0.6 + 0.4 * Math.sin(t * 260)) : (sw(s, 180 * ex(-(t - 0.22) * 20) + 70) * 0.9 + rd() * 0.3) * ex(-(t - 0.22) * 16)));
-		B.step = mk(0.34, (t, s) => {
-			const q = t % 0.11;
-			return (lp(s, "l", rd(), 0.1) * 0.9 + sw(s, 120) * 0.3) * ex(-q * 40) * 0.6;
-		});
-		B.fanfare = mk(1.6, (t, s) => {
-			const n = seq(t, [523, 523, 659, 784, 1047, 1047, 1319, 1568], 0.16);
-			return (sq(sw(s, n)) * 0.16 + o2(s, "b", n / 2) * 0.22 + o2(s, "c", n * 1.5) * 0.08) * ex(-(t % 0.16) * 3) * (1 - t / 1.7);
-		});
-		// раскрытие карты: чем выше редкость, тем длиннее и ярче фраза
-		const SC = [523, 659, 784, 1047, 1319, 1568, 2093, 2637];
-		for (let r = 0; r < 6; r++) {
-			const n = 1 + r,
-				st = r >= 4 ? 0.075 : 0.085,
-				dur = n * st + 0.25 + r * 0.12;
-			B["rev" + r] = mk(dur, (t, s) => {
-				const i = Math.min(n - 1, (t / st) | 0),
-					f = SC[i + (r >= 3 ? 1 : 0)],
-					e = t < n * st ? ex(-(t % st) * 9) : ex(-(t - n * st) * (7 - r));
-				return (sw(s, f) * 0.22 + sq(o2(s, "b", f)) * (0.05 + r * 0.012) + o2(s, "c", f * 2) * (r >= 2 ? 0.1 : 0) + o2(s, "d", f * 1.5) * (r >= 4 ? 0.1 : 0) + (r >= 3 ? rd() * 0.05 * ex(-(t % st) * 30) : 0)) * e * (r >= 4 ? 1.15 : 1);
-			});
-		}
+		sfxFight(B, mk, sw, rd);
+		sfxUi(B, mk, sw, rd);
 	});
 }
 // настроение музыки: у каждого мира свой строй (сдвиг в полутонах) и тембр; бой с боссом — выше и резче
@@ -9600,6 +9663,31 @@ function unlock() {
 	} catch (_) {}
 	fit();
 }
+// атмосфера вне боя: погода мира на карте/в событии/в лавке (в следующем мире — на экране «мир пройден»), снег в меню
+function ambientTick(dt) {
+	if (Machine.is("map", "msg", "world", "shop")) {
+		MAPA.w = WORLDS[Machine.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
+		if (!(Machine.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, Machine.is("shop") ? 0.5 : 0.7);
+	} else if (Machine.is("menu", "pick", "settings")) {
+		MAPA.w = WORLDS[0];
+		wxEmit(MAPA, dt, 2.2);
+	}
+}
+// симуляция кадра: фиксированный шаг 1/60 с (накопитель Loop, не более Loop.MAX шагов), переходы по карте, визуальные таймеры, атмосфера.
+// Сбой здесь не должен дотянуться до отрисовки и цикла
+function simTick(raw, dt) {
+	try {
+		const steps = Loop.feed(raw / 1000),
+			t0 = performance.now();
+		for (let i = 0; i < steps; i++) Machine.update(Loop.STEP);
+		dbgMark("upd", performance.now() - t0);
+		flowTick();
+		visTick(dt);
+		ambientTick(dt);
+	} catch (e) {
+		logErr("update", e);
+	}
+}
 function loop(ts) {
 	FRAME_N++;
 	FC++;
@@ -9625,28 +9713,7 @@ function loop(ts) {
 		}
 		Music.level(Machine.is("fight") ? 1 : 0);
 		Tune.upd();
-		if (!paused) {
-			// сбой в симуляции не должен дотянуться до отрисовки и цикла
-			try {
-				// симуляция — фиксированным шагом 1/60 с (накопитель, не более Loop.MAX шагов за кадр)
-				const steps = Loop.feed(raw / 1000),
-					t0 = performance.now();
-				for (let i = 0; i < steps; i++) Machine.update(Loop.STEP);
-				dbgMark("upd", performance.now() - t0);
-				flowTick();
-				visTick(dt);
-				// атмосфера вне боя
-				if (Machine.is("map", "msg", "world", "shop")) {
-					MAPA.w = WORLDS[Machine.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
-					if (!(Machine.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, Machine.is("shop") ? 0.5 : 0.7);
-				} else if (Machine.is("menu", "pick", "settings")) {
-					MAPA.w = WORLDS[0];
-					wxEmit(MAPA, dt, 2.2);
-				}
-			} catch (e) {
-				logErr("update", e);
-			}
-		}
+		if (!paused) simTick(raw, dt);
 	}
 	// фон карты собирается порциями между симуляцией и отрисовкой (см. bakeMap)
 	if (MAPJ && READY && G) {

@@ -117,6 +117,45 @@ function spriteTransition(u, img, frame, now) {
 	if (!q.prev || mix >= 1) { q.prev = null; return [null, 1]; }
 	return [q.prev, 0.25 + 0.75 * mix];
 }
+// обводка силуэтом в четыре стороны: жёлтая — выбранный боец, мигающая светлая — неуязвимый
+function uOutline(u, o, img, f, x, y, fx, sc, sy) {
+	if (o.sel) {
+		for (const [ox, oy] of [
+			[-2, 0],
+			[2, 0],
+			[0, -2],
+			[0, 2],
+		])
+			frSil(img, f, "#ffe27a", x + ox, y + oy, fx, sc, sy);
+	} else if (u.inv > 0) {
+		ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 16);
+		for (const [ox, oy] of [
+			[-2, 0],
+			[2, 0],
+			[0, -2],
+			[0, 2],
+		])
+			frSil(img, f, "#fff3b0", x + ox, y + oy, fx, sc, sy);
+		ctx.globalAlpha = 1;
+	}
+}
+// подкраска силуэтом по состояниям (лёд, холод, яд, горение, проклятие, ярость) и белая вспышка удара
+function uTints(u, o, img, f, x, y, fx, sc, sy) {
+	const s = u.st || {},
+		tint = (c, a) => {
+			ctx.globalAlpha = a * (o.a === undefined ? 1 : o.a);
+			frSil(img, f, c, x, y, fx, sc, sy);
+		};
+	if (s.stun && s.stun.ice) tint("#bff0ff", 0.62);
+	else if (s.chill) tint("#6fd0ff", 0.36);
+	if (s.poison) tint("#7be04e", 0.22 + 0.08 * Math.sin(t * 6));
+	if (s.burn) tint("#ff7a2c", 0.22 + 0.12 * Math.sin(t * 14));
+	if (s.curse) tint("#8a4fd8", 0.3);
+	if (s.rage) tint("#ff3a2a", 0.2 + 0.14 * Math.sin(t * 9));
+	if (u.hitT > 0) tint("#ffffff", Math.min(0.92, u.hitT / 0.12));
+	ctx.globalAlpha = 1;
+}
+// юнит: появление (born), выпад при ударе, дыхание/шаг, дрожь от удара и оглушения, обводка, кадр (с плавной сменой набора), подкраска
 function dUnit(u, wi, o = {}) {
 	const bk = u.born !== undefined ? (t - u.born) / 0.32 : 1;
 	if (bk <= 0) return;
@@ -142,25 +181,7 @@ function dUnit(u, wi, o = {}) {
 	x = Math.round(x);
 	y = Math.round(y);
 	const fx = u.face;
-	if (o.sel) {
-		for (const [ox, oy] of [
-			[-2, 0],
-			[2, 0],
-			[0, -2],
-			[0, 2],
-		])
-			frSil(img, f, "#ffe27a", x + ox, y + oy, fx, sc, sy);
-	} else if (u.inv > 0) {
-		ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 16);
-		for (const [ox, oy] of [
-			[-2, 0],
-			[2, 0],
-			[0, -2],
-			[0, 2],
-		])
-			frSil(img, f, "#fff3b0", x + ox, y + oy, fx, sc, sy);
-		ctx.globalAlpha = 1;
-	}
+	uOutline(u, o, img, f, x, y, fx, sc, sy);
 	const baseAlpha = o.a === undefined ? 1 : o.a;
 	const [previous, mix] = !u.team && img === IMG.heroes3 ? spriteTransition(u, img, f, t) : [null, 1];
 	if (previous) {
@@ -170,19 +191,7 @@ function dUnit(u, wi, o = {}) {
 	ctx.globalAlpha = baseAlpha * mix;
 	fr(img, f, x, y, fx, sc, sy);
 	ctx.globalAlpha = baseAlpha;
-	const s = u.st || {},
-		tint = (c, a) => {
-			ctx.globalAlpha = a * (o.a === undefined ? 1 : o.a);
-			frSil(img, f, c, x, y, fx, sc, sy);
-		};
-	if (s.stun && s.stun.ice) tint("#bff0ff", 0.62);
-	else if (s.chill) tint("#6fd0ff", 0.36);
-	if (s.poison) tint("#7be04e", 0.22 + 0.08 * Math.sin(t * 6));
-	if (s.burn) tint("#ff7a2c", 0.22 + 0.12 * Math.sin(t * 14));
-	if (s.curse) tint("#8a4fd8", 0.3);
-	if (s.rage) tint("#ff3a2a", 0.2 + 0.14 * Math.sin(t * 9));
-	if (u.hitT > 0) tint("#ffffff", Math.min(0.92, u.hitT / 0.12));
-	ctx.globalAlpha = 1;
+	uTints(u, o, img, f, x, y, fx, sc, sy);
 }
 // ---------- полосы здоровья и статусы ----------
 function uBar(u, fight) {
@@ -259,65 +268,74 @@ function jag(x0, y0, x1, y1, amp, seed) {
 	ctx.lineTo(x1, y1);
 	ctx.stroke();
 }
+// метка-полоса под углом q.a: заливка, заполнение по готовности k, края
+function teleLine(q, k, pu) {
+	const wd = q.wd || 14;
+	ctx.save();
+	ctx.translate(q.x, q.y);
+	ctx.scale(1, 0.62);
+	ctx.rotate(Math.atan2(Math.sin(q.a) / 0.62, Math.cos(q.a)));
+	ctx.globalAlpha = 0.16 + 0.1 * pu;
+	ctx.fillRect(0, -wd, q.len, wd * 2);
+	ctx.globalAlpha = 0.5;
+	ctx.fillRect(0, -wd, q.len * k, wd * 2);
+	ctx.globalAlpha = 0.9;
+	ctx.fillRect(0, -wd - 2, q.len, 2);
+	ctx.fillRect(0, wd, q.len, 2);
+	ctx.restore();
+}
+// метка-лента во всю ширину поля: заполняется справа налево, стрелки показывают направление удара
+function teleBand(q, k, pu) {
+	const y = q.y - q.h / 2;
+	ctx.globalAlpha = 0.14 + 0.1 * pu;
+	ctx.fillRect(FLD.x0 - 40, y, FLD.x1 - FLD.x0 + 80, q.h);
+	ctx.globalAlpha = 0.45;
+	const w = (FLD.x1 - FLD.x0 + 80) * k;
+	ctx.fillRect(FLD.x1 + 40 - w, y, w, q.h);
+	ctx.globalAlpha = 0.9;
+	ctx.fillRect(FLD.x0 - 40, y - 2, FLD.x1 - FLD.x0 + 80, 2);
+	ctx.fillRect(FLD.x0 - 40, y + q.h, FLD.x1 - FLD.x0 + 80, 2);
+	for (let i = 0; i < 9; i++) {
+		// стрелки направления удара
+		const ax = FLD.x1 - ((t * 240 + i * 130) % (FLD.x1 - FLD.x0));
+		ctx.beginPath();
+		ctx.moveTo(ax, q.y - 10);
+		ctx.lineTo(ax - 14, q.y);
+		ctx.lineTo(ax, q.y + 10);
+		ctx.lineWidth = 4;
+		ctx.stroke();
+	}
+}
+// метка-круг (эллипс в перспективе): заливка, растущее заполнение, бегущий пунктир по краю
+function teleRing(q, k, pu) {
+	const rx = q.r,
+		ry = q.r / 1.6;
+	ctx.globalAlpha = 0.16 + 0.1 * pu;
+	ctx.beginPath();
+	ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
+	ctx.fill();
+	ctx.globalAlpha = 0.5;
+	ctx.beginPath();
+	ctx.ellipse(q.x, q.y, rx * k, ry * k, 0, 0, TAU);
+	ctx.fill();
+	ctx.globalAlpha = 0.95;
+	ctx.lineWidth = 4;
+	ctx.setLineDash([14, 8]);
+	ctx.lineDashOffset = -t * 60;
+	ctx.beginPath();
+	ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
+	ctx.stroke();
+	ctx.setLineDash([]);
+}
+// метки приёмов на земле: пульсируют тем чаще, чем ближе срабатывание (k — готовность 0..1)
 function dTele(A) {
 	for (const q of F.tele) {
 		const k = Math.min(1, q.t / q.d),
 			pu = 0.55 + 0.45 * Math.sin(t * 22 * (0.5 + k));
 		ctx.fillStyle = ctx.strokeStyle = q.c;
-		if (q.shape === "line") {
-			const wd = q.wd || 14;
-			ctx.save();
-			ctx.translate(q.x, q.y);
-			ctx.scale(1, 0.62);
-			ctx.rotate(Math.atan2(Math.sin(q.a) / 0.62, Math.cos(q.a)));
-			ctx.globalAlpha = 0.16 + 0.1 * pu;
-			ctx.fillRect(0, -wd, q.len, wd * 2);
-			ctx.globalAlpha = 0.5;
-			ctx.fillRect(0, -wd, q.len * k, wd * 2);
-			ctx.globalAlpha = 0.9;
-			ctx.fillRect(0, -wd - 2, q.len, 2);
-			ctx.fillRect(0, wd, q.len, 2);
-			ctx.restore();
-		} else if (q.shape === "band") {
-			const y = q.y - q.h / 2;
-			ctx.globalAlpha = 0.14 + 0.1 * pu;
-			ctx.fillRect(FLD.x0 - 40, y, FLD.x1 - FLD.x0 + 80, q.h);
-			ctx.globalAlpha = 0.45;
-			const w = (FLD.x1 - FLD.x0 + 80) * k;
-			ctx.fillRect(FLD.x1 + 40 - w, y, w, q.h);
-			ctx.globalAlpha = 0.9;
-			ctx.fillRect(FLD.x0 - 40, y - 2, FLD.x1 - FLD.x0 + 80, 2);
-			ctx.fillRect(FLD.x0 - 40, y + q.h, FLD.x1 - FLD.x0 + 80, 2);
-			for (let i = 0; i < 9; i++) {
-				// стрелки направления удара
-				const ax = FLD.x1 - ((t * 240 + i * 130) % (FLD.x1 - FLD.x0));
-				ctx.beginPath();
-				ctx.moveTo(ax, q.y - 10);
-				ctx.lineTo(ax - 14, q.y);
-				ctx.lineTo(ax, q.y + 10);
-				ctx.lineWidth = 4;
-				ctx.stroke();
-			}
-		} else {
-			const rx = q.r,
-				ry = q.r / 1.6;
-			ctx.globalAlpha = 0.16 + 0.1 * pu;
-			ctx.beginPath();
-			ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
-			ctx.fill();
-			ctx.globalAlpha = 0.5;
-			ctx.beginPath();
-			ctx.ellipse(q.x, q.y, rx * k, ry * k, 0, 0, TAU);
-			ctx.fill();
-			ctx.globalAlpha = 0.95;
-			ctx.lineWidth = 4;
-			ctx.setLineDash([14, 8]);
-			ctx.lineDashOffset = -t * 60;
-			ctx.beginPath();
-			ctx.ellipse(q.x, q.y, rx, ry, 0, 0, TAU);
-			ctx.stroke();
-			ctx.setLineDash([]);
-		}
+		if (q.shape === "line") teleLine(q, k, pu);
+		else if (q.shape === "band") teleBand(q, k, pu);
+		else teleRing(q, k, pu);
 		ctx.globalAlpha = 1;
 	}
 }

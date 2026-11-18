@@ -252,70 +252,65 @@ function bakeMap(seed) {
 // на участок строки, а не на каждый пиксель (в 5 раз быстрее). Формулы и порядок операций с
 // плавающей точкой повторяют vnoise дословно, поэтому пиксели совпадают бит-в-бит
 // (контрольные суммы — в tests/unit/map.test.mjs).
-function bakeGround(J, y0, y1) {
+// Строки [y0, y1) — bakeGround, одна строка — bakeRow.
+// одна строка земли py: углы решётки обеих октав пересчитываются только при смене клетки
+function bakeRow(J, py) {
 	const p = J.id.data,
 		cols = J.cols,
 		R2 = J.R2,
 		s1 = J.seed,
-		s2 = J.seed + 1;
-	for (let py = y0; py < y1; py++) {
-		const ya = py * 0.034,
-			yi1 = Math.floor(ya),
-			fy1 = ya - yi1,
-			v1 = fy1 * fy1 * (3 - 2 * fy1),
-			yb = py * 0.11,
-			yi2 = Math.floor(yb),
-			fy2 = yb - yi2,
-			v2 = fy2 * fy2 * (3 - 2 * fy2);
-		let cx1 = -1,
-			a1 = 0,
-			b1 = 0,
-			c1 = 0,
-			d1 = 0,
-			cx2 = -1,
-			a2 = 0,
-			b2 = 0,
-			c2 = 0,
-			d2 = 0;
-		for (let px = 0; px < 609; px++) {
-			const xa = px * 0.021,
-				xi1 = Math.floor(xa),
-				fx1 = xa - xi1;
-			if (xi1 !== cx1) {
-				cx1 = xi1;
-				a1 = vhash(xi1, yi1, s1);
-				b1 = vhash(xi1 + 1, yi1, s1);
-				c1 = vhash(xi1, yi1 + 1, s1);
-				d1 = vhash(xi1 + 1, yi1 + 1, s1);
-			}
-			const u1 = fx1 * fx1 * (3 - 2 * fx1),
-				n1 = a1 + (b1 - a1) * u1 + (c1 - a1) * v1 + (a1 - b1 - c1 + d1) * u1 * v1,
-				xb = px * 0.08,
-				xi2 = Math.floor(xb),
-				fx2 = xb - xi2;
-			if (xi2 !== cx2) {
-				cx2 = xi2;
-				a2 = vhash(xi2, yi2, s2);
-				b2 = vhash(xi2 + 1, yi2, s2);
-				c2 = vhash(xi2, yi2 + 1, s2);
-				d2 = vhash(xi2 + 1, yi2 + 1, s2);
-			}
-			const u2 = fx2 * fx2 * (3 - 2 * fx2),
-				n2 = a2 + (b2 - a2) * u2 + (c2 - a2) * v2 + (a2 - b2 - c2 + d2) * u2 * v2,
-				n = n1 * 0.7 + n2 * 0.3;
-			let tn = n < 0.46 ? 0 : n < 0.6 ? 1 : 2;
-			if ((n > 0.44 && n < 0.46) || (n > 0.58 && n < 0.6)) tn = (px + py) & 1 ? tn : n < 0.5 ? 1 : 2;
-			let cc = cols[tn];
-			const sp = R2();
-			if (sp < 0.014) cc = cols[(tn + 1) % 3];
-			const i = (py * 609 + px) * 4,
-				sh = sp > 0.985 ? 0.9 : 1;
-			p[i] = cc[0] * sh;
-			p[i + 1] = cc[1] * sh;
-			p[i + 2] = cc[2] * sh;
-			p[i + 3] = 255;
+		s2 = J.seed + 1,
+		ya = py * 0.034,
+		yi1 = Math.floor(ya),
+		fy1 = ya - yi1,
+		v1 = fy1 * fy1 * (3 - 2 * fy1),
+		yb = py * 0.11,
+		yi2 = Math.floor(yb),
+		fy2 = yb - yi2,
+		v2 = fy2 * fy2 * (3 - 2 * fy2);
+	// текущая клетка (cx) и четыре угла решётки (a, b, c, d) для каждой октавы
+	let cx1 = -1, a1 = 0, b1 = 0, c1 = 0, d1 = 0, cx2 = -1, a2 = 0, b2 = 0, c2 = 0, d2 = 0;
+	for (let px = 0; px < 609; px++) {
+		const xa = px * 0.021,
+			xi1 = Math.floor(xa),
+			fx1 = xa - xi1;
+		if (xi1 !== cx1) {
+			cx1 = xi1;
+			a1 = vhash(xi1, yi1, s1);
+			b1 = vhash(xi1 + 1, yi1, s1);
+			c1 = vhash(xi1, yi1 + 1, s1);
+			d1 = vhash(xi1 + 1, yi1 + 1, s1);
 		}
+		const u1 = fx1 * fx1 * (3 - 2 * fx1),
+			n1 = a1 + (b1 - a1) * u1 + (c1 - a1) * v1 + (a1 - b1 - c1 + d1) * u1 * v1,
+			xb = px * 0.08,
+			xi2 = Math.floor(xb),
+			fx2 = xb - xi2;
+		if (xi2 !== cx2) {
+			cx2 = xi2;
+			a2 = vhash(xi2, yi2, s2);
+			b2 = vhash(xi2 + 1, yi2, s2);
+			c2 = vhash(xi2, yi2 + 1, s2);
+			d2 = vhash(xi2 + 1, yi2 + 1, s2);
+		}
+		const u2 = fx2 * fx2 * (3 - 2 * fx2),
+			n2 = a2 + (b2 - a2) * u2 + (c2 - a2) * v2 + (a2 - b2 - c2 + d2) * u2 * v2,
+			n = n1 * 0.7 + n2 * 0.3;
+		let tn = n < 0.46 ? 0 : n < 0.6 ? 1 : 2;
+		if ((n > 0.44 && n < 0.46) || (n > 0.58 && n < 0.6)) tn = (px + py) & 1 ? tn : n < 0.5 ? 1 : 2;
+		let cc = cols[tn];
+		const sp = R2();
+		if (sp < 0.014) cc = cols[(tn + 1) % 3];
+		const i = (py * 609 + px) * 4,
+			sh = sp > 0.985 ? 0.9 : 1;
+		p[i] = cc[0] * sh;
+		p[i + 1] = cc[1] * sh;
+		p[i + 2] = cc[2] * sh;
+		p[i + 3] = 255;
 	}
+}
+function bakeGround(J, y0, y1) {
+	for (let py = y0; py < y1; py++) bakeRow(J, py);
 }
 // озёра: 1–2 штуки, не ближе 9 px к дороге и 18 к узлу, не вплотную друг к другу; список — в MAPL (для бликов)
 function bakeLakes(x, im, AM, R, roadD, nodeD) {

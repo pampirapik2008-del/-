@@ -38,6 +38,31 @@ function unlock() {
 	} catch (_) {}
 	fit();
 }
+// атмосфера вне боя: погода мира на карте/в событии/в лавке (в следующем мире — на экране «мир пройден»), снег в меню
+function ambientTick(dt) {
+	if (Machine.is("map", "msg", "world", "shop")) {
+		MAPA.w = WORLDS[Machine.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
+		if (!(Machine.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, Machine.is("shop") ? 0.5 : 0.7);
+	} else if (Machine.is("menu", "pick", "settings")) {
+		MAPA.w = WORLDS[0];
+		wxEmit(MAPA, dt, 2.2);
+	}
+}
+// симуляция кадра: фиксированный шаг 1/60 с (накопитель Loop, не более Loop.MAX шагов), переходы по карте, визуальные таймеры, атмосфера.
+// Сбой здесь не должен дотянуться до отрисовки и цикла
+function simTick(raw, dt) {
+	try {
+		const steps = Loop.feed(raw / 1000),
+			t0 = performance.now();
+		for (let i = 0; i < steps; i++) Machine.update(Loop.STEP);
+		dbgMark("upd", performance.now() - t0);
+		flowTick();
+		visTick(dt);
+		ambientTick(dt);
+	} catch (e) {
+		logErr("update", e);
+	}
+}
 function loop(ts) {
 	FRAME_N++;
 	FC++;
@@ -63,28 +88,7 @@ function loop(ts) {
 		}
 		Music.level(Machine.is("fight") ? 1 : 0);
 		Tune.upd();
-		if (!paused) {
-			// сбой в симуляции не должен дотянуться до отрисовки и цикла
-			try {
-				// симуляция — фиксированным шагом 1/60 с (накопитель, не более Loop.MAX шагов за кадр)
-				const steps = Loop.feed(raw / 1000),
-					t0 = performance.now();
-				for (let i = 0; i < steps; i++) Machine.update(Loop.STEP);
-				dbgMark("upd", performance.now() - t0);
-				flowTick();
-				visTick(dt);
-				// атмосфера вне боя
-				if (Machine.is("map", "msg", "world", "shop")) {
-					MAPA.w = WORLDS[Machine.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
-					if (!(Machine.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, Machine.is("shop") ? 0.5 : 0.7);
-				} else if (Machine.is("menu", "pick", "settings")) {
-					MAPA.w = WORLDS[0];
-					wxEmit(MAPA, dt, 2.2);
-				}
-			} catch (e) {
-				logErr("update", e);
-			}
-		}
+		if (!paused) simTick(raw, dt);
 	}
 	// фон карты собирается порциями между симуляцией и отрисовкой (см. bakeMap)
 	if (MAPJ && READY && G) {

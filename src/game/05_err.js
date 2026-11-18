@@ -77,37 +77,24 @@ function errReport() {
 	);
 }
 
-function crashScreen(rec) {
-	ERR_CRASH = true;
-	try {
-		if (document.getElementById("mx-crash")) return;
-	} catch (_) {}
-	const wrap = document.createElement("div");
-	wrap.id = "mx-crash";
-	wrap.style.cssText =
-		"position:fixed;inset:0;z-index:99999;background:rgba(6,4,10,.86);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif;color:#eee;padding:16px";
-	const box = document.createElement("div");
-	box.style.cssText = "max-width:560px;width:100%;background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:20px 22px";
-	box.innerHTML =
+// разметка аварийного окна: заголовок, пояснение, строка ошибки и четыре кнопки
+function crashHtml() {
+	const bt = (id, label, bg, border = "0") => '<button id="' + id + '" style="flex:1 1 120px;padding:10px;border:' + border + ";border-radius:8px;background:" + bg + ';color:#fff;font-weight:700;cursor:pointer">' + label + "</button>";
+	return (
 		'<div style="font-weight:800;font-size:17px;margin-bottom:6px">Что-то пошло не так</div>' +
 		'<div style="color:#b9b3c8;margin-bottom:12px">Игра поймала сбой три кадра подряд, но не остановилась. Можно продолжить, вернуться в меню или откатить версию кода.</div>' +
 		'<div id="mx-crash-msg" style="font:12px/1.4 ui-monospace,monospace;color:#ff9c9c;background:#120e19;border-radius:8px;padding:8px;margin-bottom:12px;word-break:break-word"></div>' +
 		'<div style="display:flex;flex-wrap:wrap;gap:8px">' +
-		'<button id="mx-crash-go" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:#2e7d32;color:#fff;font-weight:700;cursor:pointer">Продолжить</button>' +
-		'<button id="mx-crash-menu" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:#455a64;color:#fff;font-weight:700;cursor:pointer">В меню</button>' +
-		'<button id="mx-crash-roll" style="flex:1 1 120px;padding:10px;border:0;border-radius:8px;background:#8e24aa;color:#fff;font-weight:700;cursor:pointer">Откатить версию</button>' +
-		'<button id="mx-crash-copy" style="flex:1 1 120px;padding:10px;border:1px solid #555;border-radius:8px;background:#2a2238;color:#fff;font-weight:700;cursor:pointer">Скопировать отчёт</button>' +
-		'</div>';
-	wrap.appendChild(box);
-	try {
-		document.body.appendChild(wrap);
-	} catch (_) {
-		return;
-	}
-	const $ = (id) => box.querySelector("#" + id);
-	try {
-		$("mx-crash-msg").textContent = (rec ? rec.kind + ": " + rec.msg : "нет данных") + " · кадр " + FRAME_N + " · экран " + (scrName());
-	} catch (_) {}
+		bt("mx-crash-go", "Продолжить", "#2e7d32") +
+		bt("mx-crash-menu", "В меню", "#455a64") +
+		bt("mx-crash-roll", "Откатить версию", "#8e24aa") +
+		bt("mx-crash-copy", "Скопировать отчёт", "#2a2238", "1px solid #555") +
+		"</div>"
+	);
+}
+// кнопки окна: «Продолжить» — закрыть и сбросить счётчик сбоев; «В меню» — сбросить бой/событие и уйти в меню
+// (переход в меню разрешён из любого экрана, см. Machine.can); «Откатить версию» — #orig и перезагрузка; «Скопировать отчёт»
+function crashWire($, wrap) {
 	const close = () => {
 		try {
 			wrap.remove();
@@ -122,7 +109,6 @@ function crashScreen(rec) {
 			EV = null;
 			pop = null;
 			paused = false;
-			// аварийный выход минует машину экранов: окно должно работать, даже если сломана она сама
 			Machine.go("menu", "аварийное окно");
 		} catch (_) {}
 		close();
@@ -148,6 +134,31 @@ function crashScreen(rec) {
 		} catch (_) {}
 		$("mx-crash-copy").textContent = "Скопировано";
 	};
+}
+// аварийное окно (DOM поверх холста, см. DECISIONS D7): показывается один раз, пока открыто
+function crashScreen(rec) {
+	ERR_CRASH = true;
+	try {
+		if (document.getElementById("mx-crash")) return;
+	} catch (_) {}
+	const wrap = document.createElement("div");
+	wrap.id = "mx-crash";
+	wrap.style.cssText =
+		"position:fixed;inset:0;z-index:99999;background:rgba(6,4,10,.86);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif;color:#eee;padding:16px";
+	const box = document.createElement("div");
+	box.style.cssText = "max-width:560px;width:100%;background:#1c1626;border:1px solid #8e24aa;border-radius:14px;padding:20px 22px";
+	box.innerHTML = crashHtml();
+	wrap.appendChild(box);
+	try {
+		document.body.appendChild(wrap);
+	} catch (_) {
+		return;
+	}
+	const $ = (id) => box.querySelector("#" + id);
+	try {
+		$("mx-crash-msg").textContent = (rec ? rec.kind + ": " + rec.msg : "нет данных") + " · кадр " + FRAME_N + " · экран " + scrName();
+	} catch (_) {}
+	crashWire($, wrap);
 }
 
 // глобальные перехватчики: сюда попадают и сбои вне кадра

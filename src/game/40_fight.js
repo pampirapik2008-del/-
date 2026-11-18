@@ -264,7 +264,32 @@ function heal(tg, v, src) {
 	Events.emit("unit:healed", tg, v, src);
 	return v;
 }
-// единая точка урона: броня, крит, щит, фазы босса, вампиризм, срабатывания реликвий, эффекты
+// срабатывания после удара: у героев — реликвии (вампиризм, яд, заморозка с шансом, цепная молния при крите,
+// до двух соседей на 240 px); у врагов — эффект своей стихии с шансом o.stc (по умолчанию 20 %)
+function hurtProcs(src, tg, dm, crit, hy, o) {
+	if (!src.team) {
+		if (F.rb.ls) heal(src, dm * F.rb.ls);
+		if (F.rb.psn) addSt(tg, "poison", 3, src.atk * F.rb.psn);
+		if (F.rb.frz && Rand.next() < F.rb.frz) {
+			addSt(tg, "stun", 1);
+			if (tg.st.stun) tg.st.stun.ice = 1;
+			sfx("ice");
+		}
+		if (crit && F.rb.chain) {
+			liv(F.en)
+				.filter((e) => e !== tg && dist(e, tg) < 240)
+				.slice(0, 2)
+				.forEach((e) => {
+					Fx.add({ k: "bolt", x0: tg.x, y0: hy, x1: e.x, y1: e.y - 28, c: "#fff27a", d: 0.18 });
+					hurt(src, e, dm * F.rb.chain, { pure: 1, proc: 1, nocrit: 1, el: "bolt" });
+				});
+		}
+	} else {
+		const stt = EL[src.el] && EL[src.el].st;
+		if (stt && Rand.next() < (o.stc || 0.2)) addSt(tg, stt, stt === "chill" ? 2.5 : stt === "curse" ? 4 : 3, src.atk * (stt === "poison" ? 0.1 : 0.12));
+	}
+}
+// единая точка урона: броня, крит, щит, фазы босса, статистика, энергия, событие unit:hit, срабатывания (hurtProcs)
 function hurt(src, tg, raw, o = {}) {
 	if (!tg || tg.hp <= 0 || tg.dead) return 0;
 	if (tg.inv > 0) {
@@ -312,30 +337,8 @@ function hurt(src, tg, raw, o = {}) {
 	// визуал и звук удара — подписчики события (50_draw.js, 70_audio.js)
 	const hy = tg.y - (tg.rad > 30 ? 60 : 28) - (tg.z || 0);
 	Events.emit("unit:hit", tg, { dm, crit, el, hy, dot: !!o.dot, quiet: !!o.quiet, snd: o.snd }, src);
-	// срабатывания
-	if (src && !o.dot && !o.proc) {
-		if (!src.team) {
-			if (F.rb.ls) heal(src, dm * F.rb.ls);
-			if (F.rb.psn) addSt(tg, "poison", 3, src.atk * F.rb.psn);
-			if (F.rb.frz && Rand.next() < F.rb.frz) {
-				addSt(tg, "stun", 1);
-				if (tg.st.stun) tg.st.stun.ice = 1;
-				sfx("ice");
-			}
-			if (crit && F.rb.chain) {
-				liv(F.en)
-					.filter((e) => e !== tg && dist(e, tg) < 240)
-					.slice(0, 2)
-					.forEach((e) => {
-						Fx.add({ k: "bolt", x0: tg.x, y0: hy, x1: e.x, y1: e.y - 28, c: "#fff27a", d: 0.18 });
-						hurt(src, e, dm * F.rb.chain, { pure: 1, proc: 1, nocrit: 1, el: "bolt" });
-					});
-			}
-		} else {
-			const stt = EL[src.el] && EL[src.el].st;
-			if (stt && Rand.next() < (o.stc || 0.2)) addSt(tg, stt, stt === "chill" ? 2.5 : stt === "curse" ? 4 : 3, src.atk * (stt === "poison" ? 0.1 : 0.12));
-		}
-	}
+	// срабатывания (не для яда и не для отражённых ударов)
+	if (src && !o.dot && !o.proc) hurtProcs(src, tg, dm, crit, hy, o);
 	return dm;
 }
 function knock(u, fx, fy, pow) {
@@ -1358,6 +1361,57 @@ function projStep(h) {
 	});
 	if (F.proj === projectiles) F.proj = remaining.concat(projectiles.slice(projectileCount));
 }
+// гроза: молния по метке рядом со случайным бойцом — урон долей здоровья, шок, вспышка, тряска
+function wxBolt(A, all) {
+	A.ev = rr(4, 6);
+	const v = pick(all);
+	if (!v) return;
+	const x = v.x + rr(-20, 20),
+		y = v.y + rr(-10, 10);
+	tele({
+		x,
+		y,
+		r: 50,
+		d: 1,
+		c: "#fff27a",
+		fn() {
+			A.fl = 0.22;
+			Fx.add({ k: "bolt", x0: x + rr(-80, 80), y0: -10, x1: x, y1: y, c: "#ffffff", d: 0.2, w: 5 });
+			ring(x, y, 80, "#fff27a", 0.3, 5);
+			for (const e of all) if (e.hp > 0 && Math.hypot(e.x - x, (e.y - y) * 1.6) < 50 + e.rad) (hurt(null, e, e.max * (e.boss ? 0.012 : 0.06), { pure: 1, el: "bolt", quiet: 1 }), addSt(e, "shock", 1));
+			hitProps(x, y, 40, 3);
+			shake(0.2);
+			sfx("bolt");
+		},
+	});
+}
+// метеоры/бомбы: две падающие метки рядом со случайными бойцами — урон, поджог, осколки
+function wxBomb(A, all) {
+	A.ev = rr(3.6, 5);
+	for (let i = 0; i < 2; i++) {
+		const v = pick(all);
+		if (!v) return;
+		const x = clamp(v.x + rr(-70, 70), FLD.x0, FLD.x1),
+			y = clamp(v.y + rr(-30, 30), A.y0, FLD.y1);
+		tele({
+			x,
+			y,
+			r: 56,
+			d: 1.3,
+			c: "#ff8a3c",
+			drop: 1,
+			fn() {
+				ring(x, y, 96, "#ff8a3c", 0.4, 6);
+				burst(x, y, 16, { c: ["#ff8a3c", "#ffe27a", "#3a2a2a"], sp: 260, s: 6, life: 0.6, up: 120, fl: y + 4, bn: 0.3 });
+				for (const e of all) if (e.hp > 0 && Math.hypot(e.x - x, (e.y - y) * 1.6) < 56 + e.rad) (hurt(null, e, e.max * (e.boss ? 0.012 : 0.07), { pure: 1, el: "fire", quiet: 1 }), addSt(e, "burn", 2, e.max * 0.01));
+				hitProps(x, y, 46, 3);
+				shake(0.25);
+				sfx("boom", 0.7);
+			},
+		});
+	}
+}
+// погода в бою: вспышка молнии (A.fl) гаснет, «поток» истекает; по таймеру A.ev — событие погоды арены
 function wxStep(h) {
 	const A = F.A,
 		q = WX[A.wx] || {};
@@ -1366,53 +1420,9 @@ function wxStep(h) {
 	A.ev -= h;
 	if (A.ev > 0) return;
 	const all = liv(F.pl).concat(liv(F.en));
-	if (q.bolt) {
-		A.ev = rr(4, 6);
-		const v = pick(all);
-		if (!v) return;
-		const x = v.x + rr(-20, 20),
-			y = v.y + rr(-10, 10);
-		tele({
-			x,
-			y,
-			r: 50,
-			d: 1,
-			c: "#fff27a",
-			fn() {
-				A.fl = 0.22;
-				Fx.add({ k: "bolt", x0: x + rr(-80, 80), y0: -10, x1: x, y1: y, c: "#ffffff", d: 0.2, w: 5 });
-				ring(x, y, 80, "#fff27a", 0.3, 5);
-				for (const e of all) if (e.hp > 0 && Math.hypot(e.x - x, (e.y - y) * 1.6) < 50 + e.rad) (hurt(null, e, e.max * (e.boss ? 0.012 : 0.06), { pure: 1, el: "bolt", quiet: 1 }), addSt(e, "shock", 1));
-				hitProps(x, y, 40, 3);
-				shake(0.2);
-				sfx("bolt");
-			},
-		});
-	} else if (q.bomb) {
-		A.ev = rr(3.6, 5);
-		for (let i = 0; i < 2; i++) {
-			const v = pick(all);
-			if (!v) return;
-			const x = clamp(v.x + rr(-70, 70), FLD.x0, FLD.x1),
-				y = clamp(v.y + rr(-30, 30), A.y0, FLD.y1);
-			tele({
-				x,
-				y,
-				r: 56,
-				d: 1.3,
-				c: "#ff8a3c",
-				drop: 1,
-				fn() {
-					ring(x, y, 96, "#ff8a3c", 0.4, 6);
-					burst(x, y, 16, { c: ["#ff8a3c", "#ffe27a", "#3a2a2a"], sp: 260, s: 6, life: 0.6, up: 120, fl: y + 4, bn: 0.3 });
-					for (const e of all) if (e.hp > 0 && Math.hypot(e.x - x, (e.y - y) * 1.6) < 56 + e.rad) (hurt(null, e, e.max * (e.boss ? 0.012 : 0.07), { pure: 1, el: "fire", quiet: 1 }), addSt(e, "burn", 2, e.max * 0.01));
-					hitProps(x, y, 46, 3);
-					shake(0.25);
-					sfx("boom", 0.7);
-				},
-			});
-		}
-	} else if (q.flux) {
+	if (q.bolt) wxBolt(A, all);
+	else if (q.bomb) wxBomb(A, all);
+	else if (q.flux) {
 		A.ev = 8;
 		F.flux = { k: pick(["haste", "might"]), t: 4 };
 		Fx.txt(609, 130, F.flux.k === "haste" ? "ПОТОК: все быстрее!" : "ПОТОК: все бьют сильнее!", "#ff9cf0", 24);
