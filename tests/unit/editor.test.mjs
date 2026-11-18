@@ -321,7 +321,7 @@ test("пароль редактора: PBKDF2-SHA-256 с солью — верн
 	assert.ok(A.iter >= 100000);
 	assert.notEqual(await MXCore.verifyPassword(TEST_PWD), true, "тестовый пароль боевому хешу не подходит");
 	// без WebCrypto — понятная ошибка, а не «тихий» отказ
-	await assert.rejects(MXCore.pwdHash("x", a, null), /WebCrypto/);
+	await assert.rejects(MXCore.pwdHash("x", a, { subtle: undefined }), /WebCrypto/); // «subtle» без deriveBits = небезопасный контекст
 	// старой схемы (FNV-1a с солью в коде игры) больше нет ни в коде, ни в сборках
 	const files = ["index.html", "dist/game.html", "src/game/65_screens.js", "src/editor/loader.js"].filter((f) => fs.existsSync(path.join(ROOT, f)));
 	for (const f of files) {
