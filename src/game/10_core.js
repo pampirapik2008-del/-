@@ -506,12 +506,15 @@ const Parts = {
 			if (!o.imp) return;
 			this.a.shift();
 		}
-		o.t = 0;
-		if (o.l === undefined) o.l = 1;
-		if (o.k === undefined) o.k = 0;
-		if (o.vx === undefined) o.vx = 0;
-		if (o.vy === undefined) o.vy = 0;
-		this.a.push(o);
+		// в пул кладётся копия единой формы: у источников частиц два десятка разных наборов полей,
+		// и с ними каждый p.x/p.t в upd/draw шёл через общий (мегаморфный) кэш свойств — вдвое медленнее.
+		// Отсутствующие поля остаются undefined, как и раньше: проверки вида p.fl !== undefined не меняются.
+		this.a.push({
+			t: 0, x: o.x, y: o.y, vx: o.vx === undefined ? 0 : o.vx, vy: o.vy === undefined ? 0 : o.vy,
+			life: o.life, c: o.c, s: o.s, k: o.k === undefined ? 0 : o.k, l: o.l === undefined ? 1 : o.l,
+			g: o.g, dr: o.dr, e: o.e, a: o.a, fade: o.fade, fi: o.fi, add: o.add, len: o.len,
+			fl: o.fl, bn: o.bn, wob: o.wob, wf: o.wf, ph: o.ph, r0: o.r0, r1: o.r1, w: o.w, fy: o.fy, vr: o.vr,
+		});
 	},
 	upd(dt) {
 		const a = this.a;

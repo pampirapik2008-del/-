@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Замер кадра: сколько занимает симуляция и отрисовка.
-//   node tools/perf.mjs [--frames 900] [--json]
+//   node tools/perf.mjs [--frames 900] [--world 0 --depth 4] [--json]
 // ВАЖНО: canvas в обвязке — заглушка, поэтому время draw — это JS-часть игрового кода
 // (вызовы, ветвления, подготовка), без растеризации GPU/CPU. Абсолютные числа браузера
 // будут выше; для сравнения «до/после» рефакторинга этого достаточно.
@@ -10,6 +10,9 @@ const args = process.argv.slice(2);
 const i = args.indexOf("--frames");
 const FRAMES = i >= 0 ? Number(args[i + 1]) : 900;
 const asJson = args.includes("--json");
+const opt = (k, d) => (args.indexOf(k) >= 0 ? Number(args[args.indexOf(k) + 1]) : d);
+const WORLD = opt("--world", 0),
+	DEPTH = opt("--depth", 4); // мир 3 глубина 9 — тяжёлая волна (вдвое больше бойцов)
 
 const g = boot();
 if (!(await g.ready())) throw new Error("игра не загрузилась");
@@ -20,7 +23,7 @@ g.dev.seed(777);
 g.dev.newGame();
 for (let k = 0; k < 8; k++) g.dev.setSlot(k, null);
 for (let k = 0; k < 4; k++) g.dev.setSlot(k, g.dev.HEROES[k]);
-g.dev.setWorld(0, 4);
+g.dev.setWorld(WORLD, DEPTH);
 g.dev.fight("fight");
 g.dev.startFight();
 
@@ -40,6 +43,8 @@ const draw = (t.draw - before.draw) / n;
 const mem = process.memoryUsage();
 
 const out = {
+	world: WORLD,
+	depth: DEPTH,
 	frames: measured,
 	updMs: +upd.toFixed(3),
 	drawMs: +draw.toFixed(3),

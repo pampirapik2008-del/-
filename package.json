@@ -15,6 +15,7 @@
 		"fuzz": "node tools/fuzz-saves.mjs",
 		"soak": "node tools/soak.mjs",
 		"perf": "node tools/perf.mjs",
+		"hot": "node tools/hot.mjs",
 		"entry": "node tools/entry.mjs",
 		"shots": "node tools/shots.mjs",
 		"lint": "node tools/lint.mjs",
