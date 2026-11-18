@@ -45,8 +45,11 @@ function logErr(kind, e, extra) {
 	if (ERR_STREAK >= 3 && !ERR_CRASH) crashScreen(rec);
 	return rec;
 }
+// кадр прошёл без сбоев → серия обнуляется. Зовётся после успешной отрисовки, но если в этом же
+// кадре упал update (а draw отработал), кадр не считается живым: иначе сломанная симуляция
+// с рабочей отрисовкой никогда не доходила до аварийного окна (нашёл tests/unit/crash.test.mjs).
 function errFrameOk() {
-	ERR_STREAK = 0;
+	if (ERR_STREAK_FRAME !== FRAME_N) ERR_STREAK = 0;
 }
 
 // ---------- аварийное окно ----------

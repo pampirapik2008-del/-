@@ -422,3 +422,64 @@ test("загрузчик: новая версия становится good по
 	await C.settle();
 	assert.equal(C.ls.getItem("mx_good"), "900");
 });
+
+test("пять сломанных версий подряд — все откатились на good, шестая здоровая становится good", async () => {
+	// каждая «правка ИИ» = новая версия, ставшая активной перед перезапуском; в браузере между ними
+	// происходит перезагрузка страницы, здесь — новый загрузчик с тем же localStorage и той же базой версий
+	const versions = [];
+	let ls = { mx_active: "orig", mx_good: "orig" };
+	const carry = (L) => {
+		// перенести localStorage в следующий «перезапуск»
+		const o = {};
+		for (const k of ["mx_active", "mx_good", "mx_pending", "mx_bad", "mx_notice", "mx_seq"]) {
+			const v = L.ls.getItem(k);
+			if (v !== null) o[k] = v;
+		}
+		return o;
+	};
+	const notices = [];
+	for (let i = 1; i <= 5; i++) {
+		const id = 900 + i;
+		versions.push({ id, ts: id, seq: i, note: "сломанная правка " + i, code: "/*broken" + i + "*/", good: false });
+		ls.mx_active = String(id); // как applyNew перед location.reload()
+		const L = loadLoader({ versions: versions.map((v) => ({ ...v })), ls, game: { ERRS: [] } });
+		await L.settle();
+		assert.equal(L.ls.getItem("mx_pending"), String(id), "версия " + id + " под наблюдением");
+		if (i % 2) {
+			// нечётные: игра загрузилась, но каждый кадр падает (журнал игры)
+			L.win.ERRS.push({ kind: "update", msg: "boom " + i });
+			await L.advance(1000);
+		} else {
+			// чётные: версия не запускается вовсе (исключение окна)
+			for (const f of L.winListeners["error"] || []) f({ message: "SyntaxError: broken " + i });
+		}
+		await L.settle();
+		assert.equal(L.ls.getItem("mx_active"), "orig", "версия " + id + " откатилась на good");
+		assert.equal(L.ls.getItem("mx_good"), "orig", "good не сдвинулся");
+		assert.equal(L.ls.getItem("mx_pending"), null);
+		assert.equal(L.reloads.length, 1, "перезапуск после отката");
+		notices.push(L.ls.getItem("mx_notice"));
+		assert.deepEqual(JSON.parse(L.ls.getItem("mx_bad")), Array.from({ length: i }, (_, k) => String(901 + k)), "mx_bad копит все сломанные");
+		assert.equal(L.win.indexedDB.rows.get(id).good, false, "в базе версия не помечена good");
+		ls = carry(L);
+	}
+	assert.equal(notices.filter((n) => /сбои в игре/.test(n)).length, 3);
+	assert.equal(notices.filter((n) => /не запустилась/.test(n)).length, 2);
+	// после пяти откатов загрузчик не «залип»: следующая здоровая версия проходит наблюдение и становится good
+	versions.push({ id: 906, ts: 906, seq: 6, note: "здоровая правка", code: "/*ok*/", good: false });
+	ls.mx_active = "906";
+	const H = loadLoader({ versions: versions.map((v) => ({ ...v })), ls, game: { ERRS: [] } });
+	await H.settle();
+	assert.equal(H.ls.getItem("mx_notice"), null, "уведомление прошлого отката показано тостом и снято при старте");
+	await H.advance(6000);
+	await H.settle();
+	assert.equal(H.ls.getItem("mx_good"), "906");
+	assert.equal(H.ls.getItem("mx_active"), "906");
+	assert.equal(H.ls.getItem("mx_pending"), null);
+	assert.equal(H.reloads.length, 0);
+	assert.equal(H.win.indexedDB.rows.get(906).good, true);
+	assert.deepEqual(JSON.parse(H.ls.getItem("mx_bad")), ["901", "902", "903", "904", "905"], "список сломанных не потерян");
+	// сломанные версии остаются в базе (их можно посмотреть в панели), чистка хранит 15 новейших + good + active
+	assert.deepEqual(MXCore.pruneList([...versions].sort((a, b) => b.id - a.id), "906", "906", 15), []);
+	assert.deepEqual(H.warns, []);
+});
