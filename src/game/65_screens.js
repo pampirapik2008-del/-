@@ -1111,7 +1111,7 @@ function dWorld() {
 }
 // ---------- итог похода ----------
 function dEnd() {
-	const wn = S === "win",
+	const wn = Machine.is("win"),
 		st = G.st;
 	if (BGA) ctx.drawImage(BGA.floor, 0, 0, W, H);
 	else stageBG(G.w || 0);
@@ -1168,7 +1168,7 @@ function pauseMenu() {
 	ctx.fillStyle = "rgba(8,6,14,.74)";
 	ctx.fillRect(0, 0, W, H);
 	area(0, 0, W, H, () => {});
-	const camp = G && !G.arena && S !== "pick" && S !== "win" && S !== "lose",
+	const camp = G && !G.arena && !Machine.is("pick", "win", "lose"),
 		items = [
 			["Вернуться в игру", () => (paused = false), "#2e7d32"],
 			[
@@ -1217,9 +1217,9 @@ function draw() {
 	ctx.save();
 	if (SK > 0) ctx.translate(Math.round((Rand.next() - 0.5) * SK * 20) * 2, Math.round((Rand.next() - 0.5) * SK * 20) * 2);
 	Machine.drawScreen();
-	if (S === "map" || S === "prep" || S === "fight" || S === "shop" || S === "codex") dPop();
-	if (S !== "menu" && S !== "win" && S !== "lose" && S !== "settings") ibtn("pause", 1142, 6, () => (paused = true));
-	if (S !== "settings") ibtn("note", S === "menu" || S === "win" || S === "lose" ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
+	if (Machine.flag("popup")) dPop();
+	if (Machine.flag("pausable") !== false) ibtn("pause", 1142, 6, () => (paused = true));
+	if (!Machine.is("settings")) ibtn("note", Machine.is("menu", "win", "lose") ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
 	Fly.draw();
 	if (FLASH) {
 		const k = (t - FLASH.t0) / FLASH.d;
@@ -1253,15 +1253,18 @@ function dFightScreen() {
 function enterEnd() {
 	ENDT = t;
 }
-Machine.reg("menu", { scene: "menu", draw: dMenu });
-Machine.reg("pick", { scene: "menu", draw: dPick });
-Machine.reg("settings", { scene: "menu", draw: dSet });
-Machine.reg("codex", { scene: "menu", draw: dCodex });
-Machine.reg("map", { scene: "map", draw: dMap });
-Machine.reg("msg", { scene: "map", draw: dMsg });
-Machine.reg("world", { scene: "map", draw: dWorld });
-Machine.reg("prep", { scene: "fight", draw: dFightScreen });
-Machine.reg("fight", { scene: "fight", draw: dFightScreen, update: upd });
-Machine.reg("shop", { scene: "shop", draw: dShop });
-Machine.reg("win", { scene: "end", draw: dEnd, enter: enterEnd });
-Machine.reg("lose", { scene: "end", draw: dEnd, enter: enterEnd });
+// Таблица экранов. Свойства: scene — сцена (смена сцены чистит частицы и даёт затемнение),
+// pausable — можно ставить паузу (кнопка и Esc), save — что пишет saveGame ("state" | "snap" | "none"),
+// autosave — autosave() пишет на этом экране, popup — рисуется карточка юнита dPop.
+Machine.reg("menu", { scene: "menu", draw: dMenu, pausable: false, save: "state" });
+Machine.reg("pick", { scene: "menu", draw: dPick, save: "state" });
+Machine.reg("settings", { scene: "menu", draw: dSet, pausable: false, save: "state" });
+Machine.reg("codex", { scene: "menu", draw: dCodex, save: "state", popup: true });
+Machine.reg("map", { scene: "map", draw: dMap, save: "state", autosave: true, popup: true });
+Machine.reg("msg", { scene: "map", draw: dMsg, save: "state" });
+Machine.reg("world", { scene: "map", draw: dWorld, save: "state", autosave: true });
+Machine.reg("prep", { scene: "fight", draw: dFightScreen, save: "snap", autosave: true, popup: true });
+Machine.reg("fight", { scene: "fight", draw: dFightScreen, update: upd, save: "snap", popup: true });
+Machine.reg("shop", { scene: "shop", draw: dShop, save: "state", popup: true });
+Machine.reg("win", { scene: "end", draw: dEnd, enter: enterEnd, pausable: false, save: "none" });
+Machine.reg("lose", { scene: "end", draw: dEnd, enter: enterEnd, pausable: false, save: "none" });

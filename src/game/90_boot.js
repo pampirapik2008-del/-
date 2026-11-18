@@ -61,7 +61,7 @@ function loop(ts) {
 			// после паузы накопленное время не должно превратиться в рывок симуляции
 			Loop.reset();
 		}
-		Music.level(S === "fight" ? 1 : 0);
+		Music.level(Machine.is("fight") ? 1 : 0);
 		Tune.upd();
 		if (!paused) {
 			// сбой в симуляции не должен дотянуться до отрисовки и цикла
@@ -74,10 +74,10 @@ function loop(ts) {
 				flowTick();
 				visTick(dt);
 				// атмосфера вне боя
-				if (S === "map" || S === "msg" || S === "world" || S === "shop") {
-					MAPA.w = WORLDS[S === "world" ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
-					if (!(S === "msg" && EV && EV.bg)) wxEmit(MAPA, dt, S === "shop" ? 0.5 : 0.7);
-				} else if (S === "menu" || S === "pick" || S === "settings") {
+				if (Machine.is("map", "msg", "world", "shop")) {
+					MAPA.w = WORLDS[Machine.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
+					if (!(Machine.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, Machine.is("shop") ? 0.5 : 0.7);
+				} else if (Machine.is("menu", "pick", "settings")) {
 					MAPA.w = WORLDS[0];
 					wxEmit(MAPA, dt, 2.2);
 				}
@@ -116,7 +116,7 @@ document.addEventListener("visibilitychange", () => {
 	if (document.hidden) {
 		Loop.reset();
 		Input.reset();
-		if (S === "fight" || S === "prep") paused = true;
+		if (Machine.is("fight", "prep")) paused = true;
 	}
 });
 ["pointerdown", "touchstart", "keydown"].forEach((ev2) => addEventListener(ev2, unlock, { passive: true }));

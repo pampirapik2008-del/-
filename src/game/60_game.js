@@ -439,7 +439,7 @@ function walkTo(n) {
 	sfx("step");
 }
 function flowTick() {
-	if (MV && S === "map" && t - MV.t0 >= MV.d) {
+	if (MV && Machine.is("map") && t - MV.t0 >= MV.d) {
 		const b = MV.b;
 		MV = null;
 		go(b);

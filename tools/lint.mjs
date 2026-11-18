@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Статические проверки игрового кода (раздел 5.6 ТЗ):
 //   - запрет прямого Math.random в src/game (вся случайность через Rand);
+//   - запрет сравнений/присваиваний S вне 12_state.js (экран — только через Machine.is/flag/go);
 //   - запрет eval / new Function в игровом коде;
 //   - запрет неявных глобалов: после запуска игры в обвязке в глобальной области
 //     не должно появиться имён, кроме объявленных function/var/class верхнего уровня;
@@ -18,6 +19,7 @@ import { boot, ROOT } from "../tests/harness/boot.mjs";
 
 const SRC = path.join(ROOT, "src/game");
 const LIMIT = 120;
+const STATE_FILE = "12_state.js"; // единственный файл, где разрешены S === "…" и S = "…"
 const args = process.argv.slice(2);
 
 const files = fs
@@ -29,16 +31,25 @@ const errors = [];
 const warnings = [];
 
 /* ---------- запрещённые конструкции ---------- */
+// список нарушений в одном файле: [{line, msg}]
+export function forbidden(f, text) {
+	const out = [];
+	text.split("\n").forEach((ln, i) => {
+		const code = ln.replace(/\/\/.*$/, "");
+		const bad = (msg) => out.push({ line: i + 1, msg });
+		if (/\bMath\.random\s*\(/.test(code)) bad("Math.random запрещён — используйте Rand");
+		// экран спрашивают и меняют только через машину состояний (12_state.js): Machine.is/flag/go
+		if (f !== STATE_FILE && /(?<![\w$.])S\s*(===|!==|==|!=)\s*["']/.test(code)) bad(`сравнение S с именем экрана вне ${STATE_FILE} — используйте Machine.is(...)`);
+		if (f !== STATE_FILE && /(?<![\w$.])S\s*=\s*["']/.test(code)) bad(`присваивание S вне ${STATE_FILE} — используйте Machine.go(...)`);
+		if (/\beval\s*\(/.test(code)) bad("eval запрещён");
+		if (/\bnew\s+Function\s*\(/.test(code)) bad("new Function запрещён");
+		if (/\bdebugger\b/.test(code)) bad("debugger оставлен в коде");
+	});
+	return out;
+}
 for (const f of files) {
 	const text = fs.readFileSync(path.join(SRC, f), "utf8");
-	const lines = text.split("\n");
-	lines.forEach((ln, i) => {
-		const code = ln.replace(/\/\/.*$/, "");
-		if (/\bMath\.random\s*\(/.test(code)) errors.push(`${f}:${i + 1}: Math.random запрещён — используйте Rand`);
-		if (/\beval\s*\(/.test(code)) errors.push(`${f}:${i + 1}: eval запрещён`);
-		if (/\bnew\s+Function\s*\(/.test(code)) errors.push(`${f}:${i + 1}: new Function запрещён`);
-		if (/\bdebugger\b/.test(code)) errors.push(`${f}:${i + 1}: debugger оставлен в коде`);
-	});
+	for (const b of forbidden(f, text)) errors.push(`${f}:${b.line}: ${b.msg}`);
 }
 
 /* ---------- длина функций (по объявлениям верхнего уровня и методам объектов) ---------- */

@@ -16,7 +16,7 @@ cv.width = W;
 cv.height = H;
 ctx.imageSmoothingEnabled = false;
 let R = 1,
-	lastS = "",
+	lastS, // предыдущий зафиксированный экран — выставляет 12_state.js
 	FADE = 0,
 	MT = 0;
 const PAL = {
@@ -486,7 +486,7 @@ function bakeTrees(x, LA) {
 }
 let SK = 0,
 	SPDX = 2,
-	S = "menu",
+	S, // текущий экран — читается везде, меняется только в 12_state.js (Machine.go)
 	hits = [],
 	paused = false,
 	t = 0,
@@ -695,7 +695,7 @@ function eggTap() {
 	const n = performance.now();
 	EGG.c = n - EGG.t < 1500 ? EGG.c + 1 : 1;
 	EGG.t = n;
-	if (EGG.c >= 3 && S === "fight" && F && !F.cat) {
+	if (EGG.c >= 3 && Machine.is("fight") && F && !F.cat) {
 		EGG.c = 0;
 		paused = false;
 		summonCat();

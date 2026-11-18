@@ -637,7 +637,7 @@ function lerpApply(list, k) {
 }
 function fightLerpIn() {
 	LERP_UNDO.length = 0;
-	if (!F || S !== "fight" || paused || !(Loop.alpha > 0.01) || F.lock > 0 || F.out) return;
+	if (!F || !Machine.is("fight") || paused || !(Loop.alpha > 0.01) || F.lock > 0 || F.out) return;
 	lerpApply(F.pl, Loop.alpha);
 	lerpApply(F.en, Loop.alpha);
 	if (F.proj) lerpApply(F.proj, Loop.alpha);
@@ -833,7 +833,7 @@ function fightInput(A, fight) {
 }
 function dFight() {
 	const A = F.A,
-		fight = S === "fight",
+		fight = Machine.is("fight"),
 		wi = F.w,
 		w = WORLDS[wi];
 	fightCamera(fight);
@@ -953,7 +953,7 @@ function bossBar(u) {
 	}
 	uc("ui", "g_skull", x - 20, y + 7, AP);
 	tx(fmt(Math.max(0, u.hp)) + " / " + fmt(u.max), 609, y + 8, 12, "#fff", "center", true);
-	if (u.inv > 0 && S === "fight") txo("неуязвим", x + w + 10, y + 8, 13, "#fff3b0", "left");
+	if (u.inv > 0 && Machine.is("fight")) txo("неуязвим", x + w + 10, y + 8, 13, "#fff3b0", "left");
 	// значки статусов босса
 	const ks = Object.keys(u.st || {}).filter((q) => ATL.ui["s_" + q]);
 	ks.forEach((q, i) => us("ui", "s_" + q, x + i * 18, y + 20, AP));
@@ -962,13 +962,14 @@ function bossBar(u) {
 const SLX = (i) => 343 + i * 67.5,
 	SLY = 470;
 function hud() {
-	const fight = S === "fight";
+	const fight = Machine.is("fight"),
+		prep = Machine.is("prep");
 	n9("win", 323, 448, 572, 98, 17);
 	for (let i = 0; i < 8; i++) {
 		const x = Math.round(SLX(i)),
 			y = SLY,
 			u = G.slots[i],
-			isSel = sel === i && S === "prep",
+			isSel = sel === i && prep,
 			dead = fight && u && (u.hp <= 0 || !F.pl.includes(u)),
 			ready = fight && u && !dead && u.en >= 100;
 		if (!u) {
@@ -987,7 +988,7 @@ function hud() {
 		ctx.beginPath();
 		ctx.rect(x + 4, y + 4 + lift, 52, 46);
 		ctx.clip();
-		ctx.globalAlpha = (S === "prep" && u.placed) || (fight && !F.pl.includes(u) && u.hp > 0) ? 0.4 : 1;
+		ctx.globalAlpha = (prep && u.placed) || (fight && !F.pl.includes(u) && u.hp > 0) ? 0.4 : 1;
 		uPort(u, x + 30, y + 62 + lift, AP, dead);
 		ctx.restore();
 		ctx.globalAlpha = 1;
@@ -1001,7 +1002,7 @@ function hud() {
 			ctx.fillRect(x + 7, y + 55 + lift, Math.round(46 * Math.min(1, u.en / 100)), 2);
 		}
 		if (u.skull) uc("ui", "skull_s", x + 49, y + 12 + lift, 1);
-		if (S === "prep" && u.placed) uc("ui", "g_check", x + 30, y + 26, AP);
+		if (prep && u.placed) uc("ui", "g_check", x + 30, y + 26, AP);
 		if (dead) uc("ui", "g_skull", x + 30, y + 28, AP);
 		if (ready && CFG.autoUlt === false) txo("УЛЬТА", x + 30, y - 6, 12, "#ffe27a", "center");
 		if (isSel) arrowDown(x + 30, y - 12 - 3 * Math.sin(t * 6));
@@ -1012,7 +1013,7 @@ function hud() {
 function slotTap(i) {
 	const u = G.slots[i];
 	if (!u) return;
-	if (S === "shop") {
+	if (Machine.is("shop")) {
 		if (G.sk) {
 			if (u.skull) G.sm = "Монета-череп уже надета";
 			else if (G.coin < 3) {
@@ -1036,7 +1037,7 @@ function slotTap(i) {
 		} else pop = { u, mine: true };
 		return;
 	}
-	if (S === "prep") {
+	if (Machine.is("prep")) {
 		if (u.placed) {
 			u.placed = false;
 			sel = i;
@@ -1046,10 +1047,10 @@ function slotTap(i) {
 			sel = i;
 			sfx("pick");
 		}
-	} else if (S === "fight") {
+	} else if (Machine.is("fight")) {
 		if (F.pl.includes(u) && u.en >= 100 && CFG.autoUlt === false) u.ultQ = 1;
 		else pop = { u, mine: false };
-	} else if (S === "map" || S === "msg") pop = { u, mine: true };
+	} else if (Machine.is("map", "msg")) pop = { u, mine: true };
 }
 // кормление мясом: +10% здоровья (и полное лечение), +8% атаки
 function feed(u) {
@@ -1087,7 +1088,7 @@ function popLines(s, w, sz) {
 function dPop() {
 	if (!pop) return;
 	const u = pop.u,
-		mine = pop.mine && S !== "fight" && !u.team,
+		mine = pop.mine && !Machine.is("fight") && !u.team,
 		K = KIT[u.k],
 		x = 826,
 		y = 84,
@@ -1162,7 +1163,7 @@ function dPop() {
 		txo("Ульта: " + K.ult.n, x + 14, yy, 14, "#ffd27a", "left");
 		yy += 17;
 		yy += txw(K.ult.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15;
-		if (mine && S === "codex") btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
+		if (mine && Machine.is("codex")) btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
 		else if (mine) btn(x + 14, y + h - 50, w - 28, 42, "Накормить: +10% здоровья, +8% атаки", () => feed(u), "#2e7d32", { dis: G.meat <= 0, sz: 14, ic: "meat_s" });
 	}
 }
@@ -1171,20 +1172,21 @@ const fxAlive = (f) => f.t < f.d,
 	numAlive = (n) => n.t < (n.k === "crit" || n.k === "txt" ? 1.1 : 0.85);
 function visTick(dt) {
 	Parts.upd(dt * TSC);
-	if (F && (S === "fight" || S === "prep")) {
+	if (F && Machine.is("fight", "prep")) {
 		const sd = dt * TSC;
 		wxEmit(F.A, dt);
 		for (const f of F.fx) f.t += f.k === "banner" || f.k === "cut" || f.k === "go" || f.k === "flash" ? dt : sd;
 		compact(F.fx, fxAlive);
 		for (const n of F.nums) n.t += dt;
 		compact(F.nums, numAlive);
-		const us2 = S === "fight" ? F.pl.concat(F.en) : F.en;
+		const inFight = Machine.is("fight"),
+			us2 = inFight ? F.pl.concat(F.en) : F.en;
 		let fo = null;
 		for (const u of us2) {
 			const k = u.hp / u.max;
 			u.hpl = u.hpl === undefined || u.hpl < k ? k : Math.max(k, u.hpl - dt * 0.45);
 			const s = u.st;
-			if (!s || S !== "fight") continue;
+			if (!s || !inFight) continue;
 			const hy = u.y - (u.boss ? 70 : 28),
 				rd = u.boss ? 60 : 16;
 			if (s.burn && Rand.next() < dt * 14) Parts.add({ x: u.x + rr(-rd, rd), y: hy + rr(-10, 16), vx: rr(-10, 10), vy: rr(-80, -40), life: 0.5, c: pick(["#ff8a3c", "#ffe27a", "#ff5a1c"]), s: 4, k: 0, e: 0.3 });
@@ -1197,7 +1199,7 @@ function visTick(dt) {
 			if (u.boss) fo = u;
 		}
 		F.focus = fo ? { x: fo.x, y: fo.y - 60 } : F.focus;
-		if (S === "fight" && !fo && F.pl[0]) {
+		if (inFight && !fo && F.pl[0]) {
 			const e = F.en[0] || F.pl[0];
 			F.focus = { x: e.x, y: e.y - 20 };
 		}

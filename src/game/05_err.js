@@ -7,6 +7,8 @@
 let GAME_BUILD = "@@BUILD@@";
 const ERRS = [];
 const ERR_MAX = 200;
+// имя экрана для журнала: S объявлена раньше этого файла, но до 12_state.js ещё не задана
+const scrName = () => (S ? String(S) : "?");
 let ERR_SEQ = 0,
 	ERR_STREAK = 0,
 	ERR_STREAK_FRAME = -99,
@@ -26,7 +28,7 @@ function logErr(kind, e, extra) {
 		i: ++ERR_SEQ,
 		at: new Date().toISOString(),
 		frame: FRAME_N,
-		screen: typeof S === "string" ? S : "?",
+		screen: scrName(),
 		kind: kind,
 		msg: errRedact(e && e.message ? e.message : e),
 		stack: errRedact(e && e.stack ? String(e.stack).split("\n").slice(0, 6).join("\n") : ""),
@@ -62,7 +64,7 @@ function errReport() {
 			build: typeof GAME_BUILD !== "undefined" ? GAME_BUILD : "",
 			version: ver,
 			userAgent: navigator && navigator.userAgent,
-			screen: typeof S === "string" ? S : "?",
+			screen: scrName(),
 			frame: FRAME_N,
 			time: Date.now(),
 			quality: typeof QL === "object" && QL ? QL.lv : "?",
@@ -104,7 +106,7 @@ function crashScreen(rec) {
 	}
 	const $ = (id) => box.querySelector("#" + id);
 	try {
-		$("mx-crash-msg").textContent = (rec ? rec.kind + ": " + rec.msg : "нет данных") + " · кадр " + FRAME_N + " · экран " + (typeof S === "string" ? S : "?");
+		$("mx-crash-msg").textContent = (rec ? rec.kind + ": " + rec.msg : "нет данных") + " · кадр " + FRAME_N + " · экран " + (scrName());
 	} catch (_) {}
 	const close = () => {
 		try {
@@ -121,7 +123,7 @@ function crashScreen(rec) {
 			pop = null;
 			paused = false;
 			// аварийный выход минует машину экранов: окно должно работать, даже если сломана она сама
-			S = "menu";
+			Machine.go("menu", "аварийное окно");
 		} catch (_) {}
 		close();
 	};

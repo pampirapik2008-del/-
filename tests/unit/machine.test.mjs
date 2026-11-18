@@ -146,3 +146,37 @@ test("lp(e): поворот экрана и letterbox-поля переводя�
 	assert.deepEqual(o.port, [0, 0], "верхний правый угол телефона в портрете = левый верхний угол холста");
 	assert.deepEqual(o.portC, [609, 270]);
 });
+
+
+test("Machine.is/flag: единственный способ спросить экран; свойства экранов из таблицы", async () => {
+	const g = await game();
+	assert.equal(g.dev.S, "menu");
+	assert.equal(g.dev.run('Machine.is("menu")'), true);
+	assert.equal(g.dev.run('Machine.is("map", "menu")'), true, "любой из перечисленных");
+	assert.equal(g.dev.run('Machine.is("map", "fight")'), false);
+	assert.equal(g.dev.run("Machine.is()"), false, "без аргументов — ложь");
+	assert.equal(g.dev.run("Machine.name()"), "menu");
+	// свойства экранов: пауза недоступна в меню/настройках/финале, снимок до боя на prep/fight, автосейв на map/prep/world
+	const table = JSON.parse(
+		g.dev.run(
+			'JSON.stringify(Object.fromEntries(["menu","pick","settings","codex","map","msg","world","prep","fight","shop","win","lose"].map((n) => { const d = Machine.def[n]; return [n, { p: d.pausable !== false, s: d.save, a: !!d.autosave, pop: !!d.popup }]; })))'
+		)
+	);
+	assert.deepEqual(Object.keys(table).filter((n) => !table[n].p).sort(), ["lose", "menu", "settings", "win"]);
+	assert.deepEqual(Object.keys(table).filter((n) => table[n].s === "snap").sort(), ["fight", "prep"]);
+	assert.deepEqual(Object.keys(table).filter((n) => table[n].s === "none").sort(), ["lose", "win"]);
+	assert.deepEqual(Object.keys(table).filter((n) => table[n].a).sort(), ["map", "prep", "world"]);
+	assert.deepEqual(Object.keys(table).filter((n) => table[n].pop).sort(), ["codex", "fight", "map", "prep", "shop"]);
+	// flag() читает свойство текущего экрана
+	assert.equal(g.dev.run('Machine.flag("pausable")'), false);
+	g.dev.run('Machine.go("map")');
+	assert.equal(g.dev.run('Machine.flag("autosave")'), true);
+	assert.equal(g.dev.run('Machine.flag("save")'), "state");
+	// в коде игры нет ни одного сравнения S с именем экрана вне 12_state.js (это же проверяет линтер)
+	const fs = await import("node:fs");
+	const path = await import("node:path");
+	const dir = new URL("../../src/game/", import.meta.url).pathname;
+	const offenders = fs.readdirSync(dir).filter((f) => f.endsWith(".js") && f !== "12_state.js" && /(?<![\w$.])S\s*(===|!==)\s*["']/.test(fs.readFileSync(path.join(dir, f), "utf8").replace(/\/\/.*$/gm, "")));
+	assert.deepEqual(offenders, []);
+});
+

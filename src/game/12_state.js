@@ -26,6 +26,9 @@ const TRANS = {
 	win: ["pick", "prep"], // «Новый поход» / «Ещё раз» (арена)
 	lose: ["pick", "prep"],
 };
+// стартовые значения алиасов (сами переменные объявлены в 01_head.js, чтобы журнал ошибок видел их всегда)
+S = "menu";
+lastS = "";
 const Machine = {
 	def: {}, // имя экрана → { scene, enter(from), update(dt), draw(), exit(to) }
 	prev: "", // предыдущий экран (после sync)
@@ -38,6 +41,19 @@ const Machine = {
 	scene(name) {
 		const d = this.def[name];
 		return d ? d.scene : undefined;
+	},
+	// текущий экран — один из перечисленных; единственный способ спросить «какой экран» вне этого модуля
+	is() {
+		for (let i = 0; i < arguments.length; i++) if (arguments[i] === S) return true;
+		return false;
+	},
+	// свойство текущего экрана из таблицы reg(): pausable, save, autosave, popup
+	flag(key) {
+		const d = this.def[S];
+		return d ? d[key] : undefined;
+	},
+	name() {
+		return S;
 	},
 	can(from, to) {
 		if (to === from || to === "menu") return SCREEN_NAMES.indexOf(to) >= 0;

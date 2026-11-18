@@ -80,9 +80,9 @@ const Tune = {
 		[-4, 20000],
 	],
 	upd() {
-		const inRun = G && S !== "menu" && S !== "settings" && S !== "pick",
+		const inRun = G && !Machine.is("menu", "settings", "pick"),
 			w = inRun ? G.w || 0 : -1,
-			b = (S === "fight" || S === "prep") && F && F.kind === "boss" ? 1 + ((F.en[0] && F.en[0].bph) || 0) : 0,
+			b = Machine.is("fight", "prep") && F && F.kind === "boss" ? 1 + ((F.en[0] && F.en[0].bph) || 0) : 0,
 			key = w + "|" + b;
 		if (key === this.k) return;
 		this.k = key;

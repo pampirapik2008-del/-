@@ -68,7 +68,7 @@ cv.width = W;
 cv.height = H;
 ctx.imageSmoothingEnabled = false;
 let R = 1,
-	lastS = "",
+	lastS, // предыдущий зафиксированный экран — выставляет 12_state.js
 	FADE = 0,
 	MT = 0;
 const PAL = {
@@ -538,7 +538,7 @@ function bakeTrees(x, LA) {
 }
 let SK = 0,
 	SPDX = 2,
-	S = "menu",
+	S, // текущий экран — читается везде, меняется только в 12_state.js (Machine.go)
 	hits = [],
 	paused = false,
 	t = 0,
@@ -747,7 +747,7 @@ function eggTap() {
 	const n = performance.now();
 	EGG.c = n - EGG.t < 1500 ? EGG.c + 1 : 1;
 	EGG.t = n;
-	if (EGG.c >= 3 && S === "fight" && F && !F.cat) {
+	if (EGG.c >= 3 && Machine.is("fight") && F && !F.cat) {
 		EGG.c = 0;
 		paused = false;
 		summonCat();
@@ -1340,9 +1340,11 @@ const Music = (() => {
 // ловится по отдельности, пишется в кольцевой журнал, а три подряд идущих сбоя
 // переводят игру в безопасный режим с понятным окном вместо мёртвого экрана.
 // версия исходников подставляется сборкой (короткий хеш src/ + ассетов)
-let GAME_BUILD = "e953bdf60086";
+let GAME_BUILD = "e7487a44a70b";
 const ERRS = [];
 const ERR_MAX = 200;
+// имя экрана для журнала: S объявлена раньше этого файла, но до 12_state.js ещё не задана
+const scrName = () => (S ? String(S) : "?");
 let ERR_SEQ = 0,
 	ERR_STREAK = 0,
 	ERR_STREAK_FRAME = -99,
@@ -1362,7 +1364,7 @@ function logErr(kind, e, extra) {
 		i: ++ERR_SEQ,
 		at: new Date().toISOString(),
 		frame: FRAME_N,
-		screen: typeof S === "string" ? S : "?",
+		screen: scrName(),
 		kind: kind,
 		msg: errRedact(e && e.message ? e.message : e),
 		stack: errRedact(e && e.stack ? String(e.stack).split("\n").slice(0, 6).join("\n") : ""),
@@ -1398,7 +1400,7 @@ function errReport() {
 			build: typeof GAME_BUILD !== "undefined" ? GAME_BUILD : "",
 			version: ver,
 			userAgent: navigator && navigator.userAgent,
-			screen: typeof S === "string" ? S : "?",
+			screen: scrName(),
 			frame: FRAME_N,
 			time: Date.now(),
 			quality: typeof QL === "object" && QL ? QL.lv : "?",
@@ -1440,7 +1442,7 @@ function crashScreen(rec) {
 	}
 	const $ = (id) => box.querySelector("#" + id);
 	try {
-		$("mx-crash-msg").textContent = (rec ? rec.kind + ": " + rec.msg : "нет данных") + " · кадр " + FRAME_N + " · экран " + (typeof S === "string" ? S : "?");
+		$("mx-crash-msg").textContent = (rec ? rec.kind + ": " + rec.msg : "нет данных") + " · кадр " + FRAME_N + " · экран " + (scrName());
 	} catch (_) {}
 	const close = () => {
 		try {
@@ -1457,7 +1459,7 @@ function crashScreen(rec) {
 			pop = null;
 			paused = false;
 			// аварийный выход минует машину экранов: окно должно работать, даже если сломана она сама
-			S = "menu";
+			Machine.go("menu", "аварийное окно");
 		} catch (_) {}
 		close();
 	};
@@ -2255,6 +2257,9 @@ const TRANS = {
 	win: ["pick", "prep"], // «Новый поход» / «Ещё раз» (арена)
 	lose: ["pick", "prep"],
 };
+// стартовые значения алиасов (сами переменные объявлены в 01_head.js, чтобы журнал ошибок видел их всегда)
+S = "menu";
+lastS = "";
 const Machine = {
 	def: {}, // имя экрана → { scene, enter(from), update(dt), draw(), exit(to) }
 	prev: "", // предыдущий экран (после sync)
@@ -2267,6 +2272,19 @@ const Machine = {
 	scene(name) {
 		const d = this.def[name];
 		return d ? d.scene : undefined;
+	},
+	// текущий экран — один из перечисленных; единственный способ спросить «какой экран» вне этого модуля
+	is() {
+		for (let i = 0; i < arguments.length; i++) if (arguments[i] === S) return true;
+		return false;
+	},
+	// свойство текущего экрана из таблицы reg(): pausable, save, autosave, popup
+	flag(key) {
+		const d = this.def[S];
+		return d ? d[key] : undefined;
+	},
+	name() {
+		return S;
 	},
 	can(from, to) {
 		if (to === from || to === "menu") return SCREEN_NAMES.indexOf(to) >= 0;
@@ -2382,19 +2400,19 @@ const Input = {
 		if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
 		if (!READY || e.repeat) return;
 		const k = e.key;
-		if (k === "Escape" && S === "codex" && CODEX_TEST) {
+		if (k === "Escape" && Machine.is("codex") && CODEX_TEST) {
 			CODEX_TEST = null;
 			pop = null;
 			e.preventDefault();
 			return;
 		}
 		if (k === "Escape" || k === "p" || k === "P" || k === "з" || k === "З") {
-			if (S !== "menu" && S !== "settings" && S !== "win" && S !== "lose") paused = !paused;
+			if (Machine.flag("pausable") !== false) paused = !paused;
 		} else if (paused) return;
 		else if (k === " " || k === "Enter") {
-			if (S === "prep" && G.slots.some((u) => u && u.placed)) startFight();
-			else if (S === "prep") autoPlace();
-			else if (S === "msg" && EV) {
+			if (Machine.is("prep") && G.slots.some((u) => u && u.placed)) startFight();
+			else if (Machine.is("prep")) autoPlace();
+			else if (Machine.is("msg") && EV) {
 				const e2 = EV;
 				if (!e2.open) {
 					e2.open = 1;
@@ -2403,7 +2421,7 @@ const Input = {
 				} else if (!e2.pick) evClose();
 			}
 			e.preventDefault();
-		} else if (S === "fight" && (k === "1" || k === "2" || k === "3")) SPDX = +k;
+		} else if (Machine.is("fight") && (k === "1" || k === "2" || k === "3")) SPDX = +k;
 	},
 	// подписка на события холста и окна (вызывается при запуске)
 	install(canvas) {
@@ -4288,7 +4306,7 @@ const CAST = {
 			anim(u, "ult", 1);
 			cutIn(u, KIT.mage.ult.n, 1);
 			F.pl.forEach((a) => heal(a, a.max * 0.25, u));
-			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => S === "fight" && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.5, { el: "nature", abil: 1, sp: 420, big: 1 })));
+			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => Machine.is("fight") && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.5, { el: "nature", abil: 1, sp: 420, big: 1 })));
 			Fx.add({ k: "wave", x: u.x, y: u.y, c: "#8be06a", d: 0.8 });
 			return true;
 		},
@@ -4451,7 +4469,7 @@ const CAST = {
 		ult(u) {
 			anim(u, "ult", 1);
 			cutIn(u, KIT.necro.ult.n, 1);
-			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => S === "fight" && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 2, { el: "dark", abil: 1, sp: 420, big: 1 })));
+			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => Machine.is("fight") && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 2, { el: "dark", abil: 1, sp: 420, big: 1 })));
 			liv(F.en).forEach((e) => addSt(e, "curse", 4));
 			Fx.add({ k: "wave", x: u.x, y: u.y, c: "#b06cff", d: 0.8 });
 			return true;
@@ -4495,7 +4513,7 @@ const CAST = {
 			anim(u, "ult", 1);
 			cutIn(u, KIT.druid.ult.n, 1);
 			F.pl.forEach((a) => heal(a, a.max * 0.2, u));
-			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => S === "fight" && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.4, { el: "nature", abil: 1, sp: 420, big: 1 })));
+			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => Machine.is("fight") && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.4, { el: "nature", abil: 1, sp: 420, big: 1 })));
 			Fx.add({ k: "wave", x: u.x, y: u.y, c: "#8be06a", d: 0.8 });
 			return true;
 		},
@@ -4760,7 +4778,7 @@ const BOSSP = {
 		for (let i = 0; i < n; i++) {
 			const a = a0 + (i - (n - 1) / 2) * 0.17;
 			tele({ shape: "line", x: u.x, y: u.y - 20, a, len: 620, d: 0.55, c: EL[u.el].c });
-			Seq.at(0.55 + i * 0.04, () => S === "fight" && u.hp > 0 && u.bph === phase && shoot(u, null, eAtk(u) * 0.6, { lin: 1, vx: Math.cos(a) * 470, vy: Math.sin(a) * 470, stc: 0.5, big: 1 }));
+			Seq.at(0.55 + i * 0.04, () => Machine.is("fight") && u.hp > 0 && u.bph === phase && shoot(u, null, eAtk(u) * 0.6, { lin: 1, vx: Math.cos(a) * 470, vy: Math.sin(a) * 470, stc: 0.5, big: 1 }));
 		}
 	},
 	rain(u) {
@@ -4773,7 +4791,7 @@ const BOSSP = {
 			const x = clamp(p.x + rr(-60, 60), FLD.x0, FLD.x1),
 				y = clamp(p.y + rr(-34, 34), F.A.y0, FLD.y1);
 			Seq.at(i * 0.16, () => {
-				if (S !== "fight" || u.hp <= 0 || u.bph !== phase) return;
+				if (!Machine.is("fight") || u.hp <= 0 || u.bph !== phase) return;
 				tele({
 					x,
 					y,
@@ -5164,7 +5182,7 @@ function stepApproach(u, A, tg, h) {
 	u.atkT = u.atkD = dur;
 	u.ax = (tg.x - u.x) / (d || 1);
 	u.ay = (tg.y - u.y) / (d || 1);
-	if (u.rng >= 140) Seq.at(dur * 0.4, () => S === "fight" && u.hp > 0 && tg.hp > 0 && (shoot(u, tg, eAtk(u), { el: KIT[u.k] ? KIT[u.k].el : u.el }), sfx("zap", 0.7)));
+	if (u.rng >= 140) Seq.at(dur * 0.4, () => Machine.is("fight") && u.hp > 0 && tg.hp > 0 && (shoot(u, tg, eAtk(u), { el: KIT[u.k] ? KIT[u.k].el : u.el }), sfx("zap", 0.7)));
 	else u.sw = { tg, t: dur * 0.42 * SPDX, dmg: eAtk(u) };
 }
 // удар ближнего боя: у каждого бойца свой росчерк
@@ -5528,9 +5546,9 @@ function idleUpd(dt) {
 	TSC = 1;
 }
 function upd(dt) {
-	if (S !== "fight" || !F) Seq.clock = null;
+	if (!Machine.is("fight") || !F) Seq.clock = null;
 	Seq.run();
-	if (S !== "fight" || !F) {
+	if (!Machine.is("fight") || !F) {
 		TSC = 1;
 		return;
 	}
@@ -5544,7 +5562,7 @@ function upd(dt) {
 	if (F.proj) lerpRemember(F.proj);
 	let rem = dt * SPDX * TSC,
 		n = 0;
-	while (rem > 1e-5 && n++ < BAL.fight.maxSub && S === "fight") {
+	while (rem > 1e-5 && n++ < BAL.fight.maxSub && Machine.is("fight")) {
 		const h = Math.min(rem, BAL.fight.subStep);
 		simStep(h);
 		rem -= h;
@@ -6193,7 +6211,7 @@ function lerpApply(list, k) {
 }
 function fightLerpIn() {
 	LERP_UNDO.length = 0;
-	if (!F || S !== "fight" || paused || !(Loop.alpha > 0.01) || F.lock > 0 || F.out) return;
+	if (!F || !Machine.is("fight") || paused || !(Loop.alpha > 0.01) || F.lock > 0 || F.out) return;
 	lerpApply(F.pl, Loop.alpha);
 	lerpApply(F.en, Loop.alpha);
 	if (F.proj) lerpApply(F.proj, Loop.alpha);
@@ -6389,7 +6407,7 @@ function fightInput(A, fight) {
 }
 function dFight() {
 	const A = F.A,
-		fight = S === "fight",
+		fight = Machine.is("fight"),
 		wi = F.w,
 		w = WORLDS[wi];
 	fightCamera(fight);
@@ -6509,7 +6527,7 @@ function bossBar(u) {
 	}
 	uc("ui", "g_skull", x - 20, y + 7, AP);
 	tx(fmt(Math.max(0, u.hp)) + " / " + fmt(u.max), 609, y + 8, 12, "#fff", "center", true);
-	if (u.inv > 0 && S === "fight") txo("неуязвим", x + w + 10, y + 8, 13, "#fff3b0", "left");
+	if (u.inv > 0 && Machine.is("fight")) txo("неуязвим", x + w + 10, y + 8, 13, "#fff3b0", "left");
 	// значки статусов босса
 	const ks = Object.keys(u.st || {}).filter((q) => ATL.ui["s_" + q]);
 	ks.forEach((q, i) => us("ui", "s_" + q, x + i * 18, y + 20, AP));
@@ -6518,13 +6536,14 @@ function bossBar(u) {
 const SLX = (i) => 343 + i * 67.5,
 	SLY = 470;
 function hud() {
-	const fight = S === "fight";
+	const fight = Machine.is("fight"),
+		prep = Machine.is("prep");
 	n9("win", 323, 448, 572, 98, 17);
 	for (let i = 0; i < 8; i++) {
 		const x = Math.round(SLX(i)),
 			y = SLY,
 			u = G.slots[i],
-			isSel = sel === i && S === "prep",
+			isSel = sel === i && prep,
 			dead = fight && u && (u.hp <= 0 || !F.pl.includes(u)),
 			ready = fight && u && !dead && u.en >= 100;
 		if (!u) {
@@ -6543,7 +6562,7 @@ function hud() {
 		ctx.beginPath();
 		ctx.rect(x + 4, y + 4 + lift, 52, 46);
 		ctx.clip();
-		ctx.globalAlpha = (S === "prep" && u.placed) || (fight && !F.pl.includes(u) && u.hp > 0) ? 0.4 : 1;
+		ctx.globalAlpha = (prep && u.placed) || (fight && !F.pl.includes(u) && u.hp > 0) ? 0.4 : 1;
 		uPort(u, x + 30, y + 62 + lift, AP, dead);
 		ctx.restore();
 		ctx.globalAlpha = 1;
@@ -6557,7 +6576,7 @@ function hud() {
 			ctx.fillRect(x + 7, y + 55 + lift, Math.round(46 * Math.min(1, u.en / 100)), 2);
 		}
 		if (u.skull) uc("ui", "skull_s", x + 49, y + 12 + lift, 1);
-		if (S === "prep" && u.placed) uc("ui", "g_check", x + 30, y + 26, AP);
+		if (prep && u.placed) uc("ui", "g_check", x + 30, y + 26, AP);
 		if (dead) uc("ui", "g_skull", x + 30, y + 28, AP);
 		if (ready && CFG.autoUlt === false) txo("УЛЬТА", x + 30, y - 6, 12, "#ffe27a", "center");
 		if (isSel) arrowDown(x + 30, y - 12 - 3 * Math.sin(t * 6));
@@ -6568,7 +6587,7 @@ function hud() {
 function slotTap(i) {
 	const u = G.slots[i];
 	if (!u) return;
-	if (S === "shop") {
+	if (Machine.is("shop")) {
 		if (G.sk) {
 			if (u.skull) G.sm = "Монета-череп уже надета";
 			else if (G.coin < 3) {
@@ -6592,7 +6611,7 @@ function slotTap(i) {
 		} else pop = { u, mine: true };
 		return;
 	}
-	if (S === "prep") {
+	if (Machine.is("prep")) {
 		if (u.placed) {
 			u.placed = false;
 			sel = i;
@@ -6602,10 +6621,10 @@ function slotTap(i) {
 			sel = i;
 			sfx("pick");
 		}
-	} else if (S === "fight") {
+	} else if (Machine.is("fight")) {
 		if (F.pl.includes(u) && u.en >= 100 && CFG.autoUlt === false) u.ultQ = 1;
 		else pop = { u, mine: false };
-	} else if (S === "map" || S === "msg") pop = { u, mine: true };
+	} else if (Machine.is("map", "msg")) pop = { u, mine: true };
 }
 // кормление мясом: +10% здоровья (и полное лечение), +8% атаки
 function feed(u) {
@@ -6643,7 +6662,7 @@ function popLines(s, w, sz) {
 function dPop() {
 	if (!pop) return;
 	const u = pop.u,
-		mine = pop.mine && S !== "fight" && !u.team,
+		mine = pop.mine && !Machine.is("fight") && !u.team,
 		K = KIT[u.k],
 		x = 826,
 		y = 84,
@@ -6718,7 +6737,7 @@ function dPop() {
 		txo("Ульта: " + K.ult.n, x + 14, yy, 14, "#ffd27a", "left");
 		yy += 17;
 		yy += txw(K.ult.d, x + 14, yy, w - 28, 15, 12, "#e8e2f4") * 15;
-		if (mine && S === "codex") btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
+		if (mine && Machine.is("codex")) btn(x + 14, y + h - 50, w - 28, 42, "Просмотр анимаций", () => { const hero = HEROES.find((h) => h.k === u.k); if (hero) codexTestOpen(hero); }, "#2e7d32", { sz: 15 });
 		else if (mine) btn(x + 14, y + h - 50, w - 28, 42, "Накормить: +10% здоровья, +8% атаки", () => feed(u), "#2e7d32", { dis: G.meat <= 0, sz: 14, ic: "meat_s" });
 	}
 }
@@ -6727,20 +6746,21 @@ const fxAlive = (f) => f.t < f.d,
 	numAlive = (n) => n.t < (n.k === "crit" || n.k === "txt" ? 1.1 : 0.85);
 function visTick(dt) {
 	Parts.upd(dt * TSC);
-	if (F && (S === "fight" || S === "prep")) {
+	if (F && Machine.is("fight", "prep")) {
 		const sd = dt * TSC;
 		wxEmit(F.A, dt);
 		for (const f of F.fx) f.t += f.k === "banner" || f.k === "cut" || f.k === "go" || f.k === "flash" ? dt : sd;
 		compact(F.fx, fxAlive);
 		for (const n of F.nums) n.t += dt;
 		compact(F.nums, numAlive);
-		const us2 = S === "fight" ? F.pl.concat(F.en) : F.en;
+		const inFight = Machine.is("fight"),
+			us2 = inFight ? F.pl.concat(F.en) : F.en;
 		let fo = null;
 		for (const u of us2) {
 			const k = u.hp / u.max;
 			u.hpl = u.hpl === undefined || u.hpl < k ? k : Math.max(k, u.hpl - dt * 0.45);
 			const s = u.st;
-			if (!s || S !== "fight") continue;
+			if (!s || !inFight) continue;
 			const hy = u.y - (u.boss ? 70 : 28),
 				rd = u.boss ? 60 : 16;
 			if (s.burn && Rand.next() < dt * 14) Parts.add({ x: u.x + rr(-rd, rd), y: hy + rr(-10, 16), vx: rr(-10, 10), vy: rr(-80, -40), life: 0.5, c: pick(["#ff8a3c", "#ffe27a", "#ff5a1c"]), s: 4, k: 0, e: 0.3 });
@@ -6753,7 +6773,7 @@ function visTick(dt) {
 			if (u.boss) fo = u;
 		}
 		F.focus = fo ? { x: fo.x, y: fo.y - 60 } : F.focus;
-		if (S === "fight" && !fo && F.pl[0]) {
+		if (inFight && !fo && F.pl[0]) {
 			const e = F.en[0] || F.pl[0];
 			F.focus = { x: e.x, y: e.y - 20 };
 		}
@@ -7244,7 +7264,7 @@ function walkTo(n) {
 	sfx("step");
 }
 function flowTick() {
-	if (MV && S === "map" && t - MV.t0 >= MV.d) {
+	if (MV && Machine.is("map") && t - MV.t0 >= MV.d) {
 		const b = MV.b;
 		MV = null;
 		go(b);
@@ -7853,7 +7873,9 @@ function applySave(d, v) {
 function saveGame() {
 	if (!G || G.arena) return false;
 	try {
-		const q = S === "prep" || S === "fight" ? snap : S === "lose" || S === "win" ? null : ser();
+		// что писать — свойство экрана (таблица экранов): prep/fight — снимок до боя, win/lose — ничего, прочие — состояние
+		const mode = Machine.flag("save"),
+			q = mode === "snap" ? snap : mode === "none" ? null : ser();
 		if (!q) return false;
 		const inner = saveInner(q);
 		if (!inner) return false;
@@ -8075,7 +8097,7 @@ function saveDialog(mode) {
 }
 
 function autosave() {
-	if (G && !G.arena && (S === "map" || S === "prep" || S === "world")) saveGame();
+	if (G && !G.arena && Machine.flag("autosave")) saveGame();
 }
 
 // автосохранение при уходе со страницы и сворачивании вкладки
@@ -9204,7 +9226,7 @@ function dWorld() {
 }
 // ---------- итог похода ----------
 function dEnd() {
-	const wn = S === "win",
+	const wn = Machine.is("win"),
 		st = G.st;
 	if (BGA) ctx.drawImage(BGA.floor, 0, 0, W, H);
 	else stageBG(G.w || 0);
@@ -9261,7 +9283,7 @@ function pauseMenu() {
 	ctx.fillStyle = "rgba(8,6,14,.74)";
 	ctx.fillRect(0, 0, W, H);
 	area(0, 0, W, H, () => {});
-	const camp = G && !G.arena && S !== "pick" && S !== "win" && S !== "lose",
+	const camp = G && !G.arena && !Machine.is("pick", "win", "lose"),
 		items = [
 			["Вернуться в игру", () => (paused = false), "#2e7d32"],
 			[
@@ -9310,9 +9332,9 @@ function draw() {
 	ctx.save();
 	if (SK > 0) ctx.translate(Math.round((Rand.next() - 0.5) * SK * 20) * 2, Math.round((Rand.next() - 0.5) * SK * 20) * 2);
 	Machine.drawScreen();
-	if (S === "map" || S === "prep" || S === "fight" || S === "shop" || S === "codex") dPop();
-	if (S !== "menu" && S !== "win" && S !== "lose" && S !== "settings") ibtn("pause", 1142, 6, () => (paused = true));
-	if (S !== "settings") ibtn("note", S === "menu" || S === "win" || S === "lose" ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
+	if (Machine.flag("popup")) dPop();
+	if (Machine.flag("pausable") !== false) ibtn("pause", 1142, 6, () => (paused = true));
+	if (!Machine.is("settings")) ibtn("note", Machine.is("menu", "win", "lose") ? 1142 : 1068, 6, () => (Music.toggle(), saveCfg()), { off: !Music.on });
 	Fly.draw();
 	if (FLASH) {
 		const k = (t - FLASH.t0) / FLASH.d;
@@ -9346,18 +9368,21 @@ function dFightScreen() {
 function enterEnd() {
 	ENDT = t;
 }
-Machine.reg("menu", { scene: "menu", draw: dMenu });
-Machine.reg("pick", { scene: "menu", draw: dPick });
-Machine.reg("settings", { scene: "menu", draw: dSet });
-Machine.reg("codex", { scene: "menu", draw: dCodex });
-Machine.reg("map", { scene: "map", draw: dMap });
-Machine.reg("msg", { scene: "map", draw: dMsg });
-Machine.reg("world", { scene: "map", draw: dWorld });
-Machine.reg("prep", { scene: "fight", draw: dFightScreen });
-Machine.reg("fight", { scene: "fight", draw: dFightScreen, update: upd });
-Machine.reg("shop", { scene: "shop", draw: dShop });
-Machine.reg("win", { scene: "end", draw: dEnd, enter: enterEnd });
-Machine.reg("lose", { scene: "end", draw: dEnd, enter: enterEnd });
+// Таблица экранов. Свойства: scene — сцена (смена сцены чистит частицы и даёт затемнение),
+// pausable — можно ставить паузу (кнопка и Esc), save — что пишет saveGame ("state" | "snap" | "none"),
+// autosave — autosave() пишет на этом экране, popup — рисуется карточка юнита dPop.
+Machine.reg("menu", { scene: "menu", draw: dMenu, pausable: false, save: "state" });
+Machine.reg("pick", { scene: "menu", draw: dPick, save: "state" });
+Machine.reg("settings", { scene: "menu", draw: dSet, pausable: false, save: "state" });
+Machine.reg("codex", { scene: "menu", draw: dCodex, save: "state", popup: true });
+Machine.reg("map", { scene: "map", draw: dMap, save: "state", autosave: true, popup: true });
+Machine.reg("msg", { scene: "map", draw: dMsg, save: "state" });
+Machine.reg("world", { scene: "map", draw: dWorld, save: "state", autosave: true });
+Machine.reg("prep", { scene: "fight", draw: dFightScreen, save: "snap", autosave: true, popup: true });
+Machine.reg("fight", { scene: "fight", draw: dFightScreen, update: upd, save: "snap", popup: true });
+Machine.reg("shop", { scene: "shop", draw: dShop, save: "state", popup: true });
+Machine.reg("win", { scene: "end", draw: dEnd, enter: enterEnd, pausable: false, save: "none" });
+Machine.reg("lose", { scene: "end", draw: dEnd, enter: enterEnd, pausable: false, save: "none" });
 // ===== 70_audio.js =====
 // ===== ЗВУК: новые эффекты (синтез в браузере), настроение музыки по мирам =====
 // Каждый звук — функция (t, s) -> отсчёт; sw — синус с накоплением фазы, rd — шум. Буферы строятся один раз при запуске.
@@ -9440,9 +9465,9 @@ const Tune = {
 		[-4, 20000],
 	],
 	upd() {
-		const inRun = G && S !== "menu" && S !== "settings" && S !== "pick",
+		const inRun = G && !Machine.is("menu", "settings", "pick"),
 			w = inRun ? G.w || 0 : -1,
-			b = (S === "fight" || S === "prep") && F && F.kind === "boss" ? 1 + ((F.en[0] && F.en[0].bph) || 0) : 0,
+			b = Machine.is("fight", "prep") && F && F.kind === "boss" ? 1 + ((F.en[0] && F.en[0].bph) || 0) : 0,
 			key = w + "|" + b;
 		if (key === this.k) return;
 		this.k = key;
@@ -9525,7 +9550,7 @@ function loop(ts) {
 			// после паузы накопленное время не должно превратиться в рывок симуляции
 			Loop.reset();
 		}
-		Music.level(S === "fight" ? 1 : 0);
+		Music.level(Machine.is("fight") ? 1 : 0);
 		Tune.upd();
 		if (!paused) {
 			// сбой в симуляции не должен дотянуться до отрисовки и цикла
@@ -9538,10 +9563,10 @@ function loop(ts) {
 				flowTick();
 				visTick(dt);
 				// атмосфера вне боя
-				if (S === "map" || S === "msg" || S === "world" || S === "shop") {
-					MAPA.w = WORLDS[S === "world" ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
-					if (!(S === "msg" && EV && EV.bg)) wxEmit(MAPA, dt, S === "shop" ? 0.5 : 0.7);
-				} else if (S === "menu" || S === "pick" || S === "settings") {
+				if (Machine.is("map", "msg", "world", "shop")) {
+					MAPA.w = WORLDS[Machine.is("world") ? Math.min(WORLDS.length - 1, G.w + 1) : G.w || 0];
+					if (!(Machine.is("msg") && EV && EV.bg)) wxEmit(MAPA, dt, Machine.is("shop") ? 0.5 : 0.7);
+				} else if (Machine.is("menu", "pick", "settings")) {
 					MAPA.w = WORLDS[0];
 					wxEmit(MAPA, dt, 2.2);
 				}
@@ -9580,7 +9605,7 @@ document.addEventListener("visibilitychange", () => {
 	if (document.hidden) {
 		Loop.reset();
 		Input.reset();
-		if (S === "fight" || S === "prep") paused = true;
+		if (Machine.is("fight", "prep")) paused = true;
 	}
 });
 ["pointerdown", "touchstart", "keydown"].forEach((ev2) => addEventListener(ev2, unlock, { passive: true }));

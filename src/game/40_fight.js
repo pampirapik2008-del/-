@@ -405,7 +405,7 @@ const CAST = {
 			anim(u, "ult", 1);
 			cutIn(u, KIT.mage.ult.n, 1);
 			F.pl.forEach((a) => heal(a, a.max * 0.25, u));
-			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => S === "fight" && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.5, { el: "nature", abil: 1, sp: 420, big: 1 })));
+			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => Machine.is("fight") && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.5, { el: "nature", abil: 1, sp: 420, big: 1 })));
 			Fx.add({ k: "wave", x: u.x, y: u.y, c: "#8be06a", d: 0.8 });
 			return true;
 		},
@@ -568,7 +568,7 @@ const CAST = {
 		ult(u) {
 			anim(u, "ult", 1);
 			cutIn(u, KIT.necro.ult.n, 1);
-			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => S === "fight" && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 2, { el: "dark", abil: 1, sp: 420, big: 1 })));
+			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => Machine.is("fight") && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 2, { el: "dark", abil: 1, sp: 420, big: 1 })));
 			liv(F.en).forEach((e) => addSt(e, "curse", 4));
 			Fx.add({ k: "wave", x: u.x, y: u.y, c: "#b06cff", d: 0.8 });
 			return true;
@@ -612,7 +612,7 @@ const CAST = {
 			anim(u, "ult", 1);
 			cutIn(u, KIT.druid.ult.n, 1);
 			F.pl.forEach((a) => heal(a, a.max * 0.2, u));
-			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => S === "fight" && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.4, { el: "nature", abil: 1, sp: 420, big: 1 })));
+			liv(F.en).forEach((e, i) => Seq.at(0.15 + i * 0.08, () => Machine.is("fight") && u.hp > 0 && e.hp > 0 && shoot(u, e, eAtk(u) * 1.4, { el: "nature", abil: 1, sp: 420, big: 1 })));
 			Fx.add({ k: "wave", x: u.x, y: u.y, c: "#8be06a", d: 0.8 });
 			return true;
 		},
@@ -877,7 +877,7 @@ const BOSSP = {
 		for (let i = 0; i < n; i++) {
 			const a = a0 + (i - (n - 1) / 2) * 0.17;
 			tele({ shape: "line", x: u.x, y: u.y - 20, a, len: 620, d: 0.55, c: EL[u.el].c });
-			Seq.at(0.55 + i * 0.04, () => S === "fight" && u.hp > 0 && u.bph === phase && shoot(u, null, eAtk(u) * 0.6, { lin: 1, vx: Math.cos(a) * 470, vy: Math.sin(a) * 470, stc: 0.5, big: 1 }));
+			Seq.at(0.55 + i * 0.04, () => Machine.is("fight") && u.hp > 0 && u.bph === phase && shoot(u, null, eAtk(u) * 0.6, { lin: 1, vx: Math.cos(a) * 470, vy: Math.sin(a) * 470, stc: 0.5, big: 1 }));
 		}
 	},
 	rain(u) {
@@ -890,7 +890,7 @@ const BOSSP = {
 			const x = clamp(p.x + rr(-60, 60), FLD.x0, FLD.x1),
 				y = clamp(p.y + rr(-34, 34), F.A.y0, FLD.y1);
 			Seq.at(i * 0.16, () => {
-				if (S !== "fight" || u.hp <= 0 || u.bph !== phase) return;
+				if (!Machine.is("fight") || u.hp <= 0 || u.bph !== phase) return;
 				tele({
 					x,
 					y,
@@ -1281,7 +1281,7 @@ function stepApproach(u, A, tg, h) {
 	u.atkT = u.atkD = dur;
 	u.ax = (tg.x - u.x) / (d || 1);
 	u.ay = (tg.y - u.y) / (d || 1);
-	if (u.rng >= 140) Seq.at(dur * 0.4, () => S === "fight" && u.hp > 0 && tg.hp > 0 && (shoot(u, tg, eAtk(u), { el: KIT[u.k] ? KIT[u.k].el : u.el }), sfx("zap", 0.7)));
+	if (u.rng >= 140) Seq.at(dur * 0.4, () => Machine.is("fight") && u.hp > 0 && tg.hp > 0 && (shoot(u, tg, eAtk(u), { el: KIT[u.k] ? KIT[u.k].el : u.el }), sfx("zap", 0.7)));
 	else u.sw = { tg, t: dur * 0.42 * SPDX, dmg: eAtk(u) };
 }
 // удар ближнего боя: у каждого бойца свой росчерк
@@ -1645,9 +1645,9 @@ function idleUpd(dt) {
 	TSC = 1;
 }
 function upd(dt) {
-	if (S !== "fight" || !F) Seq.clock = null;
+	if (!Machine.is("fight") || !F) Seq.clock = null;
 	Seq.run();
-	if (S !== "fight" || !F) {
+	if (!Machine.is("fight") || !F) {
 		TSC = 1;
 		return;
 	}
@@ -1661,7 +1661,7 @@ function upd(dt) {
 	if (F.proj) lerpRemember(F.proj);
 	let rem = dt * SPDX * TSC,
 		n = 0;
-	while (rem > 1e-5 && n++ < BAL.fight.maxSub && S === "fight") {
+	while (rem > 1e-5 && n++ < BAL.fight.maxSub && Machine.is("fight")) {
 		const h = Math.min(rem, BAL.fight.subStep);
 		simStep(h);
 		rem -= h;

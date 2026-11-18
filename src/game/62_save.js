@@ -177,7 +177,9 @@ function applySave(d, v) {
 function saveGame() {
 	if (!G || G.arena) return false;
 	try {
-		const q = S === "prep" || S === "fight" ? snap : S === "lose" || S === "win" ? null : ser();
+		// что писать — свойство экрана (таблица экранов): prep/fight — снимок до боя, win/lose — ничего, прочие — состояние
+		const mode = Machine.flag("save"),
+			q = mode === "snap" ? snap : mode === "none" ? null : ser();
 		if (!q) return false;
 		const inner = saveInner(q);
 		if (!inner) return false;
@@ -399,7 +401,7 @@ function saveDialog(mode) {
 }
 
 function autosave() {
-	if (G && !G.arena && (S === "map" || S === "prep" || S === "world")) saveGame();
+	if (G && !G.arena && Machine.flag("autosave")) saveGame();
 }
 
 // автосохранение при уходе со страницы и сворачивании вкладки

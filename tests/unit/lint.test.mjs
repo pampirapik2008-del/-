@@ -2,7 +2,7 @@
 // и мёртвый код (объявление верхнего уровня без единой ссылки).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { longFunctions, deadDeclarations } from "../../tools/lint.mjs";
+import { longFunctions, deadDeclarations, forbidden } from "../../tools/lint.mjs";
 
 const body = (n) => Array.from({ length: n }, (_, i) => `\tx += ${i};`).join("\n");
 
@@ -58,3 +58,19 @@ test("что считается ссылкой: свойство через то
 		"o.go, x.run() и goNow — не ссылки на go/run; ключ key: оставляет key живым"
 	);
 });
+
+test("экран вне 12_state.js: сравнения и присваивания S запрещены, Machine.is/go — нет", () => {
+	const bad = forbidden("50_draw.js", 'if (S === "fight") x();\nif (S !== "map" || paused) y();\nS = "menu";\nif (Machine.is("fight")) z();\nconst s = obj.S === "x"; // чужое поле S — не экран\n');
+	assert.deepEqual(
+		bad.map((b) => b.line),
+		[1, 2, 3]
+	);
+	assert.match(bad[0].msg, /Machine\.is/);
+	assert.match(bad[2].msg, /Machine\.go/);
+	// внутри модуля состояния те же строки разрешены
+	assert.deepEqual(forbidden("12_state.js", 'if (S === "fight") x();\nS = "menu";\n'), []);
+	// комментарии не считаются
+	assert.deepEqual(forbidden("60_game.js", '// раньше тут было S === "map"\n'), []);
+	assert.equal(forbidden("60_game.js", "const r = Math.random();\n")[0].msg.includes("Rand"), true);
+});
+

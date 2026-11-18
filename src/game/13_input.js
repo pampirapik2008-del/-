@@ -61,19 +61,19 @@ const Input = {
 		if (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
 		if (!READY || e.repeat) return;
 		const k = e.key;
-		if (k === "Escape" && S === "codex" && CODEX_TEST) {
+		if (k === "Escape" && Machine.is("codex") && CODEX_TEST) {
 			CODEX_TEST = null;
 			pop = null;
 			e.preventDefault();
 			return;
 		}
 		if (k === "Escape" || k === "p" || k === "P" || k === "з" || k === "З") {
-			if (S !== "menu" && S !== "settings" && S !== "win" && S !== "lose") paused = !paused;
+			if (Machine.flag("pausable") !== false) paused = !paused;
 		} else if (paused) return;
 		else if (k === " " || k === "Enter") {
-			if (S === "prep" && G.slots.some((u) => u && u.placed)) startFight();
-			else if (S === "prep") autoPlace();
-			else if (S === "msg" && EV) {
+			if (Machine.is("prep") && G.slots.some((u) => u && u.placed)) startFight();
+			else if (Machine.is("prep")) autoPlace();
+			else if (Machine.is("msg") && EV) {
 				const e2 = EV;
 				if (!e2.open) {
 					e2.open = 1;
@@ -82,7 +82,7 @@ const Input = {
 				} else if (!e2.pick) evClose();
 			}
 			e.preventDefault();
-		} else if (S === "fight" && (k === "1" || k === "2" || k === "3")) SPDX = +k;
+		} else if (Machine.is("fight") && (k === "1" || k === "2" || k === "3")) SPDX = +k;
 	},
 	// подписка на события холста и окна (вызывается при запуске)
 	install(canvas) {
