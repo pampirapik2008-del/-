@@ -732,6 +732,16 @@ function logo(y) {
 		ctx.restore();
 	}
 }
+// новый поход: сброс состояния и три случайных кандидата на выбор (одинаково из меню и после
+// поражения — порядок обращений к Rand общий, его видит golden)
+function startPick() {
+	newGame();
+	G.choices = HEROES.slice()
+		.sort(() => Rand.next() - 0.5)
+		.slice(0, 3);
+	PK = -1;
+	Machine.go("pick");
+}
 function dMenu() {
 	menuBG();
 	Light.begin("#7a78b0");
@@ -757,18 +767,7 @@ function dMenu() {
 	logo(84);
 	const bs = [
 		["Продолжить", () => (SAVED ? loadGame() || (delSave(), toast("Сохранение повреждено")) : toast("Сохранения пока нет")), "#2e7d32", !SAVED],
-		[
-			"Новая игра",
-			() => {
-				newGame();
-				G.choices = HEROES.slice()
-					.sort(() => Rand.next() - 0.5)
-					.slice(0, 3);
-				PK = -1;
-				Machine.go("pick");
-			},
-			"#8e24aa",
-		],
+		["Новая игра", startPick, "#8e24aa"],
 		["Боевая арена", arenaStart, "#8e24aa"],
 		["Коллекция", () => { CODEX_TEST = null; pop = null; Machine.go("codex"); }, "#8e24aa"],
 		[
@@ -1174,14 +1173,7 @@ function dEnd() {
 	});
 	btn(389, 468, 210, 50, G.arena ? "Ещё раз" : "Новый поход", () => {
 		if (G.arena) arenaStart();
-		else {
-			newGame();
-			G.choices = HEROES.slice()
-				.sort(() => Rand.next() - 0.5)
-				.slice(0, 3);
-			PK = -1;
-			Machine.go("pick");
-		}
+		else startPick();
 	}, "#2e7d32", { sz: 20 });
 	btn(619, 468, 210, 50, "В меню", toMenu, "#8e24aa", { sz: 20 });
 }
