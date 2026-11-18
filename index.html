@@ -9722,9 +9722,10 @@ addEventListener('unhandledrejection',e=>{
 (()=>{let taps=[];addEventListener('pointerdown',e=>{if(e.clientX>56||e.clientY>56)return;const now=Date.now();taps=taps.filter(t=>now-t<2500);taps.push(now);if(taps.length>=5){taps=[];try{window.mxUnlock&&window.mxUnlock(true)}catch(_){}}},true)})();
 
 /* ---------- API (формат Responses, как в MY AI STUDIO) ---------- */
-function extractText(p){const o=[];(p.output||[]).forEach(it=>{if(it.type==='message')(it.content||[]).forEach(c=>{if(typeof c.text==='string')o.push(c.text)})});
+// текст ответа в обоих форматах (Responses и chat completions); чужие формы полей — не исключение, а пустой текст
+function extractText(p){const o=[],arr=x=>Array.isArray(x)?x:[];arr(p.output).forEach(it=>{if(it&&it.type==='message')arr(it.content).forEach(c=>{if(c&&typeof c.text==='string')o.push(c.text)})});
   if(!o.length&&typeof p.output_text==='string')o.push(p.output_text);
-  const m=p.choices&&p.choices[0]&&p.choices[0].message;if(!o.length&&m&&typeof m.content==='string')o.push(m.content);return o.join('').trim()}
+  const ch=arr(p.choices)[0],m=ch&&ch.message;if(!o.length&&m&&typeof m.content==='string')o.push(m.content);return o.join('').trim()}
 let NOEFF=false;const SPENT={i:0,o:0};
 async function ask(msgs,system,opt){
   opt=opt||{};
@@ -9733,7 +9734,10 @@ async function ask(msgs,system,opt){
   system=system+effHint;
   let b=cfg.base.trim().replace(/\/+$/,'');if(!/\/responses$/.test(b))b+=(/\/v1$/.test(b)?'':'/v1')+'/responses';
   const eff=opt.effort||cfg.effort;
-  for(const withEff of(NOEFF||!eff)?[false]:[true,false]){
+  // повторы: сервер не знает reasoning (400) → без него; пустой/оборванный ответ → удвоить лимит, пока он меньше 64k.
+  // Раньше цикл шёл по паре [с reasoning, без] — после двух пустых ответов функция молча возвращала undefined.
+  for(let n=0;n<10;n++){
+    const withEff=!NOEFF&&!!eff;
     const body={model:cfg.model,stream:false,max_output_tokens:opt.max||cfg.maxTok,instructions:system,
       input:msgs.map(m=>({role:m.role,content:[{type:m.role==='assistant'?'output_text':'input_text',text:m.text}]}))};
     if(withEff)body.reasoning={effort:eff};
@@ -9746,6 +9750,7 @@ async function ask(msgs,system,opt){
       if(!r.ok){if(withEff&&r.status===400){NOEFF=true;continue}throw new Error(MXCore.apiError({status:r.status,body:MXCore.maskSecrets(txt,cfg.key)}))}
       if(txt.length>4e6)throw new Error(MXCore.apiError({tooLarge:true,size:txt.length}));
       let j;try{j=JSON.parse(txt)}catch(e){throw new Error(MXCore.apiError({badJson:true}))}
+      if(!j||typeof j!=='object')throw new Error(MXCore.apiError({badJson:true}));
       const u=j.usage||{};
       SPENT.i+=u.input_tokens||u.prompt_tokens||0;SPENT.o+=u.output_tokens||u.completion_tokens||0;
       const out=extractText(j);
@@ -9757,6 +9762,7 @@ async function ask(msgs,system,opt){
       return out;
     }catch(e){throw e.name==='AbortError'?new Error(MXCore.apiError({timeout:true})):new Error(MXCore.maskSecrets(e.message,cfg.key))}finally{clearTimeout(t)}
   }
+  throw new Error(MXCore.apiError({empty:true}));
 }
 
 /* ---------- оглавление кода, патчи ---------- */

@@ -156,7 +156,7 @@ export function createDom({ width = 1280, height = 720, dpr = 2, canvasFactory =
 		clearTimeout,
 		setInterval: () => 0,
 		clearInterval: noop,
-		location: { hash: "", href: "http://localhost/", reload() {} },
+		location: { hash: "", href: "http://localhost/", reload() {}, replace() {}, assign() {} },
 		localStorage: store(),
 		__mxStorage: store(),
 		navigator: { userAgent: "node-harness", hardwareConcurrency: 4, deviceMemory: 8, maxTouchPoints: 0 },

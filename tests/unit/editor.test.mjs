@@ -165,6 +165,18 @@ function fakeIDB(initial) {
 		rows,
 	};
 }
+// IndexedDB, которая отказывает: "error" — запрос open завершается onerror, "throw" — open бросает синхронно (sandbox-iframe)
+function failIDB(kind) {
+	return {
+		open() {
+			if (kind === "throw") throw new Error("SecurityError: The operation is insecure.");
+			const r = { error: new Error("InvalidStateError: A mutation operation was attempted on a database that did not allow mutations.") };
+			setImmediate(() => r.onerror && r.onerror());
+			return r;
+		},
+		rows: new Map(),
+	};
+}
 function loadLoader(opts) {
 	opts = opts || {};
 	const dom = createDom();
@@ -207,13 +219,15 @@ function loadLoader(opts) {
 	dom.document.createElement = (tag) => patchEl(mk(tag));
 	dom.document.head = patchEl(mk("head"));
 	patchEl(dom.document.body);
+	const scripts = []; // тексты скриптов, добавленных в body (так загрузчик запускает код игры)
+	dom.document.body.appendChild = (el) => { if (el && el.tagName === "SCRIPT") scripts.push(String(el.textContent)); };
 	dom.document.getElementById = (i) => byId.get(i) || null;
 	dom.document.querySelector = (sel) => byId.get(sel.slice(1)) || patchEl(Object.assign(mk("div"), { textContent: sel === "#game-src" ? "/*game*/" : sel === "#game-assets" ? "/*assets*/" : "" }));
 	const warns = [];
 	const reloads = [];
 	Object.assign(win, {
 		console: { log() {}, warn: (...a) => warns.push(a.join(" ")), error: (...a) => warns.push(a.join(" ")) },
-		indexedDB: fakeIDB(opts.versions),
+		indexedDB: opts.idbFail === "missing" ? undefined : opts.idbFail ? failIDB(opts.idbFail) : fakeIDB(opts.versions),
 		setTimeout: (f, ms) => (timers.push({ f, at: ms | 0, kind: "t" }), timers.length),
 		clearTimeout: (id) => id && timers[id - 1] && (timers[id - 1].dead = true),
 		setInterval: (f, ms) => (timers.push({ f, at: ms | 0, every: ms | 0, kind: "i" }), timers.length),
@@ -261,7 +275,7 @@ function loadLoader(opts) {
 	const settle = async () => {
 		for (let i = 0; i < 12; i++) await new Promise((r) => setImmediate(r));
 	};
-	return { win, ls: win.localStorage, warns, reloads, advance, settle, winListeners: dom.winListeners, byId };
+	return { win, ls: win.localStorage, warns, reloads, advance, settle, winListeners: dom.winListeners, byId, scripts };
 }
 // тестовая пара «пароль → соль/хеш» (боевой пароль в тестах не фигурирует: проверяется та же функция на своей паре)
 const TEST_PWD = "тестовый пароль редактора 42";
@@ -482,4 +496,100 @@ test("пять сломанных версий подряд — все отка�
 	// сломанные версии остаются в базе (их можно посмотреть в панели), чистка хранит 15 новейших + good + active
 	assert.deepEqual(MXCore.pruneList([...versions].sort((a, b) => b.id - a.id), "906", "906", 15), []);
 	assert.deepEqual(H.warns, []);
+});
+
+// ---------- устойчивость (этап S): отказ IndexedDB, пустой и мусорный ответ ИИ ----------
+test("отказ IndexedDB (onerror / синхронный throw / нет объекта): игра запускается оригиналом, панель открывается, история пуста, без необработанных отказов", async () => {
+	const auth = await testAuth();
+	const rejections = [];
+	const onRej = (e) => rejections.push(String(e && e.message));
+	process.on("unhandledRejection", onRej);
+	try {
+		for (const kind of ["error", "throw", "missing"]) {
+			// в хранилище активна версия 900 — достать её негде
+			const L = loadLoader({ idbFail: kind, auth, ls: { mx_active: "900", mx_good: "900" } });
+			await L.settle();
+			assert.equal(L.ls.getItem("mx_pending"), null, kind + ": наблюдение не начато");
+			assert.equal(L.reloads.length, 0, kind);
+			assert.equal(L.scripts.length, 1, kind + ": скрипт игры добавлен один раз");
+			assert.match(L.scripts[0], /\/\*game\*\//, kind + ": запущен оригинал, а не версия 900");
+			// вход и открытие панели: история отрисовывается без падения
+			L.win.mxGate(true);
+			await enterPassword(L, TEST_PWD);
+			assert.equal(L.win.__mxOpen, true, kind + ": панель открыта");
+			await L.settle();
+			assert.equal(L.byId.get("mx-cnt").textContent, "правок пока нет", kind);
+			assert.match(L.byId.get("mx-v").innerHTML, /Оригинал/, kind);
+			assert.deepEqual(L.warns, [], kind + ": консоль чистая: " + L.warns.join(" | "));
+		}
+	} finally {
+		process.off("unhandledRejection", onRej);
+	}
+	assert.deepEqual(rejections, [], "необработанных отказов промисов нет");
+});
+
+// загрузчик с поддельным API: ответы по очереди из списка; возвращает журнал панели после нажатия «Изменить игру»
+async function askAI(responses, req = "сделай врагов быстрее") {
+	const calls = [];
+	const L = loadLoader({
+		ls: { mx_cfg: JSON.stringify({ key: "sk-testkey123456", base: "https://api.example/v1", model: "m" }) },
+		game: {
+			fetch: async (url, init) => {
+				calls.push(JSON.parse(init.body));
+				const r = responses[Math.min(calls.length, responses.length) - 1];
+				return { ok: r.status === undefined || r.status === 200, status: r.status || 200, text: async () => (typeof r.body === "string" ? r.body : JSON.stringify(r.body)) };
+			},
+		},
+	});
+	await L.settle();
+	L.byId.get("mx-q").value = req;
+	await L.byId.get("mx-go").onclick();
+	await L.settle();
+	return { L, calls, log: L.byId.get("mx-log").textContent, busy: L.byId.get("mx-log").classList.contains("busy"), disabled: L.byId.get("mx-go").disabled };
+}
+const reply = (text) => ({ body: { output: [{ type: "message", content: [{ type: "output_text", text }] }], usage: { input_tokens: 10, output_tokens: 5 } } });
+
+test("пустой ответ ИИ ({} без текста): понятное сообщение, кнопка снова доступна, повтор с большим лимитом ограничен", async () => {
+	const r = await askAI([{ body: {} }]);
+	assert.match(r.log, /^Ошибка: Пустой ответ модели/, r.log);
+	assert.ok(!/undefined|null|TypeError|Cannot read/.test(r.log), "без внутренних формулировок: " + r.log);
+	assert.equal(r.busy, false);
+	assert.equal(r.disabled, false);
+	assert.ok(r.calls.length >= 2 && r.calls.length <= 8, "повторы с удвоением лимита: " + r.calls.length);
+	for (let i = 1; i < r.calls.length; i++) assert.ok(r.calls[i].max_output_tokens >= r.calls[i - 1].max_output_tokens, "лимит не уменьшается");
+	assert.equal(r.L.ls.getItem("mx_active"), null, "игра не изменена");
+});
+
+test("мусорный ответ ИИ: не JSON, null, текст без блоков, патчи без формата — всегда человеческое сообщение, игра не изменена", async () => {
+	const notJson = await askAI([{ body: "<html>Bad gateway</html>" }]);
+	assert.match(notJson.log, /^Ошибка: Сервер вернул непонятный ответ \(не JSON\)/, notJson.log);
+	const nul = await askAI([{ body: "null" }]);
+	assert.match(nul.log, /^Ошибка: Сервер вернул непонятный ответ/, nul.log);
+	// JSON верный, но поля не той формы (строка вместо массива) — это «пустой ответ», а не исключение
+	const shape = await askAI([{ body: { output: "не массив", choices: 5, usage: null } }]);
+	assert.match(shape.log, /^Ошибка: Пустой ответ модели/, shape.log);
+	// оборванный ответ в формате chat completions: удвоение лимита до потолка, затем понятный отказ
+	const cut = await askAI([{ body: { choices: [{ message: { content: "@@@FIND\nнача" }, finish_reason: "length" }] } }]);
+	assert.match(cut.log, /^Ошибка: Ответ модели оборван лимитом токенов/, cut.log);
+	assert.ok(cut.calls.length >= 3 && cut.calls.length <= 8, "повторы с удвоением: " + cut.calls.length);
+	assert.ok(cut.calls.every((c) => c.max_output_tokens <= 96000), "лимит не растёт бесконечно");
+	// HTML-страница ошибки вместо API
+	const html502 = await askAI([{ status: 502, body: "<html><body>Bad gateway</body></html>" }]);
+	assert.match(html502.log, /^Ошибка: Сервер модели временно недоступен \(502\)/, html502.log);
+	const noBlocks = await askAI([reply("Я не понимаю задачу, расскажите подробнее")]);
+	assert.match(noBlocks.log, /^Ошибка: Модель не выбрала код/, noBlocks.log);
+	assert.equal(noBlocks.calls.length, 1);
+	// выбор блоков удался, а правка — болтовня без @@@FIND: одна просьба исправить, затем понятный отказ
+	const noPatch = await askAI([reply("L1 L2"), reply("Вот что я думаю об игре…"), reply("Всё ещё без патчей")]);
+	assert.match(noPatch.log, /^Ошибка: Не удалось применить правку: в ответе нет патчей/, noPatch.log);
+	assert.equal(noPatch.calls.length, 3, "выбор + правка + одна просьба исправить");
+	// патч с несуществующим фрагментом: тоже отказ, без исключений
+	const badFind = await askAI([reply("L1"), reply("правка\n@@@FIND\nнет такого кода\n@@@REPLACE\nx\n@@@END"), reply("@@@FIND\nвсё ещё нет\n@@@REPLACE\ny\n@@@END")]);
+	assert.match(badFind.log, /^Ошибка: Не удалось применить правку: /, badFind.log);
+	for (const r of [notJson, nul, shape, cut, html502, noBlocks, noPatch, badFind]) {
+		assert.equal(r.busy, false);
+		assert.equal(r.disabled, false);
+		assert.equal(r.L.ls.getItem("mx_active"), null, "игра не изменена");
+		assert.ok(!r.log.includes("sk-testkey123456"), "ключ не светится");
+	}
 });

@@ -166,6 +166,11 @@ export function boot({ quiet = true, dom = createDom(), code = null, bakeMs = nu
 			for (let i = 0; i < n; i++) if (!flush()) break;
 			return this;
 		},
+		// «пропавшее» время без кадров (свёрнутая вкладка, заблокированный экран): следующий кадр увидит большой dt
+		jump(ms) {
+			ts += ms;
+			return this;
+		},
 		key(k) {
 			for (const f of winListeners["keydown"] || []) {
 				try {
