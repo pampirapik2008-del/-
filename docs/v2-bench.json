@@ -1,0 +1,2309 @@
+{
+  "date": "2026-11-18T22:19:14.390Z",
+  "browser": "HeadlessChrome/131.0.6778.0",
+  "cpu": 4,
+  "viewport": "844×390 DPR 2, качество 0, R=1",
+  "seconds": 2,
+  "scenario": [
+    {
+      "id": "menu",
+      "label": "Главное меню",
+      "timing": {
+        "frames": 35,
+        "fps": 17.65,
+        "worst5": 7.5,
+        "updateMedian": 0,
+        "update95": 0.8,
+        "drawMedian": 3.7,
+        "draw95": 8.2,
+        "maxFrame": 216.6,
+        "over60": 17.14,
+        "setupMs": 0,
+        "screen": "menu",
+        "observed": {
+          "units": [
+            0
+          ],
+          "effectsMax": 0,
+          "activities": [
+            "обычный кадр"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 216.6,
+            "update": 0.1,
+            "draw": 4.9,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 11,
+            "projectiles": 0
+          },
+          {
+            "frame": 133.4,
+            "update": 0.2,
+            "draw": 2.8,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 9,
+            "projectiles": 0
+          },
+          {
+            "frame": 116.7,
+            "update": 0.8,
+            "draw": 13.7,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 8,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.7,
+            "update": 0.1,
+            "draw": 5,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 8,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.7,
+            "update": 0,
+            "draw": 2.5,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 11,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.6,
+            "update": 0.1,
+            "draw": 8.2,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 12,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0,
+            "draw": 6.1,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 9,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0,
+            "draw": 3.7,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 11,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0,
+            "draw": 3.5,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 12,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0.1,
+            "draw": 3.6,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 8,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 4.9,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 8,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 3.2,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 7,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 4.1,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 7,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 3.7,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 7,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 5.2,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 8,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 6.9,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 8,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 2.5,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 8,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 5.2,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 9,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 2.7,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 9,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 4,
+            "activity": "обычный кадр",
+            "context": "экран menu, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 10,
+            "projectiles": 0
+          }
+        ],
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 190.89,
+        "blendsPerFrame": 12.45,
+        "lighterPerFrame": 6.18
+      }
+    },
+    {
+      "id": "map",
+      "label": "Карта (готовый фон)",
+      "timing": {
+        "frames": 65,
+        "fps": 32.5,
+        "worst5": 19.96,
+        "updateMedian": 0,
+        "update95": 0.6,
+        "drawMedian": 2,
+        "draw95": 5.8,
+        "maxFrame": 183.4,
+        "over60": 4.62,
+        "setupMs": 0,
+        "screen": "map",
+        "observed": {
+          "units": [
+            0
+          ],
+          "effectsMax": 0,
+          "activities": [
+            "обычный кадр"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 183.4,
+            "update": 0.1,
+            "draw": 3,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 133.3,
+            "update": 0,
+            "draw": 11.3,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.7,
+            "update": 0,
+            "draw": 0.4,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0,
+            "draw": 6.4,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.5,
+            "update": 0,
+            "draw": 1.5,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.7,
+            "draw": 4.2,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.3,
+            "draw": 5.8,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.5,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 2,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 3,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 1.9,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 1.9,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 1.4,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 7.1,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 1.2,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 5.5,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 1.7,
+            "activity": "обычный кадр",
+            "context": "экран map, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          }
+        ],
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 269.41,
+        "blendsPerFrame": 9.54,
+        "lighterPerFrame": 4.26
+      }
+    },
+    {
+      "id": "prep",
+      "label": "Расстановка",
+      "timing": {
+        "frames": 54,
+        "fps": 27,
+        "worst5": 19.96,
+        "updateMedian": 0,
+        "update95": 0.6,
+        "drawMedian": 3.4,
+        "draw95": 9.5,
+        "maxFrame": 100,
+        "over60": 3.7,
+        "setupMs": 0,
+        "screen": "prep",
+        "observed": {
+          "units": [
+            8
+          ],
+          "effectsMax": 0,
+          "activities": [
+            "бой: norm"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 100,
+            "update": 0,
+            "draw": 10,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 99.9,
+            "update": 0,
+            "draw": 3.5,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 6,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0.1,
+            "draw": 2.5,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 5,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 3.4,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 11.9,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.7,
+            "draw": 3.7,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 5,
+            "projectiles": 0
+          },
+          {
+            "frame": 49.9,
+            "update": 0.3,
+            "draw": 3.1,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.5,
+            "update": 0.1,
+            "draw": 5.4,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 6,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.3,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.4,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 6.5,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.2,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.9,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.6,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 3.4,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.8,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.1,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.6,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.4,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.5,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 4,
+            "projectiles": 0
+          }
+        ],
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 356.07,
+        "blendsPerFrame": 11.69,
+        "lighterPerFrame": 3.8
+      }
+    },
+    {
+      "id": "fight",
+      "label": "Бой, 3 против 5",
+      "timing": {
+        "frames": 28,
+        "fps": 14.12,
+        "worst5": 6,
+        "updateMedian": 1.4,
+        "update95": 8.4,
+        "drawMedian": 7.7,
+        "draw95": 12.8,
+        "maxFrame": 216.7,
+        "over60": 46.43,
+        "setupMs": 0,
+        "screen": "fight",
+        "observed": {
+          "units": [
+            8
+          ],
+          "effectsMax": 7,
+          "activities": [
+            "бой: norm; начало боя",
+            "бой: norm",
+            "бой: norm; способность: Рассечение",
+            "бой: norm; способность: Рассечение; способность: Святой щит",
+            "бой: norm; способность: Рассечение; способность: Святой щит; способность: Колючий корень"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 216.7,
+            "update": 0.5,
+            "draw": 5.2,
+            "activity": "бой: norm; способность: Рассечение; способность: Святой щит; способность: Колючий корень",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 6,
+            "particles": 17,
+            "projectiles": 0
+          },
+          {
+            "frame": 166.7,
+            "update": 3.6,
+            "draw": 10.4,
+            "activity": "бой: norm; способность: Рассечение; способность: Святой щит; способность: Колючий корень",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 6,
+            "particles": 26,
+            "projectiles": 0
+          },
+          {
+            "frame": 150,
+            "update": 8.7,
+            "draw": 17.1,
+            "activity": "бой: norm; начало боя",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 100.1,
+            "update": 8.4,
+            "draw": 12.8,
+            "activity": "бой: norm; начало боя",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 5,
+            "projectiles": 0
+          },
+          {
+            "frame": 83.4,
+            "update": 5.7,
+            "draw": 8.8,
+            "activity": "бой: norm; начало боя",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 83.4,
+            "update": 1.4,
+            "draw": 9.9,
+            "activity": "бой: norm; начало боя",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 83.4,
+            "update": 4.9,
+            "draw": 11.2,
+            "activity": "бой: norm; способность: Рассечение",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 2,
+            "particles": 28,
+            "projectiles": 0
+          },
+          {
+            "frame": 83.3,
+            "update": 3.2,
+            "draw": 8.8,
+            "activity": "бой: norm; начало боя",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 83.3,
+            "update": 2.3,
+            "draw": 10.1,
+            "activity": "бой: norm; начало боя",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.8,
+            "update": 3.1,
+            "draw": 9,
+            "activity": "бой: norm; способность: Рассечение; способность: Святой щит",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 5,
+            "particles": 21,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.7,
+            "update": 7.1,
+            "draw": 7.7,
+            "activity": "бой: norm",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 13,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.6,
+            "update": 1.1,
+            "draw": 8.7,
+            "activity": "бой: norm; начало боя",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.5,
+            "update": 2.2,
+            "draw": 8.8,
+            "activity": "бой: norm; начало боя",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 5,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 1.2,
+            "draw": 4.9,
+            "activity": "бой: norm",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 1,
+            "particles": 13,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.7,
+            "draw": 3.8,
+            "activity": "бой: norm; способность: Рассечение",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 2,
+            "particles": 24,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.4,
+            "draw": 10.3,
+            "activity": "бой: norm; способность: Рассечение; способность: Святой щит; способность: Колючий корень",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 6,
+            "particles": 28,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.5,
+            "draw": 7.7,
+            "activity": "бой: norm; способность: Рассечение; способность: Святой щит; способность: Колючий корень",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 7,
+            "particles": 27,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.2,
+            "draw": 9.7,
+            "activity": "бой: norm; способность: Рассечение; способность: Святой щит; способность: Колючий корень",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 7,
+            "particles": 29,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.3,
+            "draw": 5.2,
+            "activity": "бой: norm; способность: Рассечение; способность: Святой щит; способность: Колючий корень",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 7,
+            "particles": 31,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 2,
+            "draw": 5.7,
+            "activity": "бой: norm; способность: Рассечение; способность: Святой щит; способность: Колючий корень",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 6,
+            "particles": 17,
+            "projectiles": 0
+          }
+        ],
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 432.42,
+        "blendsPerFrame": 13.32,
+        "lighterPerFrame": 4.42
+      }
+    },
+    {
+      "id": "boss",
+      "label": "Босс, всплеск способностей",
+      "timing": {
+        "frames": 28,
+        "fps": 14,
+        "worst5": 4.29,
+        "updateMedian": 0.9,
+        "update95": 5.7,
+        "drawMedian": 7.35,
+        "draw95": 16.7,
+        "maxFrame": 300,
+        "over60": 35.71,
+        "setupMs": 7.8,
+        "screen": "fight",
+        "observed": {
+          "units": [
+            5
+          ],
+          "effectsMax": 13,
+          "activities": [
+            "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "бой: boss; баннер: Король слизней"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 300,
+            "update": 2.4,
+            "draw": 45,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 233.3,
+            "update": 3.4,
+            "draw": 9.3,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 59,
+            "projectiles": 1
+          },
+          {
+            "frame": 133.4,
+            "update": 0.9,
+            "draw": 8.1,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 11,
+            "particles": 56,
+            "projectiles": 2
+          },
+          {
+            "frame": 83.4,
+            "update": 1.6,
+            "draw": 16.7,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 44,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.7,
+            "update": 1.3,
+            "draw": 9.7,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.7,
+            "update": 5.7,
+            "draw": 9.7,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 11,
+            "particles": 53,
+            "projectiles": 2
+          },
+          {
+            "frame": 66.7,
+            "update": 0.2,
+            "draw": 7.1,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 11,
+            "particles": 61,
+            "projectiles": 2
+          },
+          {
+            "frame": 66.6,
+            "update": 3.4,
+            "draw": 11.4,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 35,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.6,
+            "update": 1.8,
+            "draw": 9.3,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 29,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.6,
+            "update": 0.3,
+            "draw": 10,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 62,
+            "projectiles": 1
+          },
+          {
+            "frame": 50.1,
+            "update": 2.1,
+            "draw": 5.5,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 14,
+            "projectiles": 2
+          },
+          {
+            "frame": 50,
+            "update": 0.7,
+            "draw": 6.7,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.4,
+            "draw": 6.7,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 12,
+            "projectiles": 1
+          },
+          {
+            "frame": 50,
+            "update": 0.7,
+            "draw": 6.5,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 19,
+            "projectiles": 2
+          },
+          {
+            "frame": 50,
+            "update": 1.2,
+            "draw": 9.6,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 26,
+            "projectiles": 2
+          },
+          {
+            "frame": 50,
+            "update": 1,
+            "draw": 7.2,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 11,
+            "particles": 61,
+            "projectiles": 2
+          },
+          {
+            "frame": 50,
+            "update": 0.4,
+            "draw": 10.7,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 56,
+            "projectiles": 1
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 7.2,
+            "activity": "бой: boss; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 51,
+            "projectiles": 1
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 5.9,
+            "activity": "бой: boss; баннер: Король слизней",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 6,
+            "particles": 21,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.9,
+            "draw": 5.7,
+            "activity": "бой: boss; баннер: Король слизней",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 5,
+            "particles": 18,
+            "projectiles": 0
+          }
+        ],
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 506.07,
+        "blendsPerFrame": 19.41,
+        "lighterPerFrame": 7.48
+      }
+    },
+    {
+      "id": "victory",
+      "label": "Победа + всплеск способностей",
+      "timing": {
+        "frames": 31,
+        "fps": 15.5,
+        "worst5": 5,
+        "updateMedian": 0.1,
+        "update95": 1.1,
+        "drawMedian": 6.9,
+        "draw95": 10.3,
+        "maxFrame": 316.7,
+        "over60": 12.9,
+        "setupMs": 6.1,
+        "screen": "fight",
+        "observed": {
+          "units": [
+            5
+          ],
+          "effectsMax": 10,
+          "activities": [
+            "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "бой: boss; плашка победы; баннер: Король слизней"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 316.7,
+            "update": 0.6,
+            "draw": 40.9,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 200,
+            "update": 0.7,
+            "draw": 8.3,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 9,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 116.6,
+            "update": 0.1,
+            "draw": 7.2,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 8,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.7,
+            "update": 0.1,
+            "draw": 7.1,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0,
+            "draw": 5.4,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 8,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0.8,
+            "draw": 4.8,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 4,
+            "particles": 5,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.9,
+            "draw": 5.7,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 6.9,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.7,
+            "draw": 7.2,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 7.3,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.6,
+            "draw": 6.3,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 11,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 7.8,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 10,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 6.1,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 8,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 7.6,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 7,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 6.8,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд; вспышка",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 10,
+            "particles": 7,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 7.4,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 9,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 7.6,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 9,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 9.4,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 9,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 7.4,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 9,
+            "particles": 4,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 1.8,
+            "draw": 8.6,
+            "activity": "бой: boss; плашка победы; баннер: Король слизней; способность: Дыхание леса; способность: Клинок рассвета; способность: Божественный суд",
+            "context": "экран fight, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 5,
+            "effects": 8,
+            "particles": 4,
+            "projectiles": 0
+          }
+        ],
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 436.88,
+        "blendsPerFrame": 18.82,
+        "lighterPerFrame": 7.27
+      }
+    },
+    {
+      "id": "chest",
+      "label": "Закрытый сундук",
+      "timing": {
+        "frames": 58,
+        "fps": 29,
+        "worst5": 10,
+        "updateMedian": 0,
+        "update95": 1.1,
+        "drawMedian": 2.7,
+        "draw95": 6,
+        "maxFrame": 200,
+        "over60": 5.17,
+        "setupMs": 0,
+        "screen": "msg",
+        "observed": {
+          "units": [
+            0
+          ],
+          "effectsMax": 0,
+          "activities": [
+            "переход экрана; событие: Сундук, сундук закрыт",
+            "событие: Сундук, сундук закрыт",
+            "событие: Сундук, сундук открыт"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 200,
+            "update": 0.3,
+            "draw": 2.3,
+            "activity": "событие: Сундук, сундук открыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 26,
+            "projectiles": 0
+          },
+          {
+            "frame": 100.1,
+            "update": 0,
+            "draw": 11.5,
+            "activity": "переход экрана; событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 100,
+            "update": 0.1,
+            "draw": 3.2,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 4.5,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 49.9,
+            "update": 0.8,
+            "draw": 2.5,
+            "activity": "событие: Сундук, сундук открыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 26,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.5,
+            "update": 0,
+            "draw": 1.5,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.5,
+            "update": 0.5,
+            "draw": 6,
+            "activity": "событие: Сундук, сундук открыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 26,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.3,
+            "activity": "переход экрана; событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.1,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.2,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.7,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.8,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.7,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.3,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.4,
+            "draw": 2.6,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.9,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 1.2,
+            "draw": 2.7,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3.1,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 2.1,
+            "activity": "событие: Сундук, сундук закрыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 2.5,
+            "activity": "событие: Сундук, сундук открыт",
+            "context": "экран msg, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 26,
+            "projectiles": 0
+          }
+        ],
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 318.38,
+        "blendsPerFrame": 10.27,
+        "lighterPerFrame": 4.63
+      }
+    },
+    {
+      "id": "entry",
+      "label": "Вход в бой и расстановку",
+      "timing": {
+        "frames": 41,
+        "fps": 20.16,
+        "worst5": 8.57,
+        "updateMedian": 0,
+        "update95": 0.8,
+        "drawMedian": 4,
+        "draw95": 9.1,
+        "maxFrame": 333.4,
+        "over60": 9.76,
+        "setupMs": 56.8,
+        "screen": "prep",
+        "observed": {
+          "units": [
+            8
+          ],
+          "effectsMax": 0,
+          "activities": [
+            "переход экрана; бой: norm",
+            "бой: norm"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 333.4,
+            "update": 0.5,
+            "draw": 43.4,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 166.6,
+            "update": 0,
+            "draw": 5.4,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 116.7,
+            "update": 0,
+            "draw": 6.2,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.6,
+            "update": 0,
+            "draw": 25.3,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0,
+            "draw": 1.9,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0,
+            "draw": 4,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 50.1,
+            "update": 0,
+            "draw": 4.9,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0.1,
+            "draw": 6.3,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 0,
+            "draw": 4,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 49.9,
+            "update": 0,
+            "draw": 5.7,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 49.9,
+            "update": 0,
+            "draw": 8.2,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 49.9,
+            "update": 0.1,
+            "draw": 4.9,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 5.4,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 3,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.8,
+            "draw": 5,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 2.6,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 1,
+            "draw": 3.2,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 4.6,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 3,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 4.3,
+            "activity": "переход экрана; бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 3.8,
+            "activity": "бой: norm",
+            "context": "экран prep, мир Тайга (0), узел 0, глубина 12, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 8,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          }
+        ],
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 442.98,
+        "blendsPerFrame": 10.86,
+        "lighterPerFrame": 3.37
+      }
+    },
+    {
+      "id": "bake",
+      "label": "Новая игра и сборка карты",
+      "timing": {
+        "frames": 39,
+        "fps": 20.17,
+        "worst5": 10.01,
+        "updateMedian": 0.1,
+        "update95": 19.1,
+        "drawMedian": 4.3,
+        "draw95": 15.9,
+        "maxFrame": 700,
+        "over60": 7.69,
+        "setupMs": 17.2,
+        "screen": "pick",
+        "observed": {
+          "units": [
+            0
+          ],
+          "effectsMax": 0,
+          "activities": [
+            "сборка карты: земля",
+            "сборка карты: дороги",
+            "сборка карты: лес: выбор",
+            "обычный кадр"
+          ]
+        },
+        "worst": [
+          {
+            "frame": 700,
+            "update": 19.1,
+            "draw": 87.7,
+            "activity": "сборка карты: земля",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 99.9,
+            "update": 0,
+            "draw": 4.4,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 66.6,
+            "update": 23.6,
+            "draw": 4.8,
+            "activity": "сборка карты: лес: выбор",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 9.2,
+            "draw": 15.9,
+            "activity": "сборка карты: земля",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 9.3,
+            "draw": 4.4,
+            "activity": "сборка карты: земля",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 50,
+            "update": 8.5,
+            "draw": 4.4,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 13.7,
+            "draw": 4.3,
+            "activity": "сборка карты: дороги",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 1.8,
+            "draw": 4.4,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 5.1,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 4.6,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 3.6,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0,
+            "draw": 4.7,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.4,
+            "update": 0.1,
+            "draw": 3.9,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 2,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 14.9,
+            "draw": 3.9,
+            "activity": "сборка карты: лес: выбор",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 5.8,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 4.1,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 0,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0.1,
+            "draw": 5,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0,
+            "draw": 4.5,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0.1,
+            "draw": 4.5,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          },
+          {
+            "frame": 33.3,
+            "update": 0.1,
+            "draw": 4.4,
+            "activity": "обычный кадр",
+            "context": "экран pick, мир Тайга (0), узел 0, глубина 0, качество 0 (ручное), DPR 2, окно 844×390, R 1",
+            "units": 0,
+            "effects": 0,
+            "particles": 1,
+            "projectiles": 0
+          }
+        ],
+        "counts": null
+      },
+      "counts": {
+        "commandsPerFrame": 2417.94,
+        "blendsPerFrame": 9.83,
+        "lighterPerFrame": 4.89
+      }
+    }
+  ]
+}
