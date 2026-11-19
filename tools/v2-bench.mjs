@@ -23,8 +23,9 @@ const SCENARIOS = [
 	{ id: "prep", label: "Расстановка", setup: prep + ` __dev.fight('norm');` },
 	{ id: "fight", label: "Бой, 3 против 5", setup: fight },
 	{ id: "boss", label: "Босс, искусственный всплеск способностей", setup: boss, timed: burst },
-	{ id: "victory", label: "Победа + всплеск способностей (имитация)", setup: boss, timed: burst + ` F.out={win:true,t:0.5,d:300};` },
-	{ id: "chest", label: "Сундук с автоматическим открытием", setup: prep + ` __dev.bakeNow(); __dev.S='map'; evChest();` },
+	{ id: "victory", label: "Победа босса после искусственного завершения боя", setup: boss, timed: burst + ` F.en=[]; F.cat=null; checkFightEnd();` },
+	{ id: "chest", label: "Сундук босса с автоматическим открытием", setup: boss + ` Seq.clear(); win(); EV.next();` },
+	{ id: "world", label: "Вход в следующий мир", setup: boss + ` Seq.clear(); win(); EV.next(); EV.next();`, timed: `nextWorld();` },
 	{ id: "entry", label: "Вход в бой и расстановку", setup: prep + ` __dev.bakeNow(); __dev.S='map';`, timed: `__dev.fight('norm');` },
 	{ id: "bake", label: "Новая игра и сборка карты", setup: `__dev.seed(777); __dev.S='menu';`, timed: `startPick();` },
 ];
