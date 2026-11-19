@@ -632,10 +632,10 @@ const ZONE = { x0: 96, x1: 506 };
 // позиции возвращаются: логика видит только «настоящие» координаты.
 const LERP_PREV = new WeakMap(),
 	LERP_UNDO = [];
-function lerpRemember(list) {
+function lerpRemember(list, units = true) {
 	for (let i = 0; i < list.length; i++) {
 		const u = list[i];
-		if (V2) v2AnimTrack(u);
+		if (V2 && units) v2AnimTrack(u);
 		let r = LERP_PREV.get(u);
 		if (!r) LERP_PREV.set(u, (r = { x: 0, y: 0 }));
 		r.x = u.x;

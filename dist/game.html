@@ -1079,7 +1079,7 @@ const Music = (() => {
 // ловится по отдельности, пишется в кольцевой журнал, а три подряд идущих сбоя
 // переводят игру в безопасный режим с понятным окном вместо мёртвого экрана.
 // версия исходников подставляется сборкой (короткий хеш src/ + ассетов)
-let GAME_BUILD = "a4e6d2be82ee";
+let GAME_BUILD = "440ab93bc437";
 const ERRS = [];
 const ERR_MAX = 200;
 // имя экрана для журнала: S объявлена раньше этого файла, но до 12_state.js ещё не задана
@@ -5378,7 +5378,7 @@ function upd(dt) {
 	// запоминаем позиции до шага — отрисовка экстраполирует движение между шагами
 	lerpRemember(F.pl);
 	lerpRemember(F.en);
-	if (F.proj) lerpRemember(F.proj);
+	if (F.proj) lerpRemember(F.proj, false);
 	let rem = dt * SPDX * TSC,
 		n = 0;
 	while (rem > 1e-5 && n++ < BAL.fight.maxSub && Machine.is("fight")) {
@@ -6075,10 +6075,10 @@ const ZONE = { x0: 96, x1: 506 };
 // позиции возвращаются: логика видит только «настоящие» координаты.
 const LERP_PREV = new WeakMap(),
 	LERP_UNDO = [];
-function lerpRemember(list) {
+function lerpRemember(list, units = true) {
 	for (let i = 0; i < list.length; i++) {
 		const u = list[i];
-		if (V2) v2AnimTrack(u);
+		if (V2 && units) v2AnimTrack(u);
 		let r = LERP_PREV.get(u);
 		if (!r) LERP_PREV.set(u, (r = { x: 0, y: 0 }));
 		r.x = u.x;

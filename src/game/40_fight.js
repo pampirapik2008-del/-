@@ -1671,7 +1671,7 @@ function upd(dt) {
 	// запоминаем позиции до шага — отрисовка экстраполирует движение между шагами
 	lerpRemember(F.pl);
 	lerpRemember(F.en);
-	if (F.proj) lerpRemember(F.proj);
+	if (F.proj) lerpRemember(F.proj, false);
 	let rem = dt * SPDX * TSC,
 		n = 0;
 	while (rem > 1e-5 && n++ < BAL.fight.maxSub && Machine.is("fight")) {

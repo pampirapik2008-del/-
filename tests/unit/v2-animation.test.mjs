@@ -39,3 +39,11 @@ test("V2: интерполяция не оставляет временные к
 	})())`));
 	assert.deepEqual(result, { during: 205, after: 210 });
 });
+
+test("V2: снаряды не создают состояние анимации персонажей", async () => {
+	const g = boot(); await g.ready();
+	assert.equal(g.dev.run(`(() => {
+		V2=true; const p={x:1,y:2,team:1}; lerpRemember([p], false);
+		return V2_ANIM.has(p);
+	})()`), false);
+});
