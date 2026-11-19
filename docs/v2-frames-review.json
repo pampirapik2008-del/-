@@ -1,0 +1,140 @@
+[
+  {
+    "character": "knight",
+    "frame": "walk_01",
+    "attempt": 3,
+    "auto": "pass",
+    "shape": 0.904,
+    "color": 2.52,
+    "change": 0.448,
+    "review": "reject",
+    "note": "Пропал меч, поза похожа на покой",
+    "normalized": "assets/generated_candidates/normalized/knight/walk_01.png"
+  },
+  {
+    "character": "mage",
+    "frame": "walk_01",
+    "attempt": 3,
+    "auto": "pass",
+    "shape": 0.93,
+    "color": 5.12,
+    "change": 0.359,
+    "review": "reject",
+    "note": "Есть попытка шага, но видна яркая магентовая обводка; сравнить с образцом после очистки.",
+    "normalized": "assets/generated_candidates/normalized/mage/walk_01.png"
+  },
+  {
+    "character": "swamp",
+    "frame": "walk_01",
+    "attempt": 2,
+    "auto": "pass",
+    "shape": 0.906,
+    "color": 8.92,
+    "change": 0.282,
+    "review": "reject",
+    "note": "Нет обещанного сжатия и прыжка",
+    "normalized": "assets/generated_candidates/normalized/swamp/walk_01.png"
+  },
+  {
+    "character": "red",
+    "frame": "walk_01",
+    "attempt": 2,
+    "auto": "pass",
+    "shape": 0.893,
+    "color": 6.38,
+    "change": 0.32,
+    "review": "reject",
+    "note": "Нет обещанного сжатия и прыжка",
+    "normalized": "assets/generated_candidates/normalized/red/walk_01.png"
+  },
+  {
+    "character": "king",
+    "frame": "walk_01",
+    "attempt": 2,
+    "auto": "pass",
+    "shape": 0.941,
+    "color": 6.41,
+    "change": 0.291,
+    "review": "reject",
+    "note": "Нет обещанного сжатия и прыжка",
+    "normalized": "assets/generated_candidates/normalized/king/walk_01.png"
+  },
+  {
+    "character": "paladin",
+    "frame": "walk_02",
+    "attempt": 1,
+    "auto": "pass",
+    "shape": 0.989,
+    "color": 3.93,
+    "change": 0.065,
+    "review": "reject",
+    "note": "Поза почти совпадает с покоем; шага не видно",
+    "normalized": "assets/generated_candidates/normalized/paladin/walk_02.png"
+  },
+  {
+    "character": "paladin",
+    "frame": "walk_03",
+    "attempt": 1,
+    "auto": "pass",
+    "shape": 0.976,
+    "color": 4.02,
+    "change": 0.086,
+    "review": "reject",
+    "note": "Поза почти совпадает с покоем; шага не видно",
+    "normalized": "assets/generated_candidates/normalized/paladin/walk_03.png"
+  },
+  {
+    "character": "paladin",
+    "frame": "walk_04",
+    "attempt": 1,
+    "auto": "pass",
+    "shape": 0.812,
+    "color": 4.39,
+    "change": 0.746,
+    "review": "reject",
+    "note": "Поза отличается от покоя, но заметна магентовая обводка; непрерывность цикла не проверена.",
+    "normalized": "assets/generated_candidates/normalized/paladin/walk_04.png"
+  },
+  {
+    "character": "slime",
+    "frame": "walk_02",
+    "attempt": 1,
+    "auto": "pass",
+    "shape": 0.671,
+    "color": 6.28,
+    "change": 0.684,
+    "review": "reject",
+    "note": "Силуэт изменён, но видна магентовая обводка, совпадение позы и непрерывность цикла не проверены.",
+    "normalized": "assets/generated_candidates/normalized/slime/walk_02.png"
+  },
+  {
+    "character": "slime",
+    "frame": "walk_03",
+    "attempt": 1,
+    "auto": "pass",
+    "shape": 1,
+    "color": 3.06,
+    "change": 0,
+    "review": "reject",
+    "note": "Сжатия не видно: поза совпадает с покоем",
+    "normalized": "assets/generated_candidates/normalized/slime/walk_03.png"
+  },
+  {
+    "character": "paladin",
+    "frame": "walk_01",
+    "attempt": 1,
+    "auto": "pass (ранее)",
+    "review": "provisional",
+    "note": "Поза напоминает шаг; качество контура, опора и непрерывность цикла ещё не проверены.",
+    "normalized": "assets/generated_candidates/normalized/paladin/walk_01.png"
+  },
+  {
+    "character": "slime",
+    "frame": "walk_01",
+    "attempt": 2,
+    "auto": "pass (ранее)",
+    "review": "reject",
+    "note": "По подписанному сравнению персонаж повёрнут в другую сторону и пропорции отличаются; заметна обводка.",
+    "normalized": "assets/generated_candidates/normalized/slime/walk_01.png"
+  }
+]

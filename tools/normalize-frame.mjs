@@ -10,4 +10,4 @@ if (!out.toLowerCase().endsWith(".png")) throw new Error("выход долже�
 const { png, metrics } = await normalizeFrame(opt("--input"), opt("--ref"), { width: Number(opt("--width")), height: Number(opt("--height")) });
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, png);
-console.log(`готово: ${out}; пересечение силуэтов ${metrics.shape.toFixed(3)}, отклонение цвета ${metrics.color.toFixed(2)}`);
+console.log(`готово: ${out}; пересечение силуэтов ${metrics.shape.toFixed(3)}, отклонение цвета ${metrics.color.toFixed(2)}, отличие от образца ${metrics.change.toFixed(3)}`);
