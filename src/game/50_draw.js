@@ -160,7 +160,7 @@ function dUnit(u, wi, o = {}) {
 	const bk = u.born !== undefined ? (t - u.born) / 0.32 : 1;
 	if (bk <= 0) return;
 	const [A, img] = uSet(u, wi),
-		f = uFrame(u, A);
+		f = V2 ? v2AnimFrame(u, A) : uFrame(u, A);
 	let x = u.x,
 		y = u.y - (u.z || 0),
 		sc = AP * (u.sc || 1),
@@ -178,12 +178,14 @@ function dUnit(u, wi, o = {}) {
 	else if (!u.mv) sy *= 1 + 0.018 * Math.sin(t * 3 + u.ph);
 	if (u.hitT > 0) x += Math.sin(u.hitT * 95) * 3;
 	if (u.st && u.st.stun && !u.st.stun.ice) x += Math.sin(t * 40) * 1;
-	x = Math.round(x);
-	y = Math.round(y);
+	x = V2 ? v2Pixel(x) : Math.round(x);
+	y = V2 ? v2Pixel(y) : Math.round(y);
 	const fx = u.face;
 	uOutline(u, o, img, f, x, y, fx, sc, sy);
 	const baseAlpha = o.a === undefined ? 1 : o.a;
-	const [previous, mix] = !u.team && img === IMG.heroes3 ? spriteTransition(u, img, f, t) : [null, 1];
+	let previous, mix;
+	if (V2) { const q = v2AnimBlend(u, img, f, t); previous = q.prev; mix = q.mix; }
+	else [previous, mix] = !u.team && img === IMG.heroes3 ? spriteTransition(u, img, f, t) : [null, 1];
 	if (previous) {
 		ctx.globalAlpha = baseAlpha;
 		fr(img, previous, x, y, fx, sc, sy);
@@ -633,6 +635,7 @@ const LERP_PREV = new WeakMap(),
 function lerpRemember(list) {
 	for (let i = 0; i < list.length; i++) {
 		const u = list[i];
+		if (V2) v2AnimTrack(u);
 		let r = LERP_PREV.get(u);
 		if (!r) LERP_PREV.set(u, (r = { x: 0, y: 0 }));
 		r.x = u.x;
@@ -655,10 +658,11 @@ function lerpApply(list, k) {
 }
 function fightLerpIn() {
 	LERP_UNDO.length = 0;
-	if (!F || !Machine.is("fight") || paused || !(Loop.alpha > 0.01) || F.lock > 0 || F.out) return;
-	lerpApply(F.pl, Loop.alpha);
-	lerpApply(F.en, Loop.alpha);
-	if (F.proj) lerpApply(F.proj, Loop.alpha);
+	if (!F || !Machine.is("fight") || paused || (!V2 && !(Loop.alpha > 0.01)) || F.lock > 0 || F.out) return;
+	const k = V2 ? Loop.alpha - 1 : Loop.alpha;
+	lerpApply(F.pl, k);
+	lerpApply(F.en, k);
+	if (F.proj) lerpApply(F.proj, k);
 }
 function fightLerpOut() {
 	for (let i = LERP_UNDO.length - 3; i >= 0; i -= 3) {

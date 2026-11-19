@@ -62,6 +62,7 @@ flowchart TB
     20_data["20_data<br/><i>герои, реликвии, миры</i>"]
     30_arena["30_arena<br/><i>арена, навигация, погода</i>"]
     40_fight["40_fight<br/><i>бой: шаги, удары, боссы</i>"]
+    46_v2_animation["46_v2_animation<br/><i></i>"]
     50_draw["50_draw<br/><i>отрисовка боя и HUD</i>"]
     60_game["60_game<br/><i>карта, события, лавка</i>"]
     62_save["62_save<br/><i>сохранения</i>"]
@@ -111,7 +112,7 @@ flowchart TB
     90_boot --> 10_core
 ```
 
-Ссылки ранних файлов на поздние (29):
+Ссылки ранних файлов на поздние (30):
 
 - `01_head` → `10_core`: `Timers`
 - `01_head` → `12_state`: `Machine`
@@ -138,6 +139,7 @@ flowchart TB
 - `30_arena` → `65_screens`: `BGA`
 - `40_fight` → `50_draw`: `autoPlace`, `lerpRemember`
 - `40_fight` → `60_game`: `lose`, `win`
+- `46_v2_animation` → `50_draw`: `CAM`, `aFrame`
 - `50_draw` → `65_screens`: `codexTestOpen`
 - `60_game` → `62_save`: `autosave`
 - `60_game` → `65_screens`: `BGA`
@@ -155,7 +157,8 @@ flowchart TB
 | `20_data` | 575 | 21 | 01_head 11, 10_core 1 |
 | `30_arena` | 627 | 46 | 10_core 157, 01_head 110, 20_data 7, 65_screens 2, 50_draw 1 |
 | `40_fight` | 1686 | 72 | 10_core 190, 20_data 80, 30_arena 47, 01_head 31, 00_rand 18, 12_state 11, 50_draw 4, 60_game 2, 15_ui 1 |
-| `50_draw` | 1280 | 64 | 01_head 428, 10_core 195, 15_ui 61, 30_arena 28, 20_data 25, 12_state 13, 40_fight 11, 00_rand 7, 65_screens 1 |
+| `46_v2_animation` | 50 | 6 | 50_draw 9, 01_head 6 |
+| `50_draw` | 1284 | 64 | 01_head 429, 10_core 194, 15_ui 61, 30_arena 28, 20_data 25, 12_state 13, 40_fight 11, 00_rand 7, 46_v2_animation 5, 65_screens 1 |
 | `60_game` | 910 | 67 | 01_head 105, 20_data 31, 10_core 28, 30_arena 11, 12_state 10, 00_rand 9, 62_save 5, 40_fight 4, 15_ui 2, 65_screens 2 |
 | `62_save` | 428 | 20 | 01_head 29, 10_core 6, 60_game 5, 05_err 4, 20_data 3, 12_state 3, 40_fight 2, 15_ui 2 |
 | `63_perf_report` | 159 | 18 | 01_head 20, 60_game 7, 15_ui 3, 10_core 3, 12_state 3, 20_data 1 |

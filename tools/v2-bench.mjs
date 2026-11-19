@@ -9,7 +9,7 @@ import { launch } from "./lib/browser.mjs";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2), opt = (k, d) => args.includes(k) ? args[args.indexOf(k) + 1] : d;
 const SECONDS = Number(opt("--seconds", 3)), OUT = opt("--out", "docs/v2-bench.json");
-const ONLY = opt("--ids", "").split(",").filter(Boolean), PROFILE = args.includes("--profile");
+const ONLY = opt("--ids", "").split(",").filter(Boolean), PROFILE = args.includes("--profile"), V2MODE = args.includes("--v2");
 if (!(SECONDS >= 1 && SECONDS <= 30)) throw new Error("--seconds: от 1 до 30");
 const DEVAPI = fs.readFileSync(path.join(ROOT, "tests/harness/devapi.js"), "utf8");
 const prep = `__dev.seed(777); __dev.newGame(); for (let i=0;i<8;i++) __dev.setSlot(i, i<3 ? __dev.HEROES[i] : null); __dev.setWorld(0,12);`;
@@ -55,7 +55,7 @@ async function measure(browser, scenario, count, profile = false) {
 	await page.goto(pathToFileURL(path.join(ROOT, "index.html")).href);
 	await page.waitForFunction("typeof READY !== 'undefined' && READY && G", { timeout: 60000 });
 	await page.addScriptTag({ content: DEVAPI });
-	await page.evaluate(() => __dev.run("setQ(0); hiDpi()"));
+	await page.evaluate((v2) => __dev.run("setQ(0); hiDpi(); V2=" + (v2 ? "true" : "false")), V2MODE);
 	await page.evaluate((code) => __dev.run(code), scenario.setup);
 	await new Promise(r => setTimeout(r, 1000));
 	if (count) await installCounts(page);
@@ -90,7 +90,7 @@ async function measure(browser, scenario, count, profile = false) {
 }
 const browser = await launch();
 try {
-	const out = { date: new Date().toISOString(), browser: await browser.version(), cpu:4, viewport:"844×390 DPR 2, качество 0, R=1", seconds:SECONDS, scenario:[] };
+	const out = { date: new Date().toISOString(), browser: await browser.version(), cpu:4, v2:V2MODE, viewport:"844×390 DPR 2, качество 0, R=1", seconds:SECONDS, scenario:[] };
 	if (ONLY.some(id => !SCENARIOS.some(s => s.id === id))) throw new Error("Неизвестный сценарий в --ids");
 	for (const s of SCENARIOS.filter(s => !ONLY.length || ONLY.includes(s.id))) {
 		const timing = await measure(browser,s,false), counts = await measure(browser,s,true);

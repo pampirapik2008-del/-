@@ -25,6 +25,7 @@ const val = (f, d) => {
 };
 const record = has("--record");
 const check = has("--check") || !record;
+if (record && has("--v2")) throw new Error("нельзя записывать эталон с --v2");
 const NB = val("--battles", 500);
 const NM = val("--maps", 1000);
 const GDIR = path.join(ROOT, "tests/golden");
@@ -35,6 +36,7 @@ const KINDS = ["fight", "fight", "boss", "arena", "swamp"];
 async function main() {
 	const g = boot(HTML ? { code: codeFromHtml(path.resolve(HTML)) } : {});
 	if (!(await g.ready())) throw new Error("игра не загрузилась");
+	if (has("--v2")) g.dev.run("V2 = true");
 
 	/* ---------- бои ---------- */
 	// newGame() пересобирает картинку карты (~0.9 c), поэтому состояние готовим один раз,
