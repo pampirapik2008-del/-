@@ -113,6 +113,7 @@ function loop(ts) {
 	} catch (e) {
 		logErr("draw", e);
 	}
+	v2UiSync();
 	if (reportActive && PERF_REPORT) perfReportFrame(ts, reportUpdate, reportDraw);
 	requestAnimationFrame(loop);
 }

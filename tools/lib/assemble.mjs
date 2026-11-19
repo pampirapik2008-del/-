@@ -41,12 +41,13 @@ export function loadGameSrc(root) {
 
 // public — сборка «для друзей»: вместо ядра и загрузчика редактора в @@LOADER@@ встаёт src/runner.js
 // (запуск игры, хранилище, ничего от редактора: ни интерфейса, ни настроек ИИ, ни пароля, ни версий кода)
-export function buildHtml(root, { public: pub = false } = {}) {
+export function buildHtml(root, { public: pub = false, v2 = false } = {}) {
 	const shell = readText(root, "src/shell.html");
 	// ядро редактора (чистые функции, тестируются в Node) + загрузчик с интерфейсом — вне #game-src,
 	// поэтому ИИ-правки их не касаются
 	const loader = pub ? readText(root, "src/runner.js") : readText(root, "src/editor/core.js") + "\n" + readText(root, "src/editor/loader.js");
 	return shell
+		.replace("</head>", v2 ? "<script>window.__mxV2Default=true;</script></head>" : "</head>")
 		.replace("@@ASSETS@@", () => loadAssetsJs(root))
 		.replace("@@SRC@@", () => loadGameSrc(root))
 		.replace("@@LOADER@@", () => loader);

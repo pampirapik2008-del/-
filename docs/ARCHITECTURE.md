@@ -67,6 +67,7 @@ flowchart TB
     62_save["62_save<br/><i>сохранения</i>"]
     63_perf_report["63_perf_report<br/><i></i>"]
     65_screens["65_screens<br/><i>экраны и таблица Machine.reg</i>"]
+    67_v2_settings["67_v2_settings<br/><i></i>"]
     70_audio["70_audio<br/><i>звук и музыка</i>"]
     90_boot["90_boot<br/><i>цикл кадра, запуск</i>"]
     05_err --> 01_head
@@ -159,8 +160,9 @@ flowchart TB
 | `62_save` | 428 | 20 | 01_head 29, 10_core 6, 60_game 5, 05_err 4, 20_data 3, 12_state 3, 40_fight 2, 15_ui 2 |
 | `63_perf_report` | 159 | 18 | 01_head 20, 60_game 7, 15_ui 3, 10_core 3, 12_state 3, 20_data 1 |
 | `65_screens` | 1286 | 78 | 01_head 355, 10_core 174, 15_ui 140, 20_data 50, 60_game 35, 50_draw 28, 12_state 28, 00_rand 9, 62_save 6, 30_arena 3, 13_input 2, 40_fight 2, 63_perf_report 2, 90_boot 1 |
+| `67_v2_settings` | 75 | 7 | 01_head 5, 60_game 1, 12_state 1, 05_err 1 |
 | `70_audio` | 119 | 5 | 10_core 9, 01_head 8, 12_state 2 |
-| `90_boot` | 154 | 12 | 01_head 20, 10_core 11, 12_state 9, 05_err 9, 60_game 6, 65_screens 5, 20_data 3, 15_ui 3, 30_arena 2, 50_draw 2, 70_audio 2, 13_input 2, 63_perf_report 1, 00_rand 1 |
+| `90_boot` | 155 | 12 | 01_head 20, 10_core 11, 12_state 9, 05_err 9, 60_game 6, 65_screens 5, 20_data 3, 15_ui 3, 30_arena 2, 50_draw 2, 70_audio 2, 13_input 2, 67_v2_settings 1, 63_perf_report 1, 00_rand 1 |
 <!-- modgraph:end -->
 
 Блок выше сверяется тестом `tests/unit/docs.test.mjs`: если схема отстала от исходников, тест говорит «выполните `npm run docs`». Точки расширения кода — герой (`regHero`), реликвия (`RELIC`), мир (`WORLDS` + `MAPT` + `AMBI` + `Tune.T`) — расписаны по шагам в `docs/HOWTO.md`.

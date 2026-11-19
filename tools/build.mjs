@@ -36,7 +36,7 @@ if (args.has("--check")) {
 		return false;
 	};
 	// index.html обязан совпадать; релизные копии в dist/ проверяются, если они собраны (npm run build:dist)
-	const ok = same("index.html", html, true) & same("dist/game.html", html, false) & same("dist/game-public.html", buildHtml(ROOT, { public: true }), false);
+	const ok = same("index.html", html, true) & same("dist/game.html", html, false) & same("dist/game-public.html", buildHtml(ROOT, { public: true }), false) & same("dist/game-v2.html", buildHtml(ROOT, { v2: true }), false) & same("dist/game-v2-public.html", buildHtml(ROOT, { public: true, v2: true }), false);
 	if (!ok) process.exit(1);
 	console.log("сборка совпадает с index.html" + (fs.existsSync(path.join(ROOT, "dist/game-public.html")) ? " и dist/" : "") + ", sha256 " + hash.slice(0, 16));
 	process.exit(0);
@@ -50,8 +50,13 @@ if (args.has("--dist")) {
 	const pub = buildHtml(ROOT, { public: true });
 	const pubHash = crypto.createHash("sha256").update(pub).digest("hex");
 	fs.writeFileSync(path.join(ROOT, "dist/game-public.html"), pub);
+	// V2 отличается лишь значением по умолчанию; сохранённый выбор имеет приоритет.
+	const v2 = buildHtml(ROOT, { v2: true }), v2pub = buildHtml(ROOT, { public: true, v2: true });
+	fs.writeFileSync(path.join(ROOT, "dist/game-v2.html"), v2);
+	fs.writeFileSync(path.join(ROOT, "dist/game-v2-public.html"), v2pub);
+	const sum = (text) => crypto.createHash("sha256").update(text).digest("hex");
 	// контрольные суммы релизных файлов — рядом, в формате sha256sum -c
-	fs.writeFileSync(path.join(ROOT, "dist/SHA256SUMS.txt"), `${hash}  game.html\n${pubHash}  game-public.html\n`);
+	fs.writeFileSync(path.join(ROOT, "dist/SHA256SUMS.txt"), `${hash}  game.html\n${pubHash}  game-public.html\n${sum(v2)}  game-v2.html\n${sum(v2pub)}  game-v2-public.html\n`);
 	console.log(`dist/game.html записан, sha256 ${hash} (dist/SHA256SUMS.txt)`);
 	console.log(`dist/game-public.html записан: ${(pub.length / 1024 / 1024).toFixed(2)} МБ без редактора, sha256 ${pubHash}`);
 }
